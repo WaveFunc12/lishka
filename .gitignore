@@ -40,3 +40,4 @@ yarn-error.*
 /ios
 /android
 .map-cache/
+tools/map/__pycache__/

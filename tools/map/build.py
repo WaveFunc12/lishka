@@ -176,13 +176,15 @@ def main():
     tiles, size = [], 0
     for ty in range(0, rgb.shape[0], TILE):
         for tx in range(0, rgb.shape[1], TILE):
-            part = rgb[ty:ty + TILE, tx:tx + TILE]
+            # One pixel of the neighbours around each tile, so scaled-up tiles blend at their seams.
+            a, b = max(ty - 1, 0), max(tx - 1, 0)
+            part = rgb[a:ty + TILE + 1, b:tx + TILE + 1]
             if ((sea | lake)[ty:ty + TILE, tx:tx + TILE]).all():
                 continue                                      # open sea: the background colour covers it
             name = f't{ty // TILE}_{tx // TILE}.jpg'
             Image.fromarray(part).save(os.path.join(OUT, name), quality=78, optimize=True, progressive=False)
             size += os.path.getsize(os.path.join(OUT, name))
-            tiles.append((name, x0 + tx / R, y0 + ty / R, part.shape[1] / R, part.shape[0] / R))
+            tiles.append((name, x0 + b / R, y0 + a / R, part.shape[1] / R, part.shape[0] / R))
     ov = Image.fromarray(rgb).resize((w * OVERVIEW_R, h * OVERVIEW_R), Image.LANCZOS)
     ov.save(os.path.join(OUT, 'overview.jpg'), quality=80, optimize=True)
     size += os.path.getsize(os.path.join(OUT, 'overview.jpg'))

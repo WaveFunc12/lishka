@@ -5,7 +5,8 @@ import Animated, { runOnJS, useAnimatedStyle, useSharedValue } from 'react-nativ
 import Svg, { Circle, Defs, G, Image as SvgImage, Line, Mask, Path, RadialGradient, Rect, Stop, Text as SvgText } from 'react-native-svg';
 import geo from '@/data/geo.json';
 import { clampView, COUNTRY, fitAspect, fitView, niceScale, zoomAt, type Point, type View as MapBox } from '@/engine';
-import { OVERVIEW, OVERVIEW_PX_PER_KM, TILE_PX_PER_KM, TILES } from './mapTiles';
+import { MapLabels, MapOverlayBase } from './MapOverlay';
+import { OVERVIEW, OVERVIEW_PX_PER_KM, TILES } from './mapTiles';
 import { BW, C, F, SHADOW } from './theme';
 
 /* The map: a shaded-relief basemap (no names, roads or towns, so it gives nothing away) with the game drawn on top.
@@ -39,7 +40,7 @@ type Props = {
 };
 
 const G_ = geo as { home: string[]; homeLow: string[]; lakes: string[] };
-const MIN_W = 6, MAX_W = 220; // km
+const MIN_W = 10, MAX_W = 220; // km
 // Rough land past the edges of the basemap, seen only when zoomed far out on a wide map: [x0, y0, x1, y1] in km.
 const FAR = 9999;
 const BEYOND: [number, number, number, number][] = [
@@ -137,7 +138,22 @@ export function MapView(p: Props) {
   const sv = { x: v.x - v.w * M, y: v.y - v.h * M, w: v.w * (1 + 2 * M), h: v.h * (1 + 2 * M) };
   const sharp = (W * PixelRatio.get()) / v.w > OVERVIEW_PX_PER_KM * 1.3;
   const tiles = sharp ? TILES.filter((t) => t.x < sv.x + sv.w && t.x + t.w > sv.x && t.y < sv.y + sv.h && t.y + t.h > sv.y) : [];
-  const seam = 0.6 / TILE_PX_PER_KM;
+
+  // Keep map labels clear of the game's dots, pins and place names (names run leftwards from their dot).
+  const avoid: Point[] = [...(p.pins || []), ...(p.cross || [])];
+  for (const d of p.dots || []) {
+    avoid.push(d);
+    if (d.label) for (let i = 1; i * 12 < d.label.length * 7.5; i++) avoid.push({ x: d.x - (8 + i * 12) * k, y: d.y });
+  }
+
+  // Screen corners covered by the zoom buttons, the mini map and the tag, in km.
+  const px = (x: number, y: number, w: number, h: number): MapBox => ({ x: v.x + x * k, y: v.y + y * k, w: w * k, h: h * k });
+  const reserved = [
+    ...(canZoom ? [px(0, 0, 50, zoomed ? 122 : 84)] : []),
+    ...(p.mini ? [px(W - 54, 0, 54, 106)] : []),
+    ...(p.tag ? [px(0, H - 40, 12 + p.tag.length * 8, 40)] : []),
+    ...(!p.noScale ? [px(0, H - 34, 90, 34)] : []),
+  ];
 
   const svg = (
     <Svg width={W * (1 + 2 * M)} height={H * (1 + 2 * M)} viewBox={`${sv.x} ${sv.y} ${sv.w} ${sv.h}`} accessibilityLabel={p.label || 'מפה'}>
@@ -145,7 +161,7 @@ export function MapView(p: Props) {
       {BEYOND.map(([x0, y0, x1, y1], i) => <Rect key={'by' + i} x={x0} y={y0} width={x1 - x0} height={y1 - y0} fill={BEYOND_LAND} />)}
       <SvgImage href={OVERVIEW.src} x={OVERVIEW.x} y={OVERVIEW.y} width={OVERVIEW.w} height={OVERVIEW.h} preserveAspectRatio="none" />
       {tiles.map((t) => (
-        <SvgImage key={`${t.x},${t.y}`} href={t.src} x={t.x} y={t.y} width={t.w + seam} height={t.h + seam} preserveAspectRatio="none" />
+        <SvgImage key={`${t.x},${t.y}`} href={t.src} x={t.x} y={t.y} width={t.w} height={t.h} preserveAspectRatio="none" />
       ))}
       {p.reveal && (
         <>
@@ -176,6 +192,8 @@ export function MapView(p: Props) {
       )}
       {G_.lakes.map((d, i) => <Path key={'lk' + i} d={d} fill={C.sea} stroke={C.ink} strokeWidth={0.8 * k} strokeOpacity={0.6} />)}
       {G_.home.map((d, i) => <Path key={'hs' + i} d={d} fill="none" stroke={C.ink} strokeWidth={2 * k} strokeLinejoin="round" />)}
+      <MapOverlayBase v={sv} k={k} />
+      <MapLabels v={v} k={k} avoid={avoid} reserved={reserved} />
       {(p.lines || []).map(([a, b, cls], i) => (
         <Line key={'ln' + i} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={cls === 'aline' ? C.accent : C.pin} strokeWidth={2 * k}
           strokeDasharray={cls === 'aline' ? [3 * k, 4 * k] : [4 * k, 3 * k]} opacity={cls === 'aline' ? 0.7 : 1} />

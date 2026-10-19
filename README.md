@@ -32,7 +32,7 @@ Days roll over at midnight Israel time. Developer tools (skipping days) appear o
 
 ## The map
 
-The basemap is shaded relief only: terrain, coast, lakes and borders, with no names, roads or built-up areas, so it never gives an answer away. It's pre-rendered into `assets/map/` (tiles at 16 px per km plus a whole-country overview) and the game is drawn on top in SVG (`src/ui/MapView.tsx`). Pinch to zoom, drag once zoomed, or use the + / − buttons.
+The basemap is shaded relief (terrain, coast, lakes and borders) with main roads, streams and region names on top. Numbered roads get their red route shield, and every label is placed again for the part of the map in view, so a shield or name stays visible at any zoom. The relief is pre-rendered into `assets/map/` (tiles at 16 px per km plus a whole-country overview); roads, streams, regions and the game are drawn in SVG (`src/ui/MapOverlay.tsx`, `src/ui/MapView.tsx`). Pinch to zoom, drag once zoomed, or use the + / − buttons.
 
 To rebuild it (downloads the elevation data on first run):
 
@@ -42,3 +42,7 @@ python3 tools/map/build.py
 ```
 
 Elevation data: Copernicus DEM GLO-90, © DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018, provided under COPERNICUS by the European Union and ESA. This credit has to appear in the app (an "about" line is enough).
+
+Roads, streams and region names come from `src/data/overlay.json`. To rebuild it, fetch roads and water from Overture Maps into a folder (see the usage line at the top of `tools/map/fetch_overture.py`), then run `python3 tools/map/build_overlays.py <that folder>`. Numbered routes are traced between waypoints listed in `build_overlays.py`; check them against the preview after any change.
+
+Roads and streams: © OpenStreetMap contributors, via Overture Maps, under the ODbL. This credit also has to appear in the app.

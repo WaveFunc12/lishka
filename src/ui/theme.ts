@@ -26,6 +26,11 @@ export const C = {
   silver: '#8E98A3',
   gold: '#C8971C',
   legend: '#6A3FB5',
+  road: '#7A2E1C',
+  roadCase: '#FFF6E2',
+  shield: '#D3202A',
+  stream: '#3A8DB0',
+  streamInk: '#1E5D78',
 } as const;
 
 export const F = {
