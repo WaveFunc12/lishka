@@ -41,10 +41,18 @@ type Props = {
 
 const G_ = geo as { home: string[]; homeLow: string[]; lakes: string[] };
 const MIN_W = 10, MAX_W = 220; // km
-// Rough land past the edges of the basemap, seen only when zoomed far out on a wide map: [x0, y0, x1, y1] in km.
+// Rough land past the edges of the basemap, seen only when zoomed far out on a wide map, in km.
+// Outlines follow the real coasts of Sinai and Lebanon, so the sea doesn't end in a straight line.
 const FAR = 9999;
-const BEYOND: [number, number, number, number][] = [
-  [140, -FAR, FAR, FAR], [46, -FAR, 140, -250], [-FAR, 260, -25, FAR], [-5, 260, 140, FAR], [-FAR, 44, -120, 260],
+const BEYOND = [
+  // East: Jordan and Syria.
+  `M140 ${-FAR}H${FAR}V${FAR}H140Z`,
+  // North: Lebanon, from the basemap's top edge up the coast past Beirut and Tripoli.
+  `M42 -250L47 -265L62 -290L80 -325L90 -400L95 ${-FAR}H140V-250Z`,
+  // South-west: Sinai and the Egyptian coast past Bardawil and Port Said.
+  `M-120 40L-180 37L-256 27L-303 9L-400 20L-484 33L${-FAR} 33V${FAR}H-120Z`,
+  // South: below the basemap.
+  `M-120 260H140V${FAR}H-120Z`,
 ];
 const BEYOND_LAND = '#D4BD92';
 const isFit = (v: MapBox | FitSpec): v is FitSpec => 'fit' in v;
@@ -72,19 +80,19 @@ export function MapView(p: Props) {
   const ax = useSharedValue(0), ay = useSharedValue(0), s0 = useSharedValue(1), live = useSharedValue(0);
   const moved = useAnimatedStyle(() => ({
     transform: [
-      { translateX: (ax.value - W / 2) * (1 - sc.value) + tx.value },
-      { translateY: (ay.value - H / 2) * (1 - sc.value) + ty.value },
-      { scale: sc.value },
+      { translateX: (ax.get() - W / 2) * (1 - sc.get()) + tx.get() },
+      { translateY: (ay.get() - H / 2) * (1 - sc.get()) + ty.get() },
+      { scale: sc.get() },
     ],
   }));
   useLayoutEffect(() => {
-    sc.value = 1; tx.value = 0; ty.value = 0;
+    sc.set(1); tx.set(0); ty.set(0);
   }, [zoom, sc, tx, ty]);
 
   const goTo = (nv: MapBox) => setZoom({ key, v: clampView(nv, OVERVIEW, MIN_W, Math.max(base.w, MAX_W)) });
   const commit = (s: number, a: Point, t: Point) => {
     if (Math.abs(s - 1) < 0.01 && Math.hypot(t.x, t.y) < 1) {
-      sc.value = 1; tx.value = 0; ty.value = 0;
+      sc.set(1); tx.set(0); ty.set(0);
       return;
     }
     // Screen point q shows what used to be at (q - a - t) / s + a.
@@ -109,25 +117,25 @@ export function MapView(p: Props) {
 
   const end = () => {
     'worklet';
-    live.value -= 1;
-    if (live.value === 0) runOnJS(commit)(sc.value, { x: ax.value, y: ay.value }, { x: tx.value, y: ty.value });
+    live.set(live.get() - 1);
+    if (live.get() === 0) runOnJS(commit)(sc.get(), { x: ax.get(), y: ay.get() }, { x: tx.get(), y: ty.get() });
   };
   const pinch = Gesture.Pinch()
     .enabled(canZoom)
     .onStart((e) => {
-      live.value += 1;
-      if (sc.value === 1) { ax.value = e.focalX - tx.value; ay.value = e.focalY - ty.value; }
-      s0.value = sc.value;
+      live.set(live.get() + 1);
+      if (sc.get() === 1) { ax.set(e.focalX - tx.get()); ay.set(e.focalY - ty.get()); }
+      s0.set(sc.get());
     })
-    .onUpdate((e) => { sc.value = Math.min(Math.max(s0.value * e.scale, 0.2), 12); })
+    .onUpdate((e) => { sc.set(Math.min(Math.max(s0.get() * e.scale, 0.2), 12)); })
     .onEnd(end);
   // One finger pans only once zoomed in, so at the start view it still scrolls the page.
   const pan = Gesture.Pan()
     .enabled(canZoom && zoomed)
     .minDistance(6)
     .averageTouches(true)
-    .onStart(() => { live.value += 1; })
-    .onUpdate((e) => { tx.value = e.translationX; ty.value = e.translationY; })
+    .onStart(() => { live.set(live.get() + 1); })
+    .onUpdate((e) => { tx.set(e.translationX); ty.set(e.translationY); })
     .onEnd(end);
   const tapG = Gesture.Tap()
     .enabled(!!(p.onPressMap || p.onPressDot))
@@ -141,26 +149,31 @@ export function MapView(p: Props) {
   const sharp = (W * PixelRatio.get()) / v.w > OVERVIEW_PX_PER_KM * 1.3;
   const tiles = sharp ? TILES.filter((t) => t.x < sv.x + sv.w && t.x + t.w > sv.x && t.y < sv.y + sv.h && t.y + t.h > sv.y) : [];
 
-  // Keep map labels clear of the game's dots, pins and place names (names run leftwards from their dot).
-  const avoid: Point[] = [...(p.pins || []), ...(p.cross || [])];
-  for (const d of p.dots || []) {
-    avoid.push(d);
-    if (d.label) for (let i = 1; i * 12 < d.label.length * 7.5; i++) avoid.push({ x: d.x - (8 + i * 12) * k, y: d.y });
-  }
-
   // Screen corners covered by the zoom buttons, the mini map and the tag, in km.
+  // With a tag in the bottom corner, the scale bar sits just above it.
+  const lift = p.tag ? 34 : 0;
   const px = (x: number, y: number, w: number, h: number): MapBox => ({ x: v.x + x * k, y: v.y + y * k, w: w * k, h: h * k });
   const reserved = [
     ...(canZoom ? [px(0, 0, 50, zoomed ? 122 : 84)] : []),
     ...(p.mini ? [px(W - 54, 0, 54, 106)] : []),
     ...(p.tag ? [px(0, H - 40, 12 + p.tag.length * 8, 40)] : []),
-    ...(!p.noScale ? [px(0, H - 34, 90, 34)] : []),
+    ...(!p.noScale ? [px(0, H - 34 - lift, 90, 34)] : []),
   ];
+
+  // Keep map labels clear of the game's dots, pins and place names (names run leftwards from their dot).
+  const spots = placeDotLabels(p.dots || [], r, fs, [...(p.pins || []), ...(p.cross || [])], v, reserved);
+  const avoid: Point[] = [...(p.pins || []), ...(p.cross || [])];
+  for (const d of p.dots || []) {
+    avoid.push(d);
+    const sp = spots.get(d.id);
+    if (sp) for (let x = sp.x0; x <= sp.x1; x += 12 * k) avoid.push({ x, y: (sp.y0 + sp.y1) / 2 });
+  }
+
 
   const svg = (
     <Svg width={W * (1 + 2 * M)} height={H * (1 + 2 * M)} viewBox={`${sv.x} ${sv.y} ${sv.w} ${sv.h}`} accessibilityLabel={p.label || 'מפה'}>
       <Rect x={sv.x} y={sv.y} width={sv.w} height={sv.h} fill={C.sea} />
-      {BEYOND.map(([x0, y0, x1, y1], i) => <Rect key={'by' + i} x={x0} y={y0} width={x1 - x0} height={y1 - y0} fill={BEYOND_LAND} />)}
+      {BEYOND.map((d, i) => <Path key={'by' + i} d={d} fill={BEYOND_LAND} />)}
       <SvgImage href={OVERVIEW.src} x={OVERVIEW.x} y={OVERVIEW.y} width={OVERVIEW.w} height={OVERVIEW.h} preserveAspectRatio="none" />
       {tiles.map((t) => (
         <SvgImage key={`${t.x},${t.y}`} href={t.src} x={t.x} y={t.y} width={t.w} height={t.h} preserveAspectRatio="none" />
@@ -212,7 +225,8 @@ export function MapView(p: Props) {
               <SvgText x={d.x} y={d.y + rr * 0.38} textAnchor="middle" fontSize={rr * 1.15} fontFamily={F.black} fontWeight="900"
                 fill={d.state === 'mystery' ? C.target : C.ink}>{String(d.num)}</SvgText>
             )}
-            {!!d.label && <Label x={d.x - rr * 1.5} y={d.y + fs * 0.35} fs={fs} text={d.label} faint={d.state === 'anc'} />}
+            {!!d.label && spots.get(d.id) && (() => { const sp = spots.get(d.id)!;
+              return <Label x={sp.tx} y={sp.ty} anchor={sp.anchor} fs={fs} text={d.label} faint={d.state === 'anc'} />; })()}
           </G>
         );
       })}
@@ -241,7 +255,7 @@ export function MapView(p: Props) {
         )}
         {box.w > 0 && !p.noScale && (
           <Svg width={W} height={H} viewBox={`${v.x} ${v.y} ${v.w} ${v.h}`} style={StyleSheet.absoluteFill} pointerEvents="none">
-            <ScaleBar v={v} k={k} />
+            <ScaleBar v={v} k={k} lift={lift} />
           </Svg>
         )}
         {p.mini && box.w > 0 && <MiniMap v={v} />}
@@ -272,7 +286,48 @@ function ZoomBtn({ label, a11y, onPress }: { label: string; a11y: string; onPres
   );
 }
 
-function Label({ x, y, fs, text, faint, anchor = 'end' }: { x: number; y: number; fs: number; text: string; faint?: boolean; anchor?: 'end' | 'middle' }) {
+type Spot = { tx: number; ty: number; anchor: 'end' | 'start' | 'middle'; x0: number; x1: number; y0: number; y1: number };
+
+/** Labelling priority: the question's own dots first, then places the player knows, then reference cities. */
+const LABEL_RANK: Record<DotState, number> = { right: 0, wrong: 0, target: 0, choice: 0, mystery: 0, lit: 1, ctx: 2, dim: 3, anc: 3 };
+
+/** Where each dot's name goes: left of the dot if it's free, else right, above, below or on a diagonal.
+    The game's own dots (answers, choices) always get a name; any other name that fits nowhere is left out,
+    so close neighbours like Tel Aviv and Bnei Brak never print on top of each other. */
+function placeDotLabels(dots: MapDot[], r: number, fs: number, marks: Point[], v: MapBox, reserved: MapBox[]): Map<string, Spot> {
+  const out = new Map<string, Spot>();
+  const taken: { x0: number; x1: number; y0: number; y1: number }[] = [
+    ...dots.map((d) => { const rr = r * (d.size || 1) + fs * 0.15; return { x0: d.x - rr, x1: d.x + rr, y0: d.y - rr, y1: d.y + rr }; }),
+    ...marks.map((m) => ({ x0: m.x - fs * 0.6, x1: m.x + fs * 0.6, y0: m.y - fs * 1.6, y1: m.y + fs * 0.3 })),
+    ...reserved.map((b) => ({ x0: b.x, x1: b.x + b.w, y0: b.y, y1: b.y + b.h })),
+  ];
+  const inside = (b: Spot) => b.x0 > v.x && b.x1 < v.x + v.w && b.y0 > v.y && b.y1 < v.y + v.h;
+  const hit = (a: (typeof taken)[0], b: (typeof taken)[0]) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
+  const order = dots.filter((d) => d.label).sort((a, b) => LABEL_RANK[a.state] - LABEL_RANK[b.state]);
+  for (const d of order) {
+    const rr = r * (d.size || 1), w = d.label!.length * fs * 0.5, gap = rr + fs * 0.3, dg = rr * 0.7 + fs * 0.15;
+    const at = (tx: number, ty: number, anchor: Spot['anchor']): Spot => {
+      const x0 = anchor === 'end' ? tx - w : anchor === 'start' ? tx : tx - w / 2;
+      return { tx, ty, anchor, x0, x1: x0 + w, y0: ty - fs * 0.85, y1: ty + fs * 0.25 };
+    };
+    const tries: Spot[] = [
+      at(d.x - gap, d.y + fs * 0.35, 'end'),
+      at(d.x + gap, d.y + fs * 0.35, 'start'),
+      at(d.x, d.y - gap - fs * 0.1, 'middle'),
+      at(d.x, d.y + gap + fs * 0.8, 'middle'),
+      at(d.x - dg, d.y - dg - fs * 0.1, 'end'),
+      at(d.x + dg, d.y - dg - fs * 0.1, 'start'),
+      at(d.x - dg, d.y + dg + fs * 0.8, 'end'),
+      at(d.x + dg, d.y + dg + fs * 0.8, 'start'),
+    ];
+    const free = tries.find((t) => inside(t) && !taken.some((b) => hit(t, b)));
+    const sp = free || (LABEL_RANK[d.state] === 0 ? tries.find(inside) || tries[0] : null);
+    if (sp) { out.set(d.id, sp); taken.push(sp); }
+  }
+  return out;
+}
+
+function Label({ x, y, fs, text, faint, anchor = 'end' }: { x: number; y: number; fs: number; text: string; faint?: boolean; anchor?: 'end' | 'start' | 'middle' }) {
   return (
     <G opacity={faint ? 0.65 : 1}>
       <SvgText x={x} y={y} textAnchor={anchor} fontSize={fs} fontFamily={F.bold} fontWeight="700" stroke={C.surface} strokeWidth={fs * 0.28} strokeLinejoin="round" fill={C.surface}>{text}</SvgText>
@@ -281,8 +336,8 @@ function Label({ x, y, fs, text, faint, anchor = 'end' }: { x: number; y: number
   );
 }
 
-function ScaleBar({ v, k }: { v: MapBox; k: number }) {
-  const sc = niceScale(v.w), sx = v.x + 12 * k, sy = v.y + v.h - 14 * k;
+function ScaleBar({ v, k, lift }: { v: MapBox; k: number; lift: number }) {
+  const sc = niceScale(v.w), sx = v.x + 12 * k, sy = v.y + v.h - (14 + lift) * k;
   return (
     <G>
       <Path d={`M${sx} ${sy}h${sc}M${sx} ${sy - 4 * k}v${8 * k}M${sx + sc} ${sy - 4 * k}v${8 * k}`} stroke={C.ink} strokeWidth={2 * k} fill="none" />

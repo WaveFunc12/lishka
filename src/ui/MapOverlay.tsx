@@ -3,7 +3,7 @@ import { G, Path, Rect, Text as SvgText } from 'react-native-svg';
 import overlay from '@/data/overlay.json';
 import roadnet from '@/data/roadnet.json';
 import type { Point, View as MapBox } from '@/engine';
-import { C, F } from './theme';
+import { C, F, ROAD_COL } from './theme';
 
 /* The road network, named streams, route shields and region names, drawn over the relief.
    Built by tools/map/build_overlays.py from OpenStreetMap data (via Overture Maps).
@@ -24,9 +24,9 @@ const CHAR_W = 0.29;
 const REGION_R = [30, 16, 8];
 // Below this view width (km) the full-detail roads and streams are drawn.
 const DETAIL_W = 90;
-// Line and casing widths in px, by road class.
-const ROAD_PX = [2.6, 2.0, 1.6, 1.1];
-const CASE_PX = [4.8, 4.0, 3.4, 2.6];
+// Line and casing widths in px, by road class. Secondary roads get no casing so they stay in the background.
+const ROAD_PX = [2.5, 1.9, 1.3, 0.9];
+const CASE_PX = [4.6, 3.7, 2.7, 0];
 
 /** The road classes worth drawing at this zoom: motorways and trunk roads always, primary from 140 km across, secondary from 50. */
 const showClass = (c: number, w: number) => c <= 1 || (c === 2 && w < 140) || (c === 3 && w < 50);
@@ -39,7 +39,8 @@ export const MapOverlayBase = memo(function MapOverlayBase({ v, k }: { v: MapBox
     (lod === 0 || (p.x < v.x + v.w && p.x + CELL > v.x && p.y < v.y + v.h && p.y + CELL > v.y)))
     .sort((a, b) => b.c - a.c);
   // Full-detail paths are in 10 m units: draw them in a group scaled by 0.01, with widths scaled up to match.
-  const u = 100 * k;
+  // Zoomed far out the network is drawn finer, so the country doesn't turn into a tangle.
+  const u = 100 * k * (v.w > 200 ? 0.6 : v.w > DETAIL_W ? 0.8 : 1);
   return (
     <G>
       {lod ? (
@@ -54,12 +55,12 @@ export const MapOverlayBase = memo(function MapOverlayBase({ v, k }: { v: MapBox
         ))
       )}
       <G transform="scale(0.01)">
-        {parts.map((p) => (
+        {parts.filter((p) => CASE_PX[p.c]).map((p) => (
           <Path key={`c${p.c}-${p.x}-${p.y}`} d={p.d} fill="none" stroke={C.roadCase} strokeOpacity={0.85} strokeWidth={CASE_PX[p.c] * u}
             strokeLinejoin="round" strokeLinecap="round" />
         ))}
         {parts.map((p) => (
-          <Path key={`r${p.c}-${p.x}-${p.y}`} d={p.d} fill="none" stroke={p.c === 3 ? C.roadMinor : C.road} strokeWidth={ROAD_PX[p.c] * u}
+          <Path key={`r${p.c}-${p.x}-${p.y}`} d={p.d} fill="none" stroke={ROAD_COL[p.c]} strokeWidth={ROAD_PX[p.c] * u}
             strokeLinejoin="round" strokeLinecap="round" />
         ))}
       </G>

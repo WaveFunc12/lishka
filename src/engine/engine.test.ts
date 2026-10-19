@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  BY, DAY_MS, PLACES, UNITS, advance, anchorFor, buildExam, buildShift, bump, clone, compareAnswer, dailyIds, dayNo, dist, points, shareText, totalKm,
+  BY, DAY_MS, UNITS, advance, anchorFor, buildExam, buildShift, bump, clone, compareAnswer, dailyIds, dayNo, dist, points, shareText, totalKm,
   fading, finish, freshState, gradePin, gradeType, israelDay, markDay, migrate, nextShift, onOpen, rank, seeded,
   squares, startSession, strength, T, answer, gradeTap, zoomAt, clampView, COUNTRY,
 } from './index';
