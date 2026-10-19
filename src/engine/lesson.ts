@@ -1,5 +1,5 @@
 import { daily, markDay } from './attendance';
-import { BY, PLACES } from './catalog';
+import { BY, shiftItems, STORY } from './catalog';
 import { COPY, DIR_WORD } from './content';
 import { dist, nearest } from './geo';
 import { bump, fading, introduce, learned, mastery, qType, strength } from './memory';
@@ -35,9 +35,9 @@ export function confPair(s: PlayerState, ids: string[], rng: Rng): { a: string; 
   return { a: k.a, b: k.b, dir: k.ax === 'y' ? rnd<Dir>(['n', 's'], rng) : rnd<Dir>(['e', 'w'], rng) };
 }
 
-/** One postcard = two shifts of 3 places; a shift is about 14 short screens. */
+/** One postcard = two shifts of 2 or 3 places; a shift is about 14 short screens. */
 export function buildShift(s: PlayerState, u: Unit, shift: number, now: number, rng: Rng): Question[] {
-  const ids = u.items.slice(shift * 3, shift * 3 + 3);
+  const ids = shiftItems(u, shift);
   const q: Question[] = [];
   ids.forEach((id) => {
     if (mastery(s, id) < 1) q.push({ t: 'intro', id });
@@ -51,7 +51,7 @@ export function buildShift(s: PlayerState, u: Unit, shift: number, now: number, 
     .slice(0, 2)
     .forEach((p) => q.push({ t: qType(s, p.id), id: p.id, rev: true }));
   const sh = shuffle(ids.slice(), rng);
-  q.push({ t: 'pin', id: sh[0] }, { t: 'type', id: sh[1] });
+  q.push({ t: 'pin', id: sh[0] }, { t: 'type', id: sh[1 % sh.length] });
   return q;
 }
 
@@ -67,11 +67,16 @@ export function buildReview(s: PlayerState, now: number, rng: Rng, pool = learne
   );
 }
 
-/** The tenure exam: 10 random places on a blank map. */
-export const buildExam = (rng: Rng): Question[] => pick(PLACES.map((p) => p.id), 10, rng).map((id): Question => ({ t: 'pin', id }));
+/** The tenure exam: 10 random places the player has learned (the story's at least) on a blank map. */
+export function buildExam(s: PlayerState, rng: Rng): Question[] {
+  const pool = [...new Set([...STORY.flatMap((u) => u.items), ...learned(s).map((p) => p.id)])];
+  return pick(pool, 10, rng).map((id): Question => ({ t: 'pin', id }));
+}
 
-export function startSession(kind: SessionKind, q: Question[], rng: Rng, unitId: string | null = null, shift = 0): Session {
-  const sess: Session = { kind, unitId, shift, q, i: 0, ok: 0, n: 0, xp: 0, combo: 0, best: 0, misses: [], fb: null };
+/** Choices are drawn from `pool` (places the player has met, plus the session's own),
+    so a wrong option is never a hamlet they've never heard of. */
+export function startSession(kind: SessionKind, q: Question[], rng: Rng, unitId: string | null = null, shift = 0, pool?: string[]): Session {
+  const sess: Session = { kind, unitId, shift, q, i: 0, ok: 0, n: 0, xp: 0, combo: 0, best: 0, misses: [], fb: null, pool };
   prep(sess, rng);
   return sess;
 }
@@ -80,7 +85,8 @@ export function startSession(kind: SessionKind, q: Question[], rng: Rng, unitId:
 export function prep(sess: Session, rng: Rng): void {
   const q = sess.q[sess.i];
   if (!q) return;
-  const near = nearest(q.id, 2, 4);
+  const pool = sess.pool && sess.pool.length >= 6 ? sess.pool : undefined;
+  const near = nearest(q.id, 2, 4, pool);
   const jitter = (k: number) => (rng() - 0.5) * k;
   if (q.t === 'tap') q.choices = shuffle([q.id, ...near], rng);
   if (q.t === 'name') {

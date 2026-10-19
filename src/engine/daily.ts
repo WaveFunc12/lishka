@@ -1,4 +1,4 @@
-import { PLACES } from './catalog';
+import { DAILY_POOL } from './catalog';
 import { DAILY_EPOCH } from './content';
 import { dist } from './geo';
 import { seeded, shuffle } from './random';
@@ -23,7 +23,7 @@ export function hash(s: string): number {
 
 export function dailyIds(day: DayStr): string[] {
   const out: Place[] = [];
-  for (const p of shuffle(PLACES.slice(), seeded(hash('lishka' + day)))) {
+  for (const p of shuffle(DAILY_POOL.slice(), seeded(hash('lishka' + day)))) {
     if (out.every((q) => dist(p, q) >= SPREAD_KM)) out.push(p);
     if (out.length === DAILY_N) break;
   }

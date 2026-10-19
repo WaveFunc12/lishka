@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 import {
   advance, anchorFor, answer, BY, compareAnswer, DIR_WORD, finish, fitView, gradeCompare, gradeName, gradePin, gradeTap,
-  gradeType, learned, PIN_LIMIT, PLACES, ANCHORS, shortName, viewAround, ZVI_MEMORY, type Grade, type Point, type View as Box,
+  gradeType, learned, PIN_LIMIT, PLACES, popText, ANCHORS, shortName, viewAround, ZVI_MEMORY, type Grade, type Point, type View as Box,
 } from '@/engine';
 import { useStore, useT } from '@/state/store';
 import { MapView, type MapDot } from '@/ui/MapView';
@@ -71,7 +71,7 @@ export default function Shift() {
         <Card style={{ gap: 6 }}>
           <Kicker>תיק חדש נפתח</Kicker>
           <T_ style={{ fontFamily: F.display, fontSize: 30 }}>{it.name}</T_>
-          <T_ style={{ color: C.muted, fontSize: 14 }}>{it.type} · {it.district}</T_>
+          <T_ style={{ color: C.muted, fontSize: 14 }}>{it.type} · {it.district} · {popText(it.pop)}</T_>
           {an && <T_ style={{ fontFamily: F.bold }}>🧭 כ־{an.km} ק״מ {an.dir} ל{shortName(BY[an.id])}</T_>}
           <T_><T_ style={{ fontFamily: F.black }}>לזכור:</T_> {it.hint}</T_>
         </Card>

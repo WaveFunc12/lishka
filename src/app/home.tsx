@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import {
-  BY, fading, learned, mastery, nextShift, PLACES, postcardsDone, strength, UNITS, zviSays, squares, points, DAILY_N,
+  BY, chapter, fading, learned, mastery, nextShift, PLACES, shiftItems, storyDone, strength, UNITS, zviSays, squares, points, DAILY_N,
 } from '@/engine';
 import { useStart } from '@/state/actions';
 import { useStore, useT } from '@/state/store';
@@ -24,9 +24,11 @@ export default function Home() {
   const fresh = !s.xp;
   const act = s.welcome ? 'review' : ns ? 'shift' : 'exam';
   const label = s.welcome ? 'לחמם מנועים' : !ns ? 'למבחן הקביעות' : fresh ? 'להחתים כרטיס' : 'בחזרה לשולחן';
-  const done = postcardsDone(s);
+  // Progress is shown for the current chapter: the story's seven postcards, then one region at a time.
+  const story = storyDone(s), ch = chapter(s, u.region ?? null);
+  const examDue = story && !s.legendary && act !== 'exam';
 
-  const cur = ns ? u.items.slice(ns.s * 3, ns.s * 3 + 3) : [];
+  const cur = ns ? shiftItems(u, ns.s) : [];
   const pts = u.items.map((id) => BY[id]);
   const lit = (id: string) => mastery(s, id) >= 1;
   const dots: MapDot[] = [
@@ -55,6 +57,7 @@ export default function Home() {
           <View style={styles.region} pointerEvents="none">
             <T_ style={{ fontSize: 13 }}>ד״ש מ</T_>
             <T_ style={{ fontFamily: F.display, fontSize: 22, lineHeight: 26 }}>{u.t}</T_>
+            {!!u.parts && u.parts > 1 && <T_ style={{ fontSize: 12, color: C.muted }}>גלויה {u.part} מתוך {u.parts} באזור</T_>}
           </View>
           {ns && (
             <View style={styles.hint} pointerEvents="none">
@@ -72,13 +75,14 @@ export default function Home() {
       <View style={{ gap: 10, marginTop: 'auto' }}>
         <Btn big label={label} onPress={go}
           right={act === 'exam' ? undefined : <T_ style={styles.xp}>+{(s.welcome ? 8 : 14) * 10} ותק · 2 דק׳</T_>} />
+        {examDue && <Btn alt label="למבחן הקביעות" onPress={() => start.exam()} />}
         <View>
           <View style={styles.segLbl}>
-            <T_ style={{ fontFamily: F.black, fontSize: 14 }}>{done}/{UNITS.length} גלויות</T_>
+            <T_ style={{ fontFamily: F.black, fontSize: 14 }}>{u.region ? u.s : 'הסיפור'} · {ch.done}/{ch.units.length} גלויות</T_>
             <T_ style={{ fontSize: 14, color: quota ? C.ok : C.muted }}>{quota ? '✓ המכסה של היום בוצעה' : 'המכסה של היום: משמרת אחת'}</T_>
           </View>
-          <View style={styles.segs} accessibilityLabel={`${done} מתוך ${UNITS.length} גלויות הושלמו`}>
-            {UNITS.map((x) => {
+          <View style={styles.segs} accessibilityLabel={`${ch.done} מתוך ${ch.units.length} גלויות הושלמו`}>
+            {ch.units.map((x) => {
               const sh = s.shifts[x.id] || [];
               const f = s.units[x.id] ? 1 : sh.filter(Boolean).length / 2;
               return (
@@ -99,6 +103,7 @@ export default function Home() {
           <T_ style={{ fontFamily: F.black, color: C.accent }}>{dailyDone ? 'לשתף' : dn ? 'להמשיך' : 'לשחק'}</T_>
         </Pressable>
         <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 24 }}>
+          {story && <LinkBtn label="הארכיון" onPress={() => router.push('/archive')} />}
           <LinkBtn label="תיק אישי" onPress={() => router.push('/file')} />
         </View>
       </View>

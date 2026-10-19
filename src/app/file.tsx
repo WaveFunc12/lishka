@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { Alert, Platform, View } from 'react-native';
-import { learned, rank, tiers, UNITS } from '@/engine';
+import { learned, PLACES, postcardsDone, rank, STORY, tiers, UNITS } from '@/engine';
 import { useStart } from '@/state/actions';
 import { useStore, useT } from '@/state/store';
 import { Btn, Card, H1, Kicker, LinkBtn, Meter, Screen, T_ } from '@/ui/kit';
@@ -29,7 +29,7 @@ export default function File() {
         <T_ style={{ fontSize: 13, color: C.muted }}>{r.next ? `${r.next[0] - s.xp} ותק עד ${t(r.next[1])}` : 'הדרגה הגבוהה ביותר בלשכה'}</T_>
       </Card>
       <Card style={{ flexDirection: 'row' }}>
-        {[[s.xp, 'ותק'], [learned(s).length, 'יישובים'], [s.streak, 'ימי נוכחות']].map(([n, l]) => (
+        {[[s.xp, 'ותק'], [`${learned(s).length}/${PLACES.length}`, 'יישובים'], [`${postcardsDone(s)}/${UNITS.length}`, 'גלויות']].map(([n, l]) => (
           <View key={String(l)} style={{ flex: 1, alignItems: 'center' }}>
             <T_ style={{ fontFamily: F.display, fontSize: 24 }}>{String(n)}</T_>
             <T_ style={{ color: C.muted, fontSize: 13 }}>{String(l)}</T_>
@@ -42,7 +42,7 @@ export default function File() {
       </Card>
       <Card style={{ gap: 4 }}>
         <T_ style={{ fontFamily: F.display, fontSize: 22 }}>אותות</T_>
-        <T_>{tr.bronze ? '✓' : '○'} ארד: לתייק את כל {UNITS.length} הגלויות</T_>
+        <T_>{tr.bronze ? '✓' : '○'} ארד: לתייק את {STORY.length} גלויות הסיפור</T_>
         <T_>{tr.silver ? '✓' : '○'} כסף: שליטה ב־80% מהיישובים</T_>
         <T_>{tr.gold ? '✓' : '○'} זהב: שליטה בכל היישובים ({Math.round(tr.mast * 100)}%)</T_>
         <T_>{tr.legend ? '✓' : '○'} קביעות: מבחן הקביעות על מפה ריקה</T_>

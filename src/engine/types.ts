@@ -13,6 +13,13 @@ export type Place = {
   district: string;
   hint: string;
   unit: string;
+  /** Population (CBS 2023) and rank by population, 1 = biggest. */
+  pop: number;
+  rank: number;
+  /** Game region (REGIONS in content.ts). */
+  region: string;
+  /** Everyday short name, where it differs (תל אביב). */
+  short?: string;
 };
 
 export type Point = { x: number; y: number };
@@ -31,7 +38,13 @@ export type Unit = {
   /** Clue for the chocolate-milk mystery. */
   clue: string;
   items: string[];
+  /** Regional postcards: the region and this postcard's place among the region's. Story postcards have none. */
+  region?: string;
+  part?: number;
+  parts?: number;
 };
+
+export type Region = { id: string; t: string; s: string; col: string; in: string; z: string; card: string };
 
 export type DayStr = string; // YYYY-MM-DD in Israel time
 
@@ -55,6 +68,8 @@ export type PlayerState = {
   legendary: boolean;
   seenComic: boolean;
   mute: boolean;
+  /** The region chosen for the next postcards once the story is done; null = the default order. */
+  focus: string | null;
   /** picks: today's daily pins, in order. */
   daily: { day: DayStr | null; shifts: number; reviews: number; picks: DailyPick[] };
 };
@@ -96,6 +111,8 @@ export type Session = {
   best: number;
   misses: string[];
   fb: Feedback | null;
+  /** Places the wrong options may come from. */
+  pool?: string[];
 };
 
 export type SessionResult = {

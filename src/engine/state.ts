@@ -18,6 +18,7 @@ export const freshState = (): PlayerState => ({
   legendary: false,
   seenComic: false,
   mute: false,
+  focus: null,
   daily: { day: null, shifts: 0, reviews: 0, picks: [] },
 });
 

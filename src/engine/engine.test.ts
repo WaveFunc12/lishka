@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  BY, DAY_MS, UNITS, advance, anchorFor, buildExam, buildShift, bump, clone, compareAnswer, dailyIds, dayNo, dist, points, shareText, totalKm,
+  BY, DAY_MS, UNITS, PLACES, STORY, REGION_UNITS, UNIT_BY, shiftItems, advance, anchorFor, buildExam, buildShift, bump, clone, compareAnswer, dailyIds, dayNo, dist, points, shareText, totalKm,
   fading, finish, freshState, gradePin, gradeType, israelDay, markDay, migrate, nextShift, onOpen, rank, seeded,
   squares, startSession, strength, T, answer, gradeTap, zoomAt, clampView, COUNTRY,
 } from './index';
@@ -135,8 +135,48 @@ describe('scoring', () => {
     expect(rank(5000).next).toBeNull();
   });
   it('builds a 10-place exam with no repeats', () => {
-    const q = buildExam(seeded(4));
+    const q = buildExam(freshState(), seeded(4));
     expect(new Set(q.map((x) => x.id)).size).toBe(10);
+    expect(q.every((x) => STORY.some((u) => u.items.includes(x.id)))).toBe(true);
+  });
+});
+
+describe('catalog', () => {
+  it('has 500 places with unique ids, the story first', () => {
+    expect(PLACES.length).toBe(500);
+    expect(new Set(PLACES.map((p) => p.id)).size).toBe(500);
+    expect(STORY.map((u) => u.items.length)).toEqual([6, 6, 6, 6, 6, 6, 6]);
+  });
+  it('puts every place in exactly one postcard of 4 to 6', () => {
+    const all = UNITS.flatMap((u) => u.items);
+    expect(all.length).toBe(500);
+    expect(new Set(all).size).toBe(500);
+    expect(UNITS.every((u) => u.items.length >= 4 && u.items.length <= 6)).toBe(true);
+  });
+  it('splits a postcard into two non-empty shifts', () => {
+    for (const u of UNITS) {
+      expect(shiftItems(u, 0).length).toBeGreaterThan(0);
+      expect(shiftItems(u, 1).length).toBeGreaterThan(0);
+      expect([...shiftItems(u, 0), ...shiftItems(u, 1)]).toEqual(u.items);
+    }
+  });
+  it('goes through the story, then the chosen region, then the rest', () => {
+    const s = freshState();
+    expect(nextShift(s)!.u.id).toBe('u1');
+    STORY.forEach((u) => { s.units[u.id] = true; });
+    expect(nextShift(s)!.u.id).toBe(REGION_UNITS[0].id);
+    s.focus = 'ngv';
+    expect(nextShift(s)!.u.id).toBe('ngv1');
+    s.units.ngv1 = true;
+    s.shifts.ngv2 = [true, false];
+    expect(nextShift(s)).toEqual({ u: UNIT_BY.ngv2, s: 1 });
+  });
+  it('builds a shift for every regional postcard', () => {
+    const s = freshState();
+    for (const u of REGION_UNITS.slice(0, 20)) expect(buildShift(s, u, 1, 0, seeded(1)).length).toBeGreaterThan(5);
+  });
+  it('draws the daily from the biggest places only', () => {
+    expect(dailyIds('2026-11-02').every((id) => BY[id].rank <= 150)).toBe(true);
   });
 });
 
@@ -167,6 +207,7 @@ describe('state', () => {
     expect(s.daily.picks).toEqual([]);
     expect('dp' in s.daily).toBe(false);
     expect(s.mastery).toEqual({});
+    expect(s.focus).toBeNull();
     expect(clone(s)).toEqual(s);
   });
 });

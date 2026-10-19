@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { BY, COPY, COUNTRY, learned, mastery, PLACES, rnd, strength, UNITS } from '@/engine';
+import { BY, COPY, COUNTRY, learned, mastery, PLACES, rnd, STORY, storyDone, strength, UNIT_BY } from '@/engine';
 import { useStore, useT } from '@/state/store';
 import { MapView, type MapDot } from '@/ui/MapView';
 import { Btn, Card, H1, Kicker, OkStamp, Screen, T_, ZviSays } from '@/ui/kit';
@@ -20,8 +20,12 @@ export default function Result() {
   }, [R]);
   if (!R) return null;
   const acc = R.n ? Math.round((R.ok / R.n) * 100) : 100;
-  const unit = R.unitId ? UNITS.find((u) => u.id === R.unitId)! : null;
-  const dots: MapDot[] = PLACES.map((p) => ({ ...p, state: mastery(s, p.id) >= 1 ? 'lit' : 'dim', size: mastery(s, p.id) >= 1 ? 1 : 0.6, label: R.newIds.includes(p.id) ? p.name : '' }));
+  const unit = R.unitId ? UNIT_BY[R.unitId] : null;
+  // Known places light up; the ones still missing show faintly, but only in the story or in this region.
+  const todo = (id: string) => (unit?.region ? BY[id].region === unit.region : STORY.some((u) => u.items.includes(id)));
+  const dots: MapDot[] = PLACES.filter((p) => mastery(s, p.id) >= 1 || todo(p.id))
+    .map((p) => ({ ...p, state: mastery(s, p.id) >= 1 ? 'lit' : 'dim', size: mastery(s, p.id) >= 1 ? 1 : 0.6, label: R.newIds.includes(p.id) ? p.name : '' }));
+  const storyEnd = R.card && unit?.id === STORY[STORY.length - 1].id && storyDone(s);
   const reveal = learned(s).map((p) => ({ x: p.x, y: p.y, s: strength(s, p.id, now()) }));
   const perks = [
     R.streakUp && `🔥 ${R.streakUp} ${R.streakUp === 1 ? 'יום נוכחות' : 'ימי נוכחות'}`,
@@ -60,10 +64,11 @@ export default function Result() {
       </Card>
       {R.card && unit ? (
         <Card style={{ backgroundColor: '#FFF6E2', gap: 8, borderColor: unit.col }}>
-          <Kicker>דואר נכנס · גלויה {UNITS.indexOf(unit) + 1} מתוך {UNITS.length}</Kicker>
+          <Kicker>דואר נכנס · {unit.region ? `${unit.t} · גלויה ${unit.part} מתוך ${unit.parts}` : `גלויה ${STORY.indexOf(unit) + 1} מתוך ${STORY.length}`}</Kicker>
           <T_ style={{ fontFamily: F.display, fontSize: 24 }}>גלויה חדשה הגיעה</T_>
           <T_ style={{ fontSize: 18, lineHeight: 26 }}>{t(unit.card)}</T_>
-          <T_ style={{ color: C.muted }}>נ.ב. {unit.clue}</T_>
+          {!!unit.clue && <T_ style={{ color: C.muted }}>נ.ב. {unit.clue}</T_>}
+          {storyEnd && <T_ style={{ fontFamily: F.bold }}>{t('נ.ב. 2: הארכיון נפתח. עוד מאות יישובים, אזור אחרי אזור. ואת מבחן הקביעות {תעשה|תעשי} כשמתחשק לך.')}</T_>}
           <T_ style={{ fontFamily: F.display, fontSize: 20 }}>צבי</T_>
         </Card>
       ) : (
