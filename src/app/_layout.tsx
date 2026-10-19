@@ -6,6 +6,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StoreProvider, useStore } from '@/state/store';
 import { C } from '@/ui/theme';
@@ -25,11 +26,13 @@ function Gate() {
 
 export default function RootLayout() {
   return (
-    <SafeAreaProvider>
-      <StoreProvider>
-        <StatusBar style="dark" />
-        <Gate />
-      </StoreProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <StoreProvider>
+          <StatusBar style="dark" />
+          <Gate />
+        </StoreProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

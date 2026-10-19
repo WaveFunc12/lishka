@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   BY, DAY_MS, PLACES, UNITS, advance, anchorFor, buildExam, buildShift, bump, clone, compareAnswer, dailyId, dayNo,
   fading, finish, freshState, gradePin, gradeType, israelDay, markDay, migrate, nextShift, onOpen, rank, score, seeded,
-  squares, startSession, strength, T, answer, gradeTap,
+  squares, startSession, strength, T, answer, gradeTap, zoomAt, clampView, COUNTRY,
 } from './index';
 
 const NOW = Date.parse('2026-10-19T09:00:00Z');
@@ -160,5 +160,21 @@ describe('state', () => {
     expect(s.daily.shifts).toBe(0);
     expect(s.mastery).toEqual({});
     expect(clone(s)).toEqual(s);
+  });
+});
+
+describe('map zoom', () => {
+  const v = { x: 0, y: 0, w: 40, h: 20 };
+  it('keeps the zoom point in place', () => {
+    const z = zoomAt(v, 2, { x: 10, y: 5 });
+    expect(z).toEqual({ x: 5, y: 2.5, w: 20, h: 10 });
+    expect((10 - z.x) / z.w).toBeCloseTo((10 - v.x) / v.w);
+  });
+  it('clamps width and keeps the view inside the map', () => {
+    expect(clampView(zoomAt(v, 100), COUNTRY, 6, 200).w).toBe(6);
+    const far = clampView({ x: 900, y: 900, w: 4000, h: 2000 }, COUNTRY, 6, 200);
+    expect(far.w).toBe(200);
+    expect(far.x + far.w / 2).toBe(COUNTRY.x + COUNTRY.w / 2); // wider than the map: centred
+    expect(far.y + far.h).toBe(COUNTRY.y + COUNTRY.h); // fits in height: pushed back inside
   });
 });

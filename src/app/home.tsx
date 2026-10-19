@@ -50,7 +50,7 @@ export default function Home() {
       </View>
 
       <View style={styles.pcard} accessibilityLabel={`הגלויה הבאה: ${u.t}`}>
-        <MapView view={{ fit: pts, pad: 0.55, minW: 34 }} dots={dots} dotPx={5} reveal={reveal} revealR={0.6} style={{ height: 300 }} label="מפת האזור של הגלויה הבאה">
+        <MapView zoom={false} view={{ fit: pts, pad: 0.55, minW: 34 }} dots={dots} dotPx={5} reveal={reveal} revealR={0.6} style={{ height: 300 }} label="מפת האזור של הגלויה הבאה">
           <View style={styles.region} pointerEvents="none">
             <T_ style={{ fontSize: 13 }}>ד״ש מ</T_>
             <T_ style={{ fontFamily: F.display, fontSize: 22, lineHeight: 26 }}>{u.t}</T_>
