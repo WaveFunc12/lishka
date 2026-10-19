@@ -23,13 +23,13 @@ const CHAR_W = 0.29;
 // About how far each size of region spreads from its centre, in km. A name shows only once the whole region fits on screen.
 const REGION_R = [30, 16, 8];
 // Below this view width (km) the full-detail roads and streams are drawn.
-const DETAIL_W = 50;
+const DETAIL_W = 90;
 // Line and casing widths in px, by road class.
 const ROAD_PX = [2.6, 2.0, 1.6, 1.1];
 const CASE_PX = [4.8, 4.0, 3.4, 2.6];
 
-/** The road classes worth drawing at this zoom: motorways and trunk roads always, primary from 140 km across, secondary once zoomed in. */
-const showClass = (c: number, w: number) => c <= 1 || (c === 2 && w < 140) || (c === 3 && w < DETAIL_W);
+/** The road classes worth drawing at this zoom: motorways and trunk roads always, primary from 140 km across, secondary from 50. */
+const showClass = (c: number, w: number) => c <= 1 || (c === 2 && w < 140) || (c === 3 && w < 50);
 
 /** Lines under the game: streams and the road network. */
 export const MapOverlayBase = memo(function MapOverlayBase({ v, k }: { v: MapBox; k: number }) {
