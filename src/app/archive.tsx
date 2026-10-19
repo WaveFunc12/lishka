@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { nextShift, regionProgress, storyDone } from '@/engine';
+import { mastery, nextShift, regionProgress, storyDone } from '@/engine';
+import { useStart } from '@/state/actions';
 import { useStore, useT } from '@/state/store';
 import { H1, Kicker, LinkBtn, Meter, Screen, T_, ZviSays } from '@/ui/kit';
 import { BW, C, F, SHADOW_SM } from '@/ui/theme';
@@ -9,6 +10,7 @@ import { BW, C, F, SHADOW_SM } from '@/ui/theme';
 export default function Archive() {
   const { s, update } = useStore();
   const t = useT();
+  const start = useStart();
   const regions = regionProgress(s);
   const cur = nextShift(s)?.u.region;
   const pickRegion = (id: string) => {
@@ -39,6 +41,10 @@ export default function Archive() {
                 </View>
                 <Meter pct={(g.done / g.units.length) * 100} color={g.col} />
                 <T_ style={{ fontSize: 12, color: C.muted }}>{g.done}/{g.units.length} גלויות · {g.known}/{g.places} יישובים חזרו למפה</T_>
+                {g.known >= 4 && (
+                  <LinkBtn label={`לתרגל את ${g.known} היישובים שחזרו`}
+                    onPress={() => start.review(g.units.flatMap((u) => u.items).filter((id) => mastery(s, id) >= 1))} />
+                )}
               </View>
             </Pressable>
           );

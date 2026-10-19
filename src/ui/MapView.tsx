@@ -34,6 +34,8 @@ type Props = {
   label?: string;
   onPressMap?: (p: Point) => void;
   onPressDot?: (id: string) => void;
+  /** Any dot can be tapped, not only the numbered choices. */
+  pickAny?: boolean;
   /** Pinch, drag and zoom buttons. On by default. */
   zoom?: boolean;
   children?: ReactNode;
@@ -106,7 +108,7 @@ export function MapView(p: Props) {
     const g = toKm(x, y);
     if (p.onPressDot) {
       const hit = (p.dots || [])
-        .filter((d) => d.state === 'choice')
+        .filter((d) => p.pickAny || d.state === 'choice')
         .map((d) => ({ d, km: Math.hypot(d.x - g.x, d.y - g.y) }))
         .filter((o) => o.km <= Math.max(r * (o.d.size || 1) * 2.4, 24 * k))
         .sort((a, b) => a.km - b.km)[0];

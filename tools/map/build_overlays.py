@@ -32,7 +32,7 @@ ROUTES = {
     '5': [(32.120, 34.830), (32.110, 34.960), (32.100, 35.170)],
     '6': [(31.380, 34.830), (31.604, 34.813), (31.700, 34.822), (31.785, 34.832), (31.950, 34.940), (32.110, 34.960), (32.200, 34.980), (32.480, 35.030), (32.640, 35.105)],
     '20': [(32.000, 34.790), (32.074, 34.795), (32.145, 34.810)],
-    '25': [(31.250, 34.800), (31.070, 35.030), (30.981, 35.306)],
+    '25': [(31.470, 34.530), (31.420, 34.610), (31.330, 34.660), (31.262, 34.760), (31.250, 34.800), (31.070, 35.030), (30.981, 35.306)],
     '31': [(31.320, 34.900), (31.260, 35.210), (31.150, 35.360)],
     '35': [(31.660, 34.600), (31.610, 34.770), (31.530, 35.100)],
     '38': [(31.790, 35.000), (31.750, 34.990), (31.690, 34.960)],
@@ -157,29 +157,59 @@ NET_CLASSES = ['motorway', 'trunk', 'primary', 'secondary']
 CELL = 16  # km; the app draws only the cells in view
 
 def rel_d(g, tol, min_len=0.0):
-    """SVG path in 10 m units with relative steps: compact, and the app scales it by 0.01."""
-    out = []
+    """SVG path in 10 m units with relative steps: compact, and the app scales it by 0.01.
+    The pieces are re-chained through junctions into as few long strokes as possible: OSM cuts roads
+    at every junction, and thousands of two-point pieces cost more in "M x y" than in the points."""
+    edges, seen = [], set()
     for p in getattr(g.simplify(tol), 'geoms', [g.simplify(tol)]):
         if p.geom_type != 'LineString' or p.length < min_len or len(p.coords) < 2:
             continue
-        q = np.round(np.asarray(p.coords) * 100).astype(int)
-        q = q[np.r_[True, np.any(np.diff(q, axis=0) != 0, axis=1)]]
-        if len(q) < 2:
-            continue
-        dq = np.diff(q, axis=0)
-        out.append(f'M{q[0][0]} {q[0][1]}l' + ' '.join(f'{a} {b}' for a, b in dq))
+        q = [tuple(v) for v in np.round(np.asarray(p.coords) * 100).astype(int)]
+        for a, b in zip(q, q[1:]):
+            if a != b and (a, b) not in seen and (b, a) not in seen:
+                seen.add((a, b)); edges.append((a, b))
+    adj = {}
+    for i, (a, b) in enumerate(edges):
+        adj.setdefault(a, []).append(i); adj.setdefault(b, []).append(i)
+    used = [False] * len(edges)
+    other = lambda i, v: edges[i][1] if edges[i][0] == v else edges[i][0]
+    def walk(v, prev):
+        path = [v]
+        while True:
+            free = [i for i in adj[v] if not used[i]]
+            if not free:
+                return path
+            # Carry on along the straightest unused piece, so a road stays one stroke through a junction.
+            def turn(i):
+                w = other(i, v)
+                if prev is None:
+                    return 0
+                a1 = math.atan2(v[1] - prev[1], v[0] - prev[0]); a2 = math.atan2(w[1] - v[1], w[0] - v[0])
+                return abs((a2 - a1 + math.pi) % (2 * math.pi) - math.pi)
+            i = min(free, key=turn)
+            used[i] = True
+            prev, v = v, other(i, v)
+            path.append(v)
+    out = []
+    # Start from dead ends first, then from anything left (loops).
+    starts = sorted(adj, key=lambda v: len(adj[v]) % 2 == 0)
+    for v in starts:
+        while any(not used[i] for i in adj[v]):
+            path = walk(v, None)
+            q = np.array(path)
+            out.append(f'M{q[0][0]} {q[0][1]}l' + ' '.join(f'{a} {b}' for a, b in np.diff(q, axis=0)))
     return ''.join(out)
 
 def network(roads, home):
     """Every motorway, trunk, primary and secondary road inside the country, at two levels of detail.
-    lod 0 (zoomed out): simplified to 120 m, short bits dropped. lod 1 (zoomed in): 8 m, cut into cells."""
+    lod 0 (zoomed out, 90 km across or more, so about 4 px per km): simplified to 250 m. lod 1 (zoomed in): 8 m, cut into cells."""
     zone = home.buffer(1.5)
     out = []
     for ci, cls in enumerate(NET_CLASSES):
         u = unary_union([to_km(r['geom']) for r in roads if r['class'] == cls]).intersection(zone)
         m = linemerge(u) if u.geom_type == 'MultiLineString' else u
         if ci < 3:
-            d = rel_d(m, 0.12)
+            d = rel_d(m, 0.25)
             out.append({'c': ci, 'l': 0, 'x': 0, 'y': 0, 'd': d})
         x0, y0, x1, y1 = m.bounds
         for cx in range(int(math.floor(x0 / CELL)), int(math.ceil(x1 / CELL))):

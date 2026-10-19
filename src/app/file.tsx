@@ -58,7 +58,10 @@ export default function File() {
           <Btn style={{ flex: 1 }} alt={s.mute} label="צלילים ורטט פועלים" onPress={() => update((d) => { d.mute = false; })} />
           <Btn style={{ flex: 1 }} alt={!s.mute} label="כבויים" onPress={() => update((d) => { d.mute = true; })} />
         </View>
-        <LinkBtn label="להתחיל מחדש" onPress={confirmReset} />
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <LinkBtn label="על הלשכה וקרדיטים" onPress={() => router.push('/about')} />
+          <LinkBtn label="להתחיל מחדש" onPress={confirmReset} />
+        </View>
       </Card>
       {__DEV__ && (
         <Card style={{ gap: 8, borderStyle: 'dashed' }}>

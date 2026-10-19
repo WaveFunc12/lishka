@@ -104,6 +104,7 @@ export default function Home() {
         </Pressable>
         <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 24 }}>
           {story && <LinkBtn label="הארכיון" onPress={() => router.push('/archive')} />}
+          {learned(s).length > 0 && <LinkBtn label="המפה שלי" onPress={() => router.push('/atlas')} />}
           <LinkBtn label="תיק אישי" onPress={() => router.push('/file')} />
         </View>
       </View>
