@@ -14,7 +14,7 @@ import numpy as np, pyarrow.parquet as pq, shapely
 from scipy.sparse import coo_matrix
 from scipy.sparse.csgraph import dijkstra
 from scipy.spatial import cKDTree
-from shapely.geometry import LineString, Polygon
+from shapely.geometry import LineString, Polygon, box
 from shapely.ops import unary_union, linemerge
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -133,8 +133,10 @@ def trace_routes(roads, home):
         seq = []
         for s, t in zip(nodes, nodes[1:]):
             _, pred = dijkstra(G, indices=s, return_predecessors=True, limit=400)
+            if pred[t] < 0:
+                raise SystemExit(f'route {ref}: no road path between waypoints near {pts[s]} and {pts[t]}')
             p, cur = [], t
-            while cur != s and cur >= 0:
+            while cur != s:
                 p.append(cur); cur = pred[cur]
             p.append(s)
             seq += p[::-1][1 if seq else 0:]
@@ -147,8 +149,49 @@ def trace_routes(roads, home):
                 st.append(v)
         line = LineString(pts[st])
         label = ref.rstrip('N')
-        out.append({'ref': label, 'd': path_d(line, 0.08), 'km': round(line.length)})
+        out.append({'ref': label, 'd': path_d(line, 0.05), 'km': round(line.length)})
         print(f'route {ref}: {line.length:.0f} km')
+    return out
+
+NET_CLASSES = ['motorway', 'trunk', 'primary', 'secondary']
+CELL = 16  # km; the app draws only the cells in view
+
+def rel_d(g, tol, min_len=0.0):
+    """SVG path in 10 m units with relative steps: compact, and the app scales it by 0.01."""
+    out = []
+    for p in getattr(g.simplify(tol), 'geoms', [g.simplify(tol)]):
+        if p.geom_type != 'LineString' or p.length < min_len or len(p.coords) < 2:
+            continue
+        q = np.round(np.asarray(p.coords) * 100).astype(int)
+        q = q[np.r_[True, np.any(np.diff(q, axis=0) != 0, axis=1)]]
+        if len(q) < 2:
+            continue
+        dq = np.diff(q, axis=0)
+        out.append(f'M{q[0][0]} {q[0][1]}l' + ' '.join(f'{a} {b}' for a, b in dq))
+    return ''.join(out)
+
+def network(roads, home):
+    """Every motorway, trunk, primary and secondary road inside the country, at two levels of detail.
+    lod 0 (zoomed out): simplified to 120 m, short bits dropped. lod 1 (zoomed in): 8 m, cut into cells."""
+    zone = home.buffer(1.5)
+    out = []
+    for ci, cls in enumerate(NET_CLASSES):
+        u = unary_union([to_km(r['geom']) for r in roads if r['class'] == cls]).intersection(zone)
+        m = linemerge(u) if u.geom_type == 'MultiLineString' else u
+        if ci < 3:
+            d = rel_d(m, 0.12)
+            out.append({'c': ci, 'l': 0, 'x': 0, 'y': 0, 'd': d})
+        x0, y0, x1, y1 = m.bounds
+        for cx in range(int(math.floor(x0 / CELL)), int(math.ceil(x1 / CELL))):
+            for cy in range(int(math.floor(y0 / CELL)), int(math.ceil(y1 / CELL))):
+                part = m.intersection(box(cx * CELL, cy * CELL, (cx + 1) * CELL, (cy + 1) * CELL))
+                if part.is_empty:
+                    continue
+                part = linemerge(part) if part.geom_type == 'MultiLineString' else part
+                d = rel_d(part, 0.008, 0.05)
+                if d:
+                    out.append({'c': ci, 'l': 1, 'x': cx * CELL, 'y': cy * CELL, 'd': d})
+        print(f'net {cls}: {m.length:.0f} km')
     return out
 
 def lakes():
@@ -176,7 +219,7 @@ def streams(water, home):
         g = (linemerge(u) if u.geom_type == 'MultiLineString' else u).intersection(zone)
         if g.is_empty or g.length < 5:
             continue
-        out.append({'name': name, 'level': 0 if name in STREAMS0 else 1, 'd': path_d(g, 0.1)})
+        out.append({'name': name, 'level': 0 if name in STREAMS0 else 1, 'd': path_d(g, 0.05), 'f': rel_d(g, 0.008)})
         print(f'stream {name}: {g.length:.0f} km')
     return out
 
@@ -190,7 +233,10 @@ def main():
     }
     f = os.path.join(ROOT, 'src/data/overlay.json')
     json.dump(data, open(f, 'w'), ensure_ascii=False, separators=(',', ':'))
-    print(f'{os.path.getsize(f) / 1e3:.0f} KB')
+    print(f'overlay {os.path.getsize(f) / 1e3:.0f} KB')
+    f = os.path.join(ROOT, 'src/data/roadnet.json')
+    json.dump(network(roads, home), open(f, 'w'), separators=(',', ':'))
+    print(f'roadnet {os.path.getsize(f) / 1e3:.0f} KB')
 
 if __name__ == '__main__':
     main()

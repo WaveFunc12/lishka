@@ -18,7 +18,7 @@ export const freshState = (): PlayerState => ({
   legendary: false,
   seenComic: false,
   mute: false,
-  daily: { day: null, shifts: 0, reviews: 0, dp: null },
+  daily: { day: null, shifts: 0, reviews: 0, picks: [] },
 });
 
 /** Load saved progress, filling any fields added since it was saved. */
@@ -26,7 +26,9 @@ export function migrate(raw: unknown): PlayerState {
   const base = freshState();
   if (!raw || typeof raw !== 'object') return base;
   const s = raw as Partial<PlayerState>;
-  return { ...base, ...s, v: 1, daily: { ...base.daily, ...(s.daily || {}) } };
+  // Saves from before the five-place daily have one pick in `dp`; that day's daily just starts over.
+  const { dp: _old, ...d } = (s.daily || {}) as Partial<PlayerState['daily']> & { dp?: unknown };
+  return { ...base, ...s, v: 1, daily: { ...base.daily, ...d, picks: Array.isArray(d.picks) ? d.picks : [] } };
 }
 
 /** Engine functions mutate a draft; the store clones first so React sees a new object. */

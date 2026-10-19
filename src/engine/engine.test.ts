@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
-  BY, DAY_MS, PLACES, UNITS, advance, anchorFor, buildExam, buildShift, bump, clone, compareAnswer, dailyId, dayNo,
-  fading, finish, freshState, gradePin, gradeType, israelDay, markDay, migrate, nextShift, onOpen, rank, score, seeded,
+  BY, DAY_MS, PLACES, UNITS, advance, anchorFor, buildExam, buildShift, bump, clone, compareAnswer, dailyIds, dayNo, dist, points, shareText, totalKm,
+  fading, finish, freshState, gradePin, gradeType, israelDay, markDay, migrate, nextShift, onOpen, rank, seeded,
   squares, startSession, strength, T, answer, gradeTap, zoomAt, clampView, COUNTRY,
 } from './index';
 
@@ -140,24 +140,32 @@ describe('scoring', () => {
   });
 });
 
-describe('settlement of the day', () => {
-  it('is the same place all day and numbered from the epoch', () => {
-    expect(dailyId('2026-10-19')).toBe(dailyId('2026-10-19'));
-    expect(PLACES.map((p) => p.id)).toContain(dailyId('2026-10-19'));
+describe('daily', () => {
+  it('gives everyone the same five places all day, spread apart', () => {
+    const ids = dailyIds('2026-10-19');
+    expect(ids).toEqual(dailyIds('2026-10-19'));
+    expect(new Set(ids).size).toBe(5);
+    expect(dailyIds('2026-10-20')).not.toEqual(ids);
+    for (const a of ids) for (const b of ids) if (a !== b) expect(dist(BY[a], BY[b])).toBeGreaterThanOrEqual(20);
     expect(dayNo('2026-10-01')).toBe(1);
   });
-  it('scores five squares by distance', () => {
-    expect(score(4)).toBe(5);
-    expect(score(30)).toBe(2);
-    expect(squares(100)).toBe('⬜⬜⬜⬜⬜');
+  it('scores a point for each pin within 10 km', () => {
+    const at = (d: number) => ({ id: 'x', d, g: { x: 0, y: 0 } });
+    const picks = [at(3), at(10), at(10.5), at(40)];
+    expect(points(picks)).toBe(2);
+    expect(totalKm(picks)).toBe(63.5);
+    expect(squares(picks)).toBe('🟩🟩🟥🟥⬜');
+    expect(shareText(picks, '2026-10-19', 'f')).toContain('2/5');
   });
 });
 
 describe('state', () => {
   it('fills fields missing from older saves', () => {
-    const s = migrate({ xp: 50, daily: { day: '2026-10-19' } });
+    const s = migrate({ xp: 50, daily: { day: '2026-10-19', dp: { id: 'jlm', d: 3, g: { x: 0, y: 0 } } } });
     expect(s.xp).toBe(50);
     expect(s.daily.shifts).toBe(0);
+    expect(s.daily.picks).toEqual([]);
+    expect('dp' in s.daily).toBe(false);
     expect(s.mastery).toEqual({});
     expect(clone(s)).toEqual(s);
   });

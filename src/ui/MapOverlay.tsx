@@ -1,39 +1,68 @@
 import { memo } from 'react';
 import { G, Path, Rect, Text as SvgText } from 'react-native-svg';
 import overlay from '@/data/overlay.json';
+import roadnet from '@/data/roadnet.json';
 import type { Point, View as MapBox } from '@/engine';
 import { C, F } from './theme';
 
-/* Numbered main roads, named streams and region names, drawn over the relief.
+/* The road network, named streams, route shields and region names, drawn over the relief.
    Built by tools/map/build_overlays.py from OpenStreetMap data (via Overture Maps).
    Sizes are in screen pixels (k = km per pixel); how much shows depends on how far in the view is. */
 
 type Road = { ref: string; d: string };
-type Stream = { name: string; level: number; d: string };
+type Stream = { name: string; level: number; d: string; f: string };
 type Region = { name: string; x: number; y: number; size: number };
+/** One piece of the road network: class (0 motorway .. 3 secondary), level of detail, cell corner in km, path in 10 m units. */
+type NetPart = { c: number; l: 0 | 1; x: number; y: number; d: string };
 const O = overlay as unknown as { roads: Road[]; streams: Stream[]; regions: Region[] };
-const MOTORWAYS = new Set(['1', '2', '6', '20']);
+const NET = roadnet as NetPart[];
+const CELL = 16; // km, as in build_overlays.py
 const REGION_PX = [17, 14, 12];
 // Rough width of one Suez One letter, as a share of the font size.
 const CHAR_W = 0.29;
+// About how far each size of region spreads from its centre, in km. A name shows only once the whole region fits on screen.
+const REGION_R = [30, 16, 8];
+// Below this view width (km) the full-detail roads and streams are drawn.
+const DETAIL_W = 50;
+// Line and casing widths in px, by road class.
+const ROAD_PX = [2.6, 2.0, 1.6, 1.1];
+const CASE_PX = [4.8, 4.0, 3.4, 2.6];
 
+/** The road classes worth drawing at this zoom: motorways and trunk roads always, primary from 140 km across, secondary once zoomed in. */
+const showClass = (c: number, w: number) => c <= 1 || (c === 2 && w < 140) || (c === 3 && w < DETAIL_W);
 
-/** Lines under the game: streams and roads. */
+/** Lines under the game: streams and the road network. */
 export const MapOverlayBase = memo(function MapOverlayBase({ v, k }: { v: MapBox; k: number }) {
   const streamLevel = v.w < 110 ? 1 : v.w < 260 ? 0 : -1;
+  const lod = v.w < DETAIL_W ? 1 : 0;
+  const parts = NET.filter((p) => p.l === lod && showClass(p.c, v.w) &&
+    (lod === 0 || (p.x < v.x + v.w && p.x + CELL > v.x && p.y < v.y + v.h && p.y + CELL > v.y)))
+    .sort((a, b) => b.c - a.c);
+  // Full-detail paths are in 10 m units: draw them in a group scaled by 0.01, with widths scaled up to match.
+  const u = 100 * k;
   return (
     <G>
-      {O.streams.filter((s) => s.level <= streamLevel).map((s) => (
-        <Path key={s.name} d={s.d} fill="none" stroke={C.stream} strokeWidth={1.4 * k} strokeLinejoin="round" strokeLinecap="round" />
-      ))}
-      {O.roads.map((r, i) => (
-        <Path key={'rc' + i} d={r.d} fill="none" stroke={C.roadCase} strokeOpacity={0.85} strokeWidth={(MOTORWAYS.has(r.ref) ? 4.6 : 3.6) * k}
-          strokeLinejoin="round" strokeLinecap="round" />
-      ))}
-      {O.roads.map((r, i) => (
-        <Path key={'r' + i} d={r.d} fill="none" stroke={C.road} strokeWidth={(MOTORWAYS.has(r.ref) ? 2.4 : 1.6) * k}
-          strokeLinejoin="round" strokeLinecap="round" />
-      ))}
+      {lod ? (
+        <G transform="scale(0.01)">
+          {O.streams.filter((s) => s.level <= streamLevel).map((s) => (
+            <Path key={s.name} d={s.f} fill="none" stroke={C.stream} strokeWidth={1.4 * u} strokeLinejoin="round" strokeLinecap="round" />
+          ))}
+        </G>
+      ) : (
+        O.streams.filter((s) => s.level <= streamLevel).map((s) => (
+          <Path key={s.name} d={s.d} fill="none" stroke={C.stream} strokeWidth={1.4 * k} strokeLinejoin="round" strokeLinecap="round" />
+        ))
+      )}
+      <G transform="scale(0.01)">
+        {parts.map((p) => (
+          <Path key={`c${p.c}-${p.x}-${p.y}`} d={p.d} fill="none" stroke={C.roadCase} strokeOpacity={0.85} strokeWidth={CASE_PX[p.c] * u}
+            strokeLinejoin="round" strokeLinecap="round" />
+        ))}
+        {parts.map((p) => (
+          <Path key={`r${p.c}-${p.x}-${p.y}`} d={p.d} fill="none" stroke={p.c === 3 ? C.roadMinor : C.road} strokeWidth={ROAD_PX[p.c] * u}
+            strokeLinejoin="round" strokeLinecap="round" />
+        ))}
+      </G>
     </G>
   );
 });
@@ -54,8 +83,6 @@ const toLines = (d: string): Line[] => d.split('M').filter(Boolean).map((part) =
 });
 const ROAD_LINES = O.roads.map((r) => toLines(r.d));
 const STREAM_LINES = O.streams.map((s) => toLines(s.d));
-// How far a region's name reaches, in km, by size.
-const REGION_REACH = [45, 25, 12];
 
 /** Points every `step` km along the lines (at fixed distances, so they don't jump while panning), with the local angle. */
 function along(lines: Line[], step: number, v: MapBox, margin: number) {
@@ -85,12 +112,11 @@ export const MapLabels = memo(function MapLabels({ v, k, avoid, reserved = [] }:
   const shields = (): Label[] => O.roads.flatMap((r, i) => along(ROAD_LINES[i], 150 * k, v, m).map((q): Label => ({ kind: 'shield', x: q.x, y: q.y, ref: r.ref })));
   const streams = (lv: number): Label[] => (lv <= (v.w < 70 ? 1 : v.w < 160 ? 0 : -1) ? O.streams : [])
     .flatMap((s, i) => (s.level === lv ? along(STREAM_LINES[i], 320 * k, v, m * 2) : []).map((q): Label => ({ kind: 'stream', x: q.x, y: q.y, name: s.name, a: q.a })));
+  // A region's name shows only when the whole region is on screen, so zoomed in on part of השפלה there's no השפלה.
   const regions = (sz: number): Label[] => (sz <= (v.w < 130 ? 2 : v.w < 300 ? 1 : 0) ? O.regions : []).flatMap((g): Label[] => {
-    if (g.size !== sz) return [];
-    // Zoomed in on part of a region: keep its name on screen, as near its centre as fits.
-    const half = REGION_PX[g.size] * k * CHAR_W * g.name.length + m;
-    const x = Math.min(Math.max(g.x, v.x + half), v.x + v.w - half), y = Math.min(Math.max(g.y, v.y + m * 1.5), v.y + v.h - m * 1.5);
-    return Math.hypot(x - g.x, y - g.y) <= REGION_REACH[g.size] ? [{ kind: 'region', x, y, name: g.name, size: g.size }] : [];
+    const r = REGION_R[g.size];
+    if (g.size !== sz || v.w < 2 * r || v.h < 1.4 * r) return [];
+    return g.x > v.x && g.x < v.x + v.w && g.y > v.y && g.y < v.y + v.h ? [{ kind: 'region', x: g.x, y: g.y, name: g.name, size: g.size }] : [];
   });
   const order = [...regions(0), ...shields(), ...regions(1), ...streams(0), ...regions(2), ...streams(1)];
 

@@ -4,7 +4,7 @@ import type { DayStr, PlayerState } from './types';
 
 /** Today's quota counters, reset when the day changes. */
 export function daily(s: PlayerState, today: DayStr) {
-  if (s.daily.day !== today) s.daily = { day: today, shifts: 0, reviews: 0, dp: null };
+  if (s.daily.day !== today) s.daily = { day: today, shifts: 0, reviews: 0, picks: [] };
   return s.daily;
 }
 

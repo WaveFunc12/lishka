@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import {
-  BY, fading, learned, mastery, nextShift, PLACES, postcardsDone, strength, UNITS, zviSays, kmText, squares,
+  BY, fading, learned, mastery, nextShift, PLACES, postcardsDone, strength, UNITS, zviSays, squares, points, DAILY_N,
 } from '@/engine';
 import { useStart } from '@/state/actions';
 import { useStore, useT } from '@/state/store';
@@ -17,7 +17,8 @@ export default function Home() {
   const start = useStart();
   const ns = nextShift(s);
   const u = ns ? ns.u : UNITS[UNITS.length - 1];
-  const d = s.daily.day === today() ? s.daily : { shifts: 0, reviews: 0, dp: null };
+  const d = s.daily.day === today() ? s.daily : { shifts: 0, reviews: 0, picks: [] };
+  const dn = d.picks.length, dailyDone = dn >= DAILY_N;
   const quota = d.shifts > 0 || d.reviews > 0;
   const fad = fading(s, now()).length;
   const fresh = !s.xp;
@@ -90,10 +91,12 @@ export default function Home() {
         </View>
         <Pressable style={styles.dayrow} onPress={() => router.push('/daily')} accessibilityRole="button">
           <View style={{ flex: 1 }}>
-            <T_ style={{ fontFamily: F.black }}>היישוב של היום</T_>
-            <T_ style={{ fontSize: 13, color: C.muted }}>{d.dp ? `${squares(d.dp.d)} · ${kmText(d.dp.d)}` : 'ניסיון אחד. כל הארץ מנחשת אותו יישוב.'}</T_>
+            <T_ style={{ fontFamily: F.black }}>היומי</T_>
+            <T_ style={{ fontSize: 13, color: C.muted }}>
+              {dn ? `${squares(d.picks)} · ${points(d.picks)}/${DAILY_N}` : 'חמישה יישובים. פגיעה עד 10 ק״מ שווה נקודה.'}
+            </T_>
           </View>
-          <T_ style={{ fontFamily: F.black, color: C.accent }}>{d.dp ? 'לשתף' : 'לסמן'}</T_>
+          <T_ style={{ fontFamily: F.black, color: C.accent }}>{dailyDone ? 'לשתף' : dn ? 'להמשיך' : 'לשחק'}</T_>
         </Pressable>
         <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 24 }}>
           <LinkBtn label="תיק אישי" onPress={() => router.push('/file')} />

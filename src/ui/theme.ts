@@ -28,6 +28,7 @@ export const C = {
   legend: '#6A3FB5',
   road: '#7A2E1C',
   roadCase: '#FFF6E2',
+  roadMinor: '#9A6A4E',
   shield: '#D3202A',
   stream: '#3A8DB0',
   streamInk: '#1E5D78',

@@ -93,6 +93,8 @@ export function MapView(p: Props) {
   };
   const toKm = (x: number, y: number): Point => ({ x: v.x + (x / W) * v.w, y: v.y + (y / H) * v.h });
   const tap = (x: number, y: number) => {
+    // On the web a press on a zoom button also reaches the map's tap gesture underneath; ignore it there.
+    if (canZoom && x < 50 && y < (zoomed ? 122 : 84)) return;
     const g = toKm(x, y);
     if (p.onPressDot) {
       const hit = (p.dots || [])

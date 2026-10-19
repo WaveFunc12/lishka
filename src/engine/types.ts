@@ -55,7 +55,8 @@ export type PlayerState = {
   legendary: boolean;
   seenComic: boolean;
   mute: boolean;
-  daily: { day: DayStr | null; shifts: number; reviews: number; dp: DailyPick | null };
+  /** picks: today's daily pins, in order. */
+  daily: { day: DayStr | null; shifts: number; reviews: number; picks: DailyPick[] };
 };
 
 export type QType = 'intro' | 'tap' | 'name' | 'compare' | 'pin' | 'type';
