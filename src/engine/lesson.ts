@@ -1,4 +1,5 @@
 import { daily, markDay } from './attendance';
+import { renewInk } from './ink';
 import { BY, PLACES, shiftItems, STORY } from './catalog';
 import { COPY, DIR_WORD } from './content';
 import { dist, nearest } from './geo';
@@ -180,7 +181,7 @@ export function advance(sess: Session, s: PlayerState, now: number, rng: Rng): b
 }
 
 /** Bank the session: XP, shift and postcard completion, sick day, attendance, promotion. */
-export function finish(sess: Session, s: PlayerState, today: DayStr): SessionResult {
+export function finish(sess: Session, s: PlayerState, today: DayStr, now: number = Date.now()): SessionResult {
   const before = rank(s.xp).name;
   const d = daily(s, today);
   let card = false, earnedSick = false, welcomed = false, streakUp: number | null = null;
@@ -206,6 +207,7 @@ export function finish(sess: Session, s: PlayerState, today: DayStr): SessionRes
     }
   }
   if (sess.kind === 'exam' && !sess.misses.length) s.legendary = true;
+  const inked = sess.ink ? { region: sess.ink, days: renewInk(s, sess.ink, now) } : null;
   if (sess.kind !== 'exam' && markDay(s, today)) streakUp = s.streak;
   s.note = null;
   s.lost = 0;
@@ -223,6 +225,7 @@ export function finish(sess: Session, s: PlayerState, today: DayStr): SessionRes
     misses: sess.misses,
     newIds,
     milestone: crossedMilestone(known - newIds.length, known),
+    inked,
     card,
     streakUp,
     rankUp: after !== before ? after : null,

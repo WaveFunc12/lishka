@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
 import {
   advance, anchorFor, answer, BY, compareAnswer, DIR_WORD, finish, fitView, gradeCompare, gradeName, gradePin, gradeTap,
-  gradeType, learned, PIN_LIMIT, PLACES, popText, ANCHORS, shortName, UNIT_BY, viewAround, ZVI_MEMORY, type Grade, type Point, type View as Box,
+  gradeType, learned, PIN_LIMIT, PLACES, popText, ANCHORS, REGIONS, shortName, UNIT_BY, viewAround, ZVI_MEMORY, type Grade, type Point, type View as Box,
 } from '@/engine';
 import { useStore, useT } from '@/state/store';
 import { regionTale, TALES } from '@/ui/comic/tales';
@@ -55,7 +55,7 @@ export default function Shift() {
     let over = false;
     update((d) => {
       over = advance(next, d, now(), rng);
-      if (over) setResult(finish(next, d, today()));
+      if (over) setResult(finish(next, d, today(), now()));
     });
     setTyped('');
     setPicked(null);
@@ -174,6 +174,7 @@ export default function Shift() {
     );
   }
   if (q.rev && sess.kind === 'shift') kind = 'תיק דוהה · ' + kind;
+  if (sess.ink) kind = `חידוש הדיו · ${REGIONS.find((g) => g.id === sess.ink)?.s ?? ''} · ${kind}`;
 
   const pct = Math.round((sess.i / sess.q.length) * 100);
   // The map takes the height the question's answers leave free (with room for the feedback sheet), so tall phones show more map.

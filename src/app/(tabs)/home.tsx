@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import {
-  BY, chapter, fading, learned, mastery, nextMilestone, nextShift, PLACES, shiftItems, storyDone, strength, UNITS, zviSays,
+  BY, chapter, fading, fadingRegion, learned, REGIONS, mastery, nextMilestone, nextShift, PLACES, shiftItems, storyDone, strength, UNITS, zviSays,
   shortName,
 } from '@/engine';
 import { useStart } from '@/state/actions';
@@ -22,6 +22,8 @@ export default function Home() {
   const d = s.daily.day === today() ? s.daily : { shifts: 0, reviews: 0, picks: [] };
   const quota = d.shifts > 0 || d.reviews > 0;
   const fad = fading(s, now()).length;
+  // A closed region whose ink has faded: Zvi asks for it, with a button to renew it.
+  const inkId = s.welcome ? null : fadingRegion(s, now()), inkReg = inkId ? REGIONS.find((g) => g.id === inkId) : null;
   const fresh = !s.xp;
   const act = s.welcome ? 'review' : ns ? 'shift' : 'exam';
   const label = s.welcome ? 'לחמם מנועים' : !ns ? 'למבחן הקביעות' : fresh ? 'להחתים כרטיס' : 'למשמרת הבאה';
@@ -70,8 +72,9 @@ export default function Home() {
           )}
         </MapView>
         <View style={{ marginTop: 12 }}>
-          <ZviSays text={t(zviSays(s, today(), ns, fad, quota))}>
-            {fad >= 3 && !s.welcome && <LinkBtn label="ביקורת פתע" onPress={() => start.review()} />}
+          <ZviSays text={t(zviSays(s, today(), ns, fad, quota, inkId))}>
+            {inkReg ? <LinkBtn label={`לחדש את הדיו ${inkReg.in}`} onPress={() => start.ink(inkReg.id)} />
+              : fad >= 3 && !s.welcome && <LinkBtn label="ביקורת פתע" onPress={() => start.review()} />}
           </ZviSays>
         </View>
       </View>

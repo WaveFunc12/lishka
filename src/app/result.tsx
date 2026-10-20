@@ -1,9 +1,10 @@
 import { useEffect, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { BY, COPY, COUNTRY, learned, mastery, peopleText, PLACES, regionProgress, rnd, shortName, STORY, storyDone, strength, UNIT_BY } from '@/engine';
+import { BY, COPY, COUNTRY, learned, mastery, peopleText, PLACES, regionPlaces, regionProgress, REGIONS, rnd, shortName, STORY, storyDone, strength, UNIT_BY } from '@/engine';
 import { useStart } from '@/state/actions';
 import { goHome } from '@/state/nav';
 import { useStore, useT } from '@/state/store';
+import { RegionStamp, StampDrop } from '@/ui/Badges';
 import { MapView, type MapDot } from '@/ui/MapView';
 import { sfx } from '@/ui/sound';
 import { Btn, Card, H1, Kicker, OkStamp, Screen, T_, ZviSays } from '@/ui/kit';
@@ -22,7 +23,7 @@ export default function Result() {
     return rnd(acc >= 0.9 ? COPY.great : COPY.good, Math.random);
   }, [R]);
   // A new postcard in the mail gets its little tune, once.
-  const card = !!R?.card || !!R?.milestone, mute = s.mute;
+  const card = !!R?.card || !!R?.milestone || !!R?.inked, mute = s.mute;
   useEffect(() => { if (card && !mute) sfx('card'); }, [card, mute]);
   if (!R) return null;
   const acc = R.n ? Math.round((R.ok / R.n) * 100) : 100;
@@ -31,6 +32,12 @@ export default function Result() {
   const todo = (id: string) => (unit?.region ? BY[id].region === unit.region : STORY.some((u) => u.items.includes(id)));
   const dots: MapDot[] = PLACES.filter((p) => mastery(s, p.id) >= 1 || todo(p.id))
     .map((p) => ({ ...p, state: mastery(s, p.id) >= 1 ? 'lit' : 'dim', size: mastery(s, p.id) >= 1 ? 1 : 0.6, label: R.newIds.includes(p.id) ? p.name : '' }));
+  // A region's stamp as it stands in the album: earned, its places marked.
+  const stamp = (region: string, col: string, size: number) => {
+    const ids = regionPlaces(region);
+    return <RegionStamp col={col} earned places={ids.map((id) => BY[id])} known={ids.filter((id) => mastery(s, id) >= 1).map((id) => BY[id])} size={size} />;
+  };
+  const inkReg = R.inked ? REGIONS.find((g) => g.id === R.inked!.region) : null;
   const regionsLeft = regionProgress(s).filter((g) => g.done < g.units.length).length;
   const storyEnd = R.card && unit?.id === STORY[STORY.length - 1].id && storyDone(s);
   const reveal = learned(s).map((p) => ({ x: p.x, y: p.y, s: strength(s, p.id, now()) }));
@@ -65,12 +72,22 @@ export default function Result() {
       <View style={styles.top}>
         <View style={{ flex: 1 }}>
           <Kicker>סוף משמרת{R.kind === 'shift' ? ` · ${R.shift + 1} מתוך 2` : ''}</Kicker>
-          <H1 size={32}>{R.kind === 'review' ? (R.welcomed ? 'חימום הושלם' : 'ביקורת פתע הושלמה') : unit?.t}</H1>
+          <H1 size={32}>{R.kind === 'review' ? (R.inked ? 'הדיו חודש' : R.welcomed ? 'חימום הושלם' : 'ביקורת פתע הושלמה') : unit?.t}</H1>
         </View>
         <OkStamp xp={R.xp} size={96} />
       </View>
       {perks.length > 0 && (
         <View style={styles.perks}>{perks.map((p) => <View key={p} style={styles.perk}><T_ style={{ fontFamily: F.black, fontSize: 14 }}>{p}</T_></View>)}</View>
+      )}
+      {inkReg && (
+        <Card style={[styles.mile, { borderColor: inkReg.col, flexDirection: 'row', alignItems: 'center', gap: 14 }]}>
+          <StampDrop mute={s.mute}>{stamp(inkReg.id, inkReg.col, 70)}</StampDrop>
+          <View style={{ flex: 1, gap: 4 }}>
+            <Kicker>חותמת חודשה</Kicker>
+            <T_ style={{ fontFamily: F.display, fontSize: 22 }}>{inkReg.t} כמו חדש</T_>
+            <T_ style={{ fontSize: 15, lineHeight: 21 }}>הדיו יחזיק עכשיו לפחות {R.inked!.days} ימים. כל חידוש מחזיק פי שניים מהקודם.</T_>
+          </View>
+        </Card>
       )}
       {R.milestone && (
         <Card style={styles.mile}>
@@ -102,6 +119,11 @@ export default function Result() {
           <T_ style={{ fontFamily: F.display, fontSize: 24 }}>גלויה חדשה הגיעה</T_>
           <T_ style={{ fontSize: 18, lineHeight: 26 }}>{t(unit.card)}</T_>
           {!!unit.clue && <T_ style={{ color: C.muted }}>נ.ב. {unit.clue}</T_>}
+          {unit.region && unit.part === unit.parts && (
+            <View style={{ alignItems: 'center', paddingVertical: 6 }}>
+              <StampDrop mute={s.mute} delay={600}>{stamp(unit.region, unit.col, 84)}</StampDrop>
+            </View>
+          )}
           {unit.region && unit.part === unit.parts && <T_ style={{ fontFamily: F.bold }}>{`נ.ב. 2: אות אזורי חדש נכנס לתיק האישי. ${regionsLeft ? `עוד ${regionsLeft} אזורים, וכל הארץ על המפה.` : 'וזהו: כל הארץ על המפה.'}`}</T_>}
           {storyEnd && <T_ style={{ fontFamily: F.bold }}>{t('נ.ב. 2: הארכיון נפתח. עוד מאות יישובים, אזור אחרי אזור, עד שכל הארץ חוזרת למפה. ואת מבחן הקביעות {תעשה|תעשי} כשמתחשק לך.')}</T_>}
           <T_ style={{ fontFamily: F.display, fontSize: 20 }}>צבי</T_>

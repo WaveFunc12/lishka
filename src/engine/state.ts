@@ -23,6 +23,7 @@ export const freshState = (): PlayerState => ({
   focus: null,
   remind: null,
   dailies: {},
+  ink: {},
   daily: { day: null, shifts: 0, reviews: 0, picks: [] },
 });
 

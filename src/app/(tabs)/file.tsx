@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Platform, StyleSheet, View } from 'react-native';
-import { BY, learned, mastery, PLACES, postcardsDone, rank, regionProgress, STORY, tiers, UNITS } from '@/engine';
+import { Alert, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { BY, inkFaded, learned, mastery, PLACES, postcardsDone, rank, regionProgress, STORY, tiers, UNITS } from '@/engine';
 import { useStart } from '@/state/actions';
 import { allowReminders, remindersSupported } from '@/state/reminders';
 import { useStore, useT } from '@/state/store';
@@ -11,7 +11,7 @@ import { C, F } from '@/ui/theme';
 
 /* Personnel file: rank, stats, badges, settings, and (in development builds only) time-travel tools. */
 export default function File() {
-  const { s, update, skipDays, reset, today } = useStore();
+  const { s, update, skipDays, reset, today, now } = useStore();
   const t = useT();
   const start = useStart();
   const [denied, setDenied] = useState(false);
@@ -71,17 +71,18 @@ export default function File() {
         <T_ style={{ fontFamily: F.display, fontSize: 22 }}>בולים אזוריים · {closed}/{regions.length}</T_>
         <View style={styles.stamps}>
           {regions.map((g) => {
-            const full = g.done === g.units.length, ids = g.units.flatMap((u) => u.items);
+            const full = g.done === g.units.length, ids = g.units.flatMap((u) => u.items), faded = full && inkFaded(s, g.id, now());
             return (
-              <View key={g.id} style={styles.stamp} accessibilityLabel={`${g.t}: ${full ? 'הושלם' : `${g.done} מתוך ${g.units.length} גלויות`}`}>
-                <RegionStamp col={g.col} earned={full} places={ids.map((id) => BY[id])} known={ids.filter((id) => mastery(s, id) >= 1).map((id) => BY[id])} size={60} />
+              <Pressable key={g.id} style={styles.stamp} disabled={!faded} onPress={() => start.ink(g.id)} accessibilityRole={faded ? 'button' : undefined}
+                accessibilityLabel={`${g.t}: ${faded ? 'הדיו דוהה. לחיצה מחדשת אותו' : full ? 'הושלם' : `${g.done} מתוך ${g.units.length} גלויות`}`}>
+                <RegionStamp col={g.col} earned={full} places={ids.map((id) => BY[id])} known={ids.filter((id) => mastery(s, id) >= 1).map((id) => BY[id])} faded={faded} size={60} />
                 <T_ style={[styles.badgeName, !full && { color: C.muted }]}>{g.s}</T_>
-                {!full && <T_ style={styles.badgeNote}>{g.done}/{g.units.length} גלויות</T_>}
-              </View>
+                {!full ? <T_ style={styles.badgeNote}>{g.done}/{g.units.length} גלויות</T_> : faded && <T_ style={[styles.badgeNote, { color: C.kicker }]}>הדיו דוהה · לחדש</T_>}
+              </Pressable>
             );
           })}
         </View>
-        <T_ style={{ color: C.muted, fontSize: 13 }}>בול על כל אזור שכל הגלויות שלו תויקו בארכיון. הנקודות הצבעוניות הן היישובים שכבר חזרו למפה.</T_>
+        <T_ style={{ color: C.muted, fontSize: 13 }}>בול על כל אזור שכל הגלויות שלו תויקו בארכיון. הנקודות הצבעוניות הן היישובים שכבר חזרו למפה. כשהיישובים של אזור נשכחים, הדיו של הבול דוהה, וצבי מבקש לחדש אותו.</T_>
       </Card>
       <Card style={{ gap: 10 }}>
         <T_ style={{ fontFamily: F.display, fontSize: 22 }}>הגדרות</T_>

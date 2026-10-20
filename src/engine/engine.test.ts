@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
-  BY, DAY_MS, UNITS, PLACES, STORY, REGION_UNITS, UNIT_BY, shiftItems, advance, anchorFor, buildExam, buildShift, bump, clone, compareAnswer, dailyIds, dailyStats, dayNo, dist, points, shareText, totalKm,
+  BY, DAY_MS, UNITS, fadingRegion, inkFaded, inkHold, renewInk, PLACES, STORY, REGION_UNITS, UNIT_BY, shiftItems, advance, anchorFor, buildExam, buildShift, bump, clone, compareAnswer, dailyIds, dailyStats, dayNo, dist, points, shareText, totalKm,
   fading, finish, freshState, reminderPlan, msToNextDay, untilText, gradePin, gradeType, israelDay, markDay, migrate, nextShift, onOpen, rank, seeded,
-  squares, startSession, strength, T, answer, gradeTap, zoomAt, clampView, COUNTRY, ROUTES, roadQuiz, routeTitle, milestones, crossedMilestone, nextMilestone,
+  squares, startSession, strength, T, answer, gradeTap, zoomAt, clampView, COUNTRY, ROUTES, roadQuiz, routeTitle, milestones, crossedMilestone, nextMilestone, weekEnd, weekText,
 } from './index';
 
 const NOW = Date.parse('2026-10-19T09:00:00Z');
@@ -323,5 +323,49 @@ describe('milestones on the way to the whole country', () => {
   it('points at the next one ahead, and at nothing once the map is full', () => {
     expect(nextMilestone(42, 500)?.at).toBe(50);
     expect(nextMilestone(500, 500)).toBeNull();
+  });
+});
+
+describe('fading ink', () => {
+  const close = (s: ReturnType<typeof freshState>, id: string, m: number, at: number) => {
+    REGION_UNITS.filter((u) => u.region === id).forEach((u) => { s.units[u.id] = true; u.items.forEach((p) => { s.mastery[p] = m; s.seen[p] = at; }); });
+  };
+  it('fades a closed region once its places fade, one region at a time', () => {
+    const s = freshState();
+    close(s, 'dan', 3, NOW);
+    close(s, 'shr', 3, NOW - 2 * DAY_MS);
+    expect(fadingRegion(s, NOW)).toBe(null);
+    // Mastery 3 halves every 4 days: after 6 days Gush Dan is at about a third, the Sharon (2 days older) lower still.
+    expect(inkFaded(s, 'dan', NOW + 4 * DAY_MS)).toBe(false);
+    expect(inkFaded(s, 'dan', NOW + 6 * DAY_MS)).toBe(true);
+    expect(fadingRegion(s, NOW + 6 * DAY_MS)).toBe('shr');
+  });
+  it('never fades an open region', () => {
+    const s = freshState();
+    const u = REGION_UNITS.find((x) => x.region === 'dan')!;
+    u.items.forEach((p) => { s.mastery[p] = 1; s.seen[p] = NOW - 30 * DAY_MS; });
+    expect(inkFaded(s, 'dan', NOW)).toBe(false);
+  });
+  it('holds each renewal twice as long as the last', () => {
+    expect([1, 2, 3, 4, 5].map(inkHold)).toEqual([4, 8, 16, 30, 30]);
+    const s = freshState();
+    close(s, 'dan', 3, NOW - 10 * DAY_MS);
+    expect(renewInk(s, 'dan', NOW)).toBe(4);
+    expect(inkFaded(s, 'dan', NOW + 3 * DAY_MS)).toBe(false);
+    expect(inkFaded(s, 'dan', NOW + 5 * DAY_MS)).toBe(true);
+    expect(renewInk(s, 'dan', NOW + 5 * DAY_MS)).toBe(8);
+  });
+});
+
+describe('room weeks', () => {
+  it('runs Sunday to Saturday', () => {
+    expect(weekEnd('2026-10-20')).toBe('2026-10-24'); // Tuesday → this Saturday
+    expect(weekEnd('2026-10-24')).toBe('2026-10-24'); // Saturday closes its own week
+    expect(weekEnd('2026-10-25')).toBe('2026-10-31'); // Sunday opens the next
+    expect(weekEnd('2026-10-20', 1)).toBe('2026-10-17');
+  });
+  it('writes a week the way people do', () => {
+    expect(weekText('2026-10-17')).toBe('11.10 עד 17.10');
+    expect(weekText('2026-10-03')).toBe('27.9 עד 3.10');
   });
 });

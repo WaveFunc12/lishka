@@ -76,6 +76,8 @@ export type PlayerState = {
   remind: number | null;
   /** Every finished daily: points and total km off. */
   dailies: Record<DayStr, [number, number]>;
+  /** Fading ink: when each closed region was last renewed, and how many times. */
+  ink: Record<string, { at: number; n: number }>;
   /** picks: today's daily pins, in order. */
   daily: { day: DayStr | null; shifts: number; reviews: number; picks: DailyPick[] };
 };
@@ -119,6 +121,8 @@ export type Session = {
   fb: Feedback | null;
   /** Places the wrong options may come from. */
   pool?: string[];
+  /** The region whose ink this inspection renews. */
+  ink?: string;
 };
 
 export type SessionResult = {
@@ -137,6 +141,8 @@ export type SessionResult = {
   rankUp: string | null;
   /** A milestone on the way to the whole country, passed in this session. */
   milestone: { at: number; title: string; short: string; say: string } | null;
+  /** A region's ink renewed by this session, and how many days it now holds. */
+  inked: { region: string; days: number } | null;
   earnedSick: boolean;
   welcomed: boolean;
 };

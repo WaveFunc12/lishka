@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useCallback } from 'react';
-import { ANCHORS, buildExam, buildReview, buildShift, clone, learned, nextShift, startSession, UNIT_BY, type PlayerState } from '@/engine';
+import { ANCHORS, buildExam, buildReview, buildShift, clone, INK_QS, learned, nextShift, regionPlaces, startSession, UNIT_BY, type PlayerState } from '@/engine';
 import { useStore } from './store';
 
 /** Places the player has met, plus the big cities and any extra: where wrong options come from. */
@@ -30,6 +30,15 @@ export function useStart() {
     review: useCallback(
       (pool?: string[]) => {
         setSession(startSession('review', buildReview(s, now(), rng, pool), rng, null, 0, known(s)));
+        open();
+      },
+      [s, now, setSession, open, rng],
+    ),
+    /** Renew a closed region's fading ink: an inspection of its weakest places. */
+    ink: useCallback(
+      (region: string) => {
+        const sess = startSession('review', buildReview(s, now(), rng, regionPlaces(region), INK_QS), rng, null, 0, known(s, regionPlaces(region)));
+        setSession({ ...sess, ink: region });
         open();
       },
       [s, now, setSession, open, rng],

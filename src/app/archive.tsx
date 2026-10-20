@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { mastery, nextShift, regionProgress, storyDone } from '@/engine';
+import { INK_QS, inkFaded, inkLevel, mastery, nextShift, regionProgress, storyDone } from '@/engine';
 import { useStart } from '@/state/actions';
 import { useStore, useT } from '@/state/store';
 import { regionTale, TALES } from '@/ui/comic/tales';
@@ -9,7 +9,7 @@ import { BW, C, F, SHADOW_SM } from '@/ui/theme';
 
 /* The archive: after the story, the rest of the country region by region. Pick which region the next postcards come from. */
 export default function Archive() {
-  const { s, update } = useStore();
+  const { s, update, now } = useStore();
   const t = useT();
   const start = useStart();
   const regions = regionProgress(s);
@@ -27,7 +27,7 @@ export default function Archive() {
         : 'הארכיון נפתח אחרי שבע הגלויות של הסיפור. קודם {תחזיר|תחזירי} את הגדולות.')} />
       <View style={{ gap: 10 }}>
         {regions.map((g) => {
-          const full = g.done === g.units.length, here = g.id === cur;
+          const full = g.done === g.units.length, here = g.id === cur, faded = full && inkFaded(s, g.id, now());
           return (
             <Pressable key={g.id} disabled={!storyDone(s) || full} onPress={() => pickRegion(g.id)} accessibilityRole="button"
               accessibilityLabel={`${g.t}, ${g.done} מתוך ${g.units.length} גלויות`}
@@ -36,16 +36,21 @@ export default function Archive() {
               <View style={{ flex: 1, gap: 4 }}>
                 <View style={st.line}>
                   <T_ style={{ fontFamily: F.black, fontSize: 17, flex: 1 }}>{g.t}</T_>
-                  <T_ style={{ fontSize: 13, color: here ? g.col : C.muted, fontFamily: F.bold }}>
-                    {full ? 'מתויק ✓' : here ? 'עובדים עליו' : storyDone(s) ? 'לעבוד על האזור ←' : `${g.places} יישובים`}
+                  <T_ style={{ fontSize: 13, color: faded ? C.kicker : here ? g.col : C.muted, fontFamily: F.bold }}>
+                    {faded ? 'הדיו דוהה' : full ? 'מתויק ✓' : here ? 'עובדים עליו' : storyDone(s) ? 'לעבוד על האזור ←' : `${g.places} יישובים`}
                   </T_>
                 </View>
-                <Meter pct={(g.done / g.units.length) * 100} color={g.col} />
-                <T_ style={{ fontSize: 12, color: C.muted }}>{g.done}/{g.units.length} גלויות · {g.known}/{g.places} יישובים חזרו למפה</T_>
+                {/* A closed region's bar shows its ink: how well its places are remembered now. */}
+                <Meter pct={full ? Math.max(4, inkLevel(s, g.id, now()) * 100) : (g.done / g.units.length) * 100} color={faded ? C.kicker : g.col} />
+                <T_ style={{ fontSize: 12, color: C.muted }}>
+                  {g.done}/{g.units.length} גלויות · {full ? `הדיו ${Math.round(inkLevel(s, g.id, now()) * 100)}%` : `${g.known}/${g.places} יישובים חזרו למפה`}
+                </T_>
                 {s.tales.includes(regionTale(g.id)) && TALES[regionTale(g.id)] && (
                   <LinkBtn label="איך הכול התחיל: הקומיקס" onPress={() => router.push(`/tale/${regionTale(g.id)}`)} />
                 )}
-                {g.known >= 4 && (
+                {faded ? (
+                  <LinkBtn label={`לחדש את הדיו: ${INK_QS} שאלות`} onPress={() => start.ink(g.id)} />
+                ) : g.known >= 4 && (
                   <LinkBtn label={`לתרגל את ${g.known} היישובים שחזרו`}
                     onPress={() => start.review(g.units.flatMap((u) => u.items).filter((id) => mastery(s, id) >= 1))} />
                 )}
