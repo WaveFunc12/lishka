@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import {
   BY, chapter, fading, learned, mastery, nextShift, PLACES, shiftItems, storyDone, strength, UNITS, zviSays, squares, points, DAILY_N,
@@ -16,6 +16,8 @@ export default function Home() {
   const { s, now, today } = useStore();
   const t = useT();
   const start = useStart();
+  // The postcard takes the room the screen has, so tall phones get a bigger map instead of a gap.
+  const mapH = Math.round(Math.min(460, Math.max(240, useWindowDimensions().height - 430)));
   const ns = nextShift(s);
   const u = ns ? ns.u : UNITS[UNITS.length - 1];
   const d = s.daily.day === today() ? s.daily : { shifts: 0, reviews: 0, picks: [] };
@@ -54,7 +56,7 @@ export default function Home() {
       </View>
 
       <View style={styles.pcard} accessibilityLabel={`הגלויה הבאה: ${u.t}`}>
-        <MapView zoom={false} view={{ fit: pts, pad: 0.55, minW: 34 }} dots={dots} dotPx={5} reveal={reveal} revealR={0.6} style={{ height: 300 }} label="מפת האזור של הגלויה הבאה">
+        <MapView zoom={false} view={{ fit: pts, pad: 0.55, minW: 34 }} dots={dots} dotPx={5} reveal={reveal} revealR={0.6} style={{ height: mapH }} label="מפת האזור של הגלויה הבאה">
           <View style={styles.region} pointerEvents="none">
             <T_ style={{ fontSize: 13 }}>ד״ש מ</T_>
             <T_ style={{ fontFamily: F.display, fontSize: 22, lineHeight: 26 }}>{u.t}</T_>

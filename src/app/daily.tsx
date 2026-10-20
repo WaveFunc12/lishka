@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Share, StyleSheet, View } from 'react-native';
 import {
-  ANCHORS, BY, COUNTRY, daily, dailyIds, DAILY_N, dayNo, dist, hit, HIT_KM, kmText, msToNextDay, PLACES, points, shareText, shortName,
+  ANCHORS, BY, COUNTRY, daily, dailyIds, DAILY_N, dayNo, dist, hit, HIT_KM, kmText, markDay, msToNextDay, PLACES, points, shareText, shortName,
   squares, totalKm, untilText, type Point,
 } from '@/engine';
 import { submitDaily } from '@/net/backend';
@@ -55,6 +55,8 @@ export default function Daily() {
     update((draft) => {
       const dd = daily(draft, day);
       if (dd.picks.length === i) dd.picks.push({ id: it.id, d, g });
+      // Finishing the daily counts as showing up at the office.
+      if (dd.picks.length === DAILY_N) markDay(draft, day);
     });
     setShown(i);
     if (!s.mute) Haptics.notificationAsync(hit(d) ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Warning).catch(() => {});
