@@ -16,7 +16,7 @@ export function Screen({ children, scroll = true, style }: { children: ReactNode
 }
 
 export const T_ = ({ style, children, ...rest }: { style?: StyleProp<TextStyle>; children: ReactNode; accessibilityRole?: 'header' }) => (
-  <Text style={[styles.text, style]} {...rest}>{children}</Text>
+  <Text maxFontSizeMultiplier={1.3} style={[styles.text, style]} {...rest}>{children}</Text>
 );
 
 export const Kicker = ({ children }: { children: ReactNode }) => <T_ style={styles.kicker}>{children}</T_>;
@@ -31,7 +31,7 @@ export function Btn({ label, onPress, alt, big, disabled, style, right, tone }: 
   return (
     <Pressable onPress={onPress} disabled={disabled} accessibilityRole="button" accessibilityLabel={label}
       style={({ pressed }) => [styles.btn, big && styles.big, { backgroundColor: bg, opacity: disabled && !tone ? 0.55 : 1 }, pressed && styles.pressed, style]}>
-      <Text style={[styles.btnText, big && { fontSize: 20 }, { color: fg }]}>{label}</Text>
+      <Text maxFontSizeMultiplier={1.3} style={[styles.btnText, big && { fontSize: 20 }, { color: fg }]}>{label}</Text>
       {right}
     </Pressable>
   );
@@ -40,7 +40,7 @@ export function Btn({ label, onPress, alt, big, disabled, style, right, tone }: 
 export function LinkBtn({ label, onPress }: { label: string; onPress: () => void }) {
   return (
     <Pressable onPress={onPress} accessibilityRole="link" hitSlop={10}>
-      <Text style={styles.link}>{label}</Text>
+      <Text maxFontSizeMultiplier={1.3} style={styles.link}>{label}</Text>
     </Pressable>
   );
 }
@@ -94,8 +94,8 @@ export function OkStamp({ xp, size = 72 }: { xp: number; size?: number }) {
       </Svg>
       <View style={StyleSheet.absoluteFill}>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ fontFamily: F.stamp, fontSize: size * 0.33, color: C.ink, lineHeight: size * 0.36 }}>מאושר</Text>
-          <Text style={{ fontFamily: F.black, fontSize: size * 0.13, color: C.ink }}>+{xp} ותק</Text>
+          <Text maxFontSizeMultiplier={1} style={{ fontFamily: F.stamp, fontSize: size * 0.33, color: C.ink, lineHeight: size * 0.36 }}>מאושר</Text>
+          <Text maxFontSizeMultiplier={1} style={{ fontFamily: F.black, fontSize: size * 0.13, color: C.ink }}>+{xp} ותק</Text>
         </View>
       </View>
     </View>

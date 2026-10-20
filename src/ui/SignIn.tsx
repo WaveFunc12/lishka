@@ -40,14 +40,14 @@ export function SignIn() {
       )}
       {!sent ? (
         <>
-          <TextInput value={email} onChangeText={setEmail} placeholder="כתובת מייל" placeholderTextColor={C.muted} keyboardType="email-address" autoCapitalize="none" autoCorrect={false}
+          <TextInput maxFontSizeMultiplier={1.3} value={email} onChangeText={setEmail} placeholder="כתובת מייל" placeholderTextColor={C.muted} keyboardType="email-address" autoCapitalize="none" autoCorrect={false}
             autoComplete="email" style={[st.input, st.ltr]} accessibilityLabel="כתובת מייל" />
           <Btn alt={apple} label="לשלוח לי קוד כניסה" disabled={busy || !/\S+@\S+\.\S+/.test(email)} onPress={() => run(async () => { await sendEmailCode(email); setSent(true); })} />
         </>
       ) : (
         <>
           <T_ style={{ fontSize: 14 }}>שלחנו קוד בן 6 ספרות אל {email}.</T_>
-          <TextInput value={code} onChangeText={setCode} placeholder="הקוד מהמייל" placeholderTextColor={C.muted} keyboardType="number-pad" maxLength={6} style={[st.input, st.ltr]}
+          <TextInput maxFontSizeMultiplier={1.3} value={code} onChangeText={setCode} placeholder="הקוד מהמייל" placeholderTextColor={C.muted} keyboardType="number-pad" maxLength={6} style={[st.input, st.ltr]}
             accessibilityLabel="קוד כניסה" autoComplete="one-time-code" textContentType="oneTimeCode" />
           <Btn label="להיכנס" disabled={busy || code.trim().length < 6} onPress={() => run(() => verifyEmailCode(email, code))} />
           <LinkBtn label="לשנות כתובת" onPress={() => { setSent(false); setCode(''); }} />
@@ -69,7 +69,7 @@ export function PickName() {
     <Card style={{ gap: 12 }}>
       <T_ style={{ fontFamily: F.display, fontSize: 22 }}>איך לקרוא לך?</T_>
       <T_ style={{ color: C.muted, fontSize: 14 }}>השם שיופיע בטבלה של החדרים. אפשר שם פרטי או כינוי.</T_>
-      <TextInput value={name} onChangeText={setName} maxLength={24} placeholder="שם" placeholderTextColor={C.muted} style={st.input} accessibilityLabel="שם לתצוגה" />
+      <TextInput maxFontSizeMultiplier={1.3} value={name} onChangeText={setName} maxLength={24} placeholder="שם" placeholderTextColor={C.muted} style={st.input} accessibilityLabel="שם לתצוגה" />
       <Btn label="שמירה" disabled={!ok} onPress={save} />
       {!!err && <T_ style={{ color: C.bad, fontFamily: F.bold }}>{err}</T_>}
     </Card>

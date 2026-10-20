@@ -268,7 +268,7 @@ export function MapView(p: Props) {
         {p.mini && box.w > 0 && <MiniMap v={v} />}
       {!!p.tag && (
         <View style={styles.tag} pointerEvents="none">
-          <Text style={styles.tagText}>{p.tag}</Text>
+          <Text maxFontSizeMultiplier={1} style={styles.tagText}>{p.tag}</Text>
         </View>
       )}
         {canZoom && box.w > 0 && (
@@ -288,7 +288,7 @@ function ZoomBtn({ label, a11y, onPress }: { label: string; a11y: string; onPres
   return (
     <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={a11y} hitSlop={6}
       style={({ pressed }) => [styles.zoomBtn, pressed && { backgroundColor: C.wiped }]}>
-      <Text style={styles.zoomText}>{label}</Text>
+      <Text maxFontSizeMultiplier={1} style={styles.zoomText}>{label}</Text>
     </Pressable>
   );
 }

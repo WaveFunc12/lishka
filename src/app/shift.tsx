@@ -118,7 +118,7 @@ export default function Shift() {
     body = (
       <View style={{ gap: 6 }}>
         <T_ style={{ color: C.muted, fontSize: 14 }}>{t('{כתוב|כתבי} את השם, בלי אפשרויות בחירה.')}</T_>
-        <TextInput value={typed} onChangeText={setTyped} editable={!done} autoCorrect={false} autoCapitalize="none" style={styles.input}
+        <TextInput maxFontSizeMultiplier={1.3} value={typed} onChangeText={setTyped} editable={!done} autoCorrect={false} autoCapitalize="none" style={styles.input}
           onSubmitEditing={() => typed.trim() && submit(gradeType(q, typed))} returnKeyType="done" accessibilityLabel="שם היישוב" />
       </View>
     );
