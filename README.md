@@ -53,6 +53,8 @@ code by email), pick a display name, create a room and share its 6-letter code. 
 progress, so a new phone picks up the old one's game (the save with more xp wins on first sign-in).
 The database rules are in `supabase/migrations/` and tested by `supabase/tests/run.sh`.
 
+The project is `ptppovbvetpgglajaoew` (its URL and publishable key are already in `eas.json`).
+
 To turn it on:
 1. Create a free project at supabase.com and run the migration (SQL editor, or `supabase db push`).
 2. Auth: enable Email (with "email OTP", 6 digits) and Apple (bundle id `com.wavefunc12.lishka`).

@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
+import { useEffect, useRef, type ComponentRef, type ReactNode } from 'react';
+import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { BW, C, F, SHADOW, SHADOW_SM } from './theme';
@@ -7,13 +7,28 @@ import { BW, C, F, SHADOW, SHADOW_SM } from './theme';
 /* Small shared pieces. Every screen sits in an RTL root; maps opt back into LTR. */
 
 /** A screen: safe-area padded and scrolling. On a tab the tab bar takes the bottom inset.
-    A `footer` (the way on) stays pinned below the scrolling part, so it is always in view. */
+    A `footer` (the way on) stays pinned below the scrolling part, so it is always in view.
+    When the keyboard opens, the screen shrinks above it and scrolls the box being typed in (and the button under it) into view. */
 export function Screen({ children, scroll = true, style, tab, footer }: { children: ReactNode; scroll?: boolean; style?: StyleProp<ViewStyle>; tab?: boolean; footer?: ReactNode }) {
-  const body = <View style={[styles.screen, style]}>{children}</View>;
+  const scroller = useRef<ComponentRef<typeof ScrollView>>(null), content = useRef<ComponentRef<typeof View>>(null), shown = useRef(0);
+  useEffect(() => {
+    if (!scroll) return;
+    const sub = Keyboard.addListener('keyboardDidShow', () => {
+      const input = TextInput.State.currentlyFocusedInput();
+      if (!input || !content.current) return;
+      input.measureLayout(content.current, (_x, y, _w, h) => scroller.current?.scrollTo({ y: Math.max(0, y + h + 70 - shown.current) }), () => {});
+    });
+    return () => sub.remove();
+  }, [scroll]);
+  const body = <View ref={content} style={[styles.screen, style]}>{children}</View>;
   return (
     <SafeAreaView style={styles.safe} edges={tab ? ['top'] : ['top', 'bottom']}>
-      {scroll ? <ScrollView contentContainerStyle={{ flexGrow: 1 }}>{body}</ScrollView> : body}
-      {!!footer && <View style={styles.footer}>{footer}</View>}
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        {scroll ? (
+          <ScrollView ref={scroller} contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" onLayout={(e) => { shown.current = e.nativeEvent.layout.height; }}>{body}</ScrollView>
+        ) : body}
+        {!!footer && <View style={styles.footer}>{footer}</View>}
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
