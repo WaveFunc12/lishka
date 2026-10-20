@@ -14,4 +14,11 @@ export const shortName = (p: Place): string => p.short || p.name;
 export const popText = (n: number): string =>
   n >= 1e6 ? 'יותר ממיליון תושבים' : n >= 10000 ? `כ־${Math.round(n / 1000).toLocaleString('en-US')} אלף תושבים` : `כ־${(Math.round(n / 100) * 100).toLocaleString('en-US')} תושבים`;
 
+/** "5 שעות ו־12 דקות", "שעתיים", "דקה": a countdown in words. */
+export function untilText(ms: number): string {
+  const m = Math.max(1, Math.ceil(ms / 60000)), h = Math.floor(m / 60), mm = m % 60;
+  const H = h === 1 ? 'שעה' : h === 2 ? 'שעתיים' : `${h} שעות`, M = mm === 1 ? 'דקה' : `${mm} דקות`;
+  return h && mm ? `${H} ${/^\d/.test(M) ? 'ו־' : 'ו'}${M}` : h ? H : M;
+}
+
 export const kmText = (d: number): string => (d < 1 ? 'פחות מקילומטר' : `${Math.round(d)} ק״מ`);

@@ -3,9 +3,8 @@ import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Share, StyleSheet, View } from 'react-native';
 import {
-  ANCHORS, BY, COUNTRY, daily, dailyIds, DAILY_N, dayNo, dist, hit, HIT_KM, kmText, PLACES, points, shareText, squares, totalKm,
-  type Point,
-  shortName,
+  ANCHORS, BY, COUNTRY, daily, dailyIds, DAILY_N, dayNo, dist, hit, HIT_KM, kmText, msToNextDay, PLACES, points, shareText, shortName,
+  squares, totalKm, untilText, type Point,
 } from '@/engine';
 import { submitDaily } from '@/net/backend';
 import { useAccount } from '@/net/account';
@@ -13,6 +12,17 @@ import { useStore, useT } from '@/state/store';
 import { MapView, type MapDot } from '@/ui/MapView';
 import { Btn, Card, Kicker, LinkBtn, Screen, T_ } from '@/ui/kit';
 import { C, F } from '@/ui/theme';
+
+/** Countdown to the next daily (midnight in Israel), refreshed every half minute. */
+function NextDaily() {
+  const { now } = useStore();
+  const [, tick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => tick((n) => n + 1), 30000);
+    return () => clearInterval(id);
+  }, []);
+  return <T_ style={{ textAlign: 'center', color: C.muted }}>חמישה יישובים חדשים בעוד {untilText(msToNextDay(now()))}.</T_>;
+}
 
 const COUNTRY_ANCHORS = ['hfa', 'tlv', 'jlm', 'bsh', 'elt'];
 
@@ -52,6 +62,9 @@ export default function Daily() {
 
   if (done) {
     const all = picks.flatMap((p) => [p.g, BY[p.id]]);
+    // Pins stand above their point, so leave room over the northernmost one.
+    const top = all.reduce((a, b) => (b.y < a.y ? b : a));
+    all.push({ x: top.x, y: top.y - 0.1 * Math.max(60, Math.max(...all.map((q) => q.y)) - top.y) });
     return (
       <Screen>
         <LinkBtn label="חזרה לשולחן" onPress={() => router.back()} />
@@ -75,7 +88,7 @@ export default function Daily() {
         <Btn big label="לשתף ולהתחרות" onPress={() => Share.share({ message: shareText(picks, day, s.g) }).catch(() => {})} />
         <Btn alt label={sent === 'yes' ? 'נשלח לחדרים. לטבלה' : 'חדרים פרטיים עם חברים'} onPress={() => router.push('/rooms')} />
         {sent === 'failed' && <T_ style={{ color: C.bad, textAlign: 'center' }}>לא הצלחנו לשלוח לחדרים. ננסה שוב כשתפתחו את המסך.</T_>}
-        <T_ style={{ textAlign: 'center', color: C.muted }}>חמישה יישובים חדשים מחר בבוקר.</T_>
+        <NextDaily />
       </Screen>
     );
   }

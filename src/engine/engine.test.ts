@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   BY, DAY_MS, UNITS, PLACES, STORY, REGION_UNITS, UNIT_BY, shiftItems, advance, anchorFor, buildExam, buildShift, bump, clone, compareAnswer, dailyIds, dayNo, dist, points, shareText, totalKm,
-  fading, finish, freshState, reminderPlan, gradePin, gradeType, israelDay, markDay, migrate, nextShift, onOpen, rank, seeded,
+  fading, finish, freshState, reminderPlan, msToNextDay, untilText, gradePin, gradeType, israelDay, markDay, migrate, nextShift, onOpen, rank, seeded,
   squares, startSession, strength, T, answer, gradeTap, zoomAt, clampView, COUNTRY,
 } from './index';
 
@@ -248,5 +248,19 @@ describe('reminders', () => {
   });
   it('skips an hour that already passed today', () => {
     expect(reminderPlan(freshState(), '2026-10-19', at, 8)).toHaveLength(6);
+  });
+});
+
+describe('next daily countdown', () => {
+  it('counts to midnight Israel time', () => {
+    // 21:30 UTC on 19 Oct is 00:30 on 20 Oct in Israel (UTC+3), so 23.5 hours remain.
+    expect(msToNextDay(Date.parse('2026-10-19T21:30:00Z'))).toBe(23.5 * 3600e3);
+    expect(msToNextDay(Date.parse('2026-10-19T20:59:00Z'))).toBe(60e3);
+  });
+  it('says it in Hebrew', () => {
+    expect(untilText(5 * 3600e3 + 12 * 60e3)).toBe('5 שעות ו־12 דקות');
+    expect(untilText(2 * 3600e3)).toBe('שעתיים');
+    expect(untilText(3600e3 + 60e3)).toBe('שעה ודקה');
+    expect(untilText(20e3)).toBe('דקה');
   });
 });

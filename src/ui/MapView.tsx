@@ -333,7 +333,10 @@ function placeDotLabels(dots: MapDot[], r: number, fs: number, marks: Point[], v
     ];
     // A name that ends right beside another dot reads as that dot's name, so other dots keep a wider berth.
     const free = tries.find((t) => inside(t) && !taken.some((b) => hit(t, b)) && !berth.some((b, i) => dots[i] !== d && hit(t, b)));
-    const sp = free || (LABEL_RANK[d.state] === 0 ? tries.find(inside) || tries[0] : null);
+    // The game's own names must show: with no free spot, take the one that covers the least.
+    const cover = (t: Spot) => taken.reduce((a, b) => a + Math.max(0, Math.min(t.x1, b.x1) - Math.max(t.x0, b.x0)) * Math.max(0, Math.min(t.y1, b.y1) - Math.max(t.y0, b.y0)), 0);
+    const least = () => { const ins = tries.filter(inside); return ins.length ? ins.reduce((a, b) => (cover(b) < cover(a) ? b : a)) : tries[0]; };
+    const sp = free || (LABEL_RANK[d.state] === 0 ? least() : null);
     if (sp) { out.set(d.id, sp); taken.push(sp); }
   }
   return out;
