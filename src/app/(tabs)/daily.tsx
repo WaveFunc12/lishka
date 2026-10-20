@@ -156,7 +156,8 @@ export default function Daily() {
         <T_ style={{ fontFamily: F.display, fontSize: 26 }}>{pick ? it.name : t(`{סמן|סמני} את ${it.name}`)}</T_>
         <T_ style={{ fontSize: 18 }}>{squares(picks)}</T_>
       </View>
-      <MapView key={i} view={pick ? { fit: [pick.g, it], pad: 0.5, minW: 40 } : COUNTRY} mini style={{ height: pick ? 300 : 420 }}
+      {/* Sized to the phone, so the confirm button stays on screen without scrolling, even on an iPhone SE. */}
+      <MapView key={`${i}-${pick ? 1 : 0}`} view={pick ? { fit: [pick.g, it], pad: 0.5, minW: 40 } : COUNTRY} mini style={{ height: pick ? Math.round(Math.max(220, Math.min(300, winH - 420))) : Math.round(Math.max(260, Math.min(420, winH - 350))) }}
         label={pick ? 'המפה עם הסימון שלך' : `מפת הארץ. ${t('{סמן|סמני}')} את ${it.name}`}
         dots={pick ? [...anchors(false), { ...it, state: hit(pick.d) ? 'right' : 'wrong', label: it.name, size: 1.2 }] : anchors(true)}
         pins={pick ? [pick.g] : draft ? [draft] : undefined} lines={pick ? [[pick.g, it]] : undefined}
