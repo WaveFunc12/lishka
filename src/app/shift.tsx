@@ -1,12 +1,13 @@
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
 import {
   advance, anchorFor, answer, BY, compareAnswer, DIR_WORD, finish, fitView, gradeCompare, gradeName, gradePin, gradeTap,
   gradeType, learned, PIN_LIMIT, PLACES, popText, ANCHORS, shortName, viewAround, ZVI_MEMORY, type Grade, type Point, type View as Box,
 } from '@/engine';
 import { useStore, useT } from '@/state/store';
+import { TALES } from '@/ui/comic/tales';
 import { MapView, type MapDot } from '@/ui/MapView';
 import { sfx } from '@/ui/sound';
 import { Btn, Card, Kicker, LinkBtn, Meter, Mentor, OkStamp, Screen, T_, ZviSays } from '@/ui/kit';
@@ -20,6 +21,14 @@ export default function Shift() {
   const [picked, setPicked] = useState<string | null>(null);
   const [guess, setGuess] = useState<Point | null>(null);
   const winH = useWindowDimensions().height;
+  // A big city's founding story plays the first time its file opens; after that it waits behind a link.
+  const introId = session?.q[session.i]?.t === 'intro' ? session.q[session.i].id : null;
+  const firstTale = !!introId && !!TALES[introId] && !s.tales.includes(introId);
+  useEffect(() => {
+    if (!firstTale || !introId) return;
+    update((d) => { d.tales = [...d.tales, introId]; });
+    router.push(`/tale/${introId}`);
+  }, [firstTale, introId, update]);
   if (!session) return null;
   const sess = session, q = sess.q[sess.i], it = BY[q.id], done = !!sess.fb, rng = Math.random;
   const known = new Set(learned(s).map((p) => p.id));
@@ -81,6 +90,7 @@ export default function Shift() {
           <T_><T_ style={{ fontFamily: F.black }}>לזכור:</T_> {it.hint}</T_>
         </Card>
         {ZVI_MEMORY[it.id] && <ZviSays size={40} text={t(ZVI_MEMORY[it.id])} />}
+        {TALES[it.id] && <LinkBtn label={`איך הכול התחיל ב${shortName(it)}? לקומיקס`} onPress={() => router.push(`/tale/${it.id}`)} />}
       </>
     );
   }

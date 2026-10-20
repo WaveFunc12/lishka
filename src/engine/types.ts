@@ -67,6 +67,8 @@ export type PlayerState = {
   units: Record<string, boolean>;
   legendary: boolean;
   seenComic: boolean;
+  /** Founding stories (comics) already shown, by place or region id. */
+  tales: string[];
   mute: boolean;
   /** The region chosen for the next postcards once the story is done; null = the default order. */
   focus: string | null;

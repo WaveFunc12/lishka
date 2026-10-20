@@ -18,6 +18,7 @@ export const freshState = (): PlayerState => ({
   units: {},
   legendary: false,
   seenComic: false,
+  tales: [],
   mute: false,
   focus: null,
   remind: null,

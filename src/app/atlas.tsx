@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { BY, COUNTRY, learned, mastery, PLACES, popText, REGIONS, shortName, strength, UNIT_BY } from '@/engine';
 import { useStore, useT } from '@/state/store';
+import { TALES } from '@/ui/comic/tales';
 import { MapView, type MapDot } from '@/ui/MapView';
 import { Btn, Card, H1, Kicker, LinkBtn, Meter, Screen, T_ } from '@/ui/kit';
 import { C, F } from '@/ui/theme';
@@ -45,6 +46,7 @@ export default function Atlas() {
               <T_>{it.hint}</T_>
               <T_ style={{ fontFamily: F.black, fontSize: 14, marginTop: 4 }}>כמה טוב זה זכור: רמה {m} מתוך 5</T_>
               <Meter pct={strength(s, it.id, now()) * 100} color={C.ok} />
+              {TALES[it.id] && <LinkBtn label="איך הכול התחיל: הקומיקס" onPress={() => router.push(`/tale/${it.id}`)} />}
             </>
           ) : (
             <T_ style={{ color: C.muted }}>

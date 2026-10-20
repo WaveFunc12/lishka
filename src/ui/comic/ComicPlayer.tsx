@@ -108,8 +108,10 @@ function PanelView({ p, w, h, still }: { p: Panel; w: number; h: number; still: 
 }
 
 /** Plays the panels full screen. The last panel shows `doneLabel` as a button. */
-export function ComicPlayer({ panels, doneLabel, onDone, onSkip, mute }: {
+export function ComicPlayer({ panels, doneLabel, onDone, onSkip, mute, title }: {
   panels: Panel[]; doneLabel: string; onDone: () => void; onSkip: () => void; mute: boolean;
+  /** A short name over the progress bars, such as the city the story is about. */
+  title?: string;
 }) {
   const [i, setI] = useState(0);
   const still = !!useReducedMotion();
@@ -129,6 +131,7 @@ export function ComicPlayer({ panels, doneLabel, onDone, onSkip, mute }: {
   const label = p.bubbles.map((b) => b.text).join(' ');
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+      {!!title && <Text style={styles.title}>{title}</Text>}
       <View style={styles.top}>
         <View style={styles.bars}>
           {panels.map((_, n) => <View key={n} style={[styles.bar, n <= i && { backgroundColor: C.orange }]} />)}
@@ -164,6 +167,7 @@ const styles = StyleSheet.create({
   top: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, paddingTop: 8, paddingBottom: 8 },
   bars: { flex: 1, flexDirection: 'row', gap: 4 },
   bar: { flex: 1, height: 4, borderRadius: 2, backgroundColor: 'rgba(255,246,226,0.25)' },
+  title: { color: C.surface, fontFamily: F.display, fontSize: 18, textAlign: 'center', paddingTop: 6 },
   skip: { color: C.surface, fontFamily: F.bold, fontSize: 15, opacity: 0.85 },
   frame: { flex: 1, marginHorizontal: 12, borderWidth: BW, borderColor: C.ink, borderRadius: 10, overflow: 'hidden', backgroundColor: C.bg, direction: 'ltr' },
   foot: { height: 72, justifyContent: 'center', paddingHorizontal: 12 },
