@@ -95,11 +95,18 @@
         {
           "enableRemoteNotifications": false
         }
-      ]
+      ],
+      "expo-asset"
     ],
     "scheme": "lishka",
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "699ed40c-bd80-405a-ab91-86f8f24663cc"
+      }
+    },
+    "owner": "vaultmk42s-team"
   }
 }
