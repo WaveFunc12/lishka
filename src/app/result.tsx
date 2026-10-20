@@ -1,6 +1,7 @@
+import * as StoreReview from 'expo-store-review';
 import { useEffect, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { BY, COPY, COUNTRY, learned, mastery, peopleText, PLACES, regionPlaces, regionProgress, REGIONS, rnd, shortName, STORY, storyDone, strength, UNIT_BY } from '@/engine';
+import { BY, COPY, COUNTRY, DAY_MS, INK_PASS, learned, mastery, peopleText, PLACES, postcardsDone, regionPlaces, regionProgress, REGIONS, rnd, shortName, STORY, storyDone, strength, UNIT_BY } from '@/engine';
 import { useStart } from '@/state/actions';
 import { goHome } from '@/state/nav';
 import { useStore, useT } from '@/state/store';
@@ -12,7 +13,7 @@ import { C, F } from '@/ui/theme';
 
 /* End of shift, inspection or exam. A finished postcard shows Zvi's note and the next mystery clue. */
 export default function Result() {
-  const { s, now, result: R } = useStore();
+  const { s, now, update, result: R } = useStore();
   const t = useT();
   const start = useStart();
   const say = useMemo(() => {
@@ -20,10 +21,24 @@ export default function Result() {
     const acc = R.n ? R.ok / R.n : 1;
     if (R.welcomed) return 'הנה, כמו אופניים. המפה כבר נראית יותר טוב.';
     if (R.kind === 'shift' && R.shift === 0) return 'חצי גלויה מוכנה. עוד משמרת אחת והיא נשלחת אליך.';
-    return rnd(acc >= 0.9 ? COPY.great : COPY.good, Math.random);
+    return rnd(acc >= 0.9 ? COPY.great : acc >= 0.6 ? COPY.good : COPY.rough, Math.random);
   }, [R]);
   // A new postcard in the mail gets its little tune, once.
-  const card = !!R?.card || !!R?.milestone || !!R?.inked, mute = s.mute;
+  // A good moment to ask for a rating: a postcard just arrived after a clean shift, well into the game.
+  // Apple shows the prompt at most three times a year anyway; we ask at most once every four months.
+  const askRate = !!R?.card && !!R.n && R.ok / R.n >= 0.8 && postcardsDone(s) >= 6 && (!s.rated || now() - s.rated > 120 * DAY_MS);
+  useEffect(() => {
+    if (!askRate) return;
+    const id = setTimeout(() => {
+      StoreReview.hasAction().then((ok) => {
+        if (!ok) return;
+        update((d) => { d.rated = Date.now(); });
+        return StoreReview.requestReview();
+      }).catch(() => {});
+    }, 2500);
+    return () => clearTimeout(id);
+  }, [askRate, update]);
+  const card = !!R?.card || !!R?.milestone || !!R?.inked?.days, mute = s.mute;
   useEffect(() => { if (card && !mute) sfx('card'); }, [card, mute]);
   if (!R) return null;
   const acc = R.n ? Math.round((R.ok / R.n) * 100) : 100;
@@ -33,9 +48,9 @@ export default function Result() {
   const dots: MapDot[] = PLACES.filter((p) => mastery(s, p.id) >= 1 || todo(p.id))
     .map((p) => ({ ...p, state: mastery(s, p.id) >= 1 ? 'lit' : 'dim', size: mastery(s, p.id) >= 1 ? 1 : 0.6, label: R.newIds.includes(p.id) ? p.name : '' }));
   // A region's stamp as it stands in the album: earned, its places marked.
-  const stamp = (region: string, col: string, size: number) => {
+  const stamp = (region: string, col: string, size: number, faded = false) => {
     const ids = regionPlaces(region);
-    return <RegionStamp col={col} earned places={ids.map((id) => BY[id])} known={ids.filter((id) => mastery(s, id) >= 1).map((id) => BY[id])} size={size} />;
+    return <RegionStamp col={col} earned faded={faded} places={ids.map((id) => BY[id])} known={ids.filter((id) => mastery(s, id) >= 1).map((id) => BY[id])} size={size} />;
   };
   const inkReg = R.inked ? REGIONS.find((g) => g.id === R.inked!.region) : null;
   const regionsLeft = regionProgress(s).filter((g) => g.done < g.units.length).length;
@@ -72,20 +87,23 @@ export default function Result() {
       <View style={styles.top}>
         <View style={{ flex: 1 }}>
           <Kicker>סוף משמרת{R.kind === 'shift' ? ` · ${R.shift + 1} מתוך 2` : ''}</Kicker>
-          <H1 size={32}>{R.kind === 'review' ? (R.inked ? 'הדיו חודש' : R.welcomed ? 'חימום הושלם' : 'ביקורת פתע הושלמה') : unit?.t}</H1>
+          <H1 size={32}>{R.kind === 'review' ? (R.inked ? (R.inked.days ? 'הדיו חודש' : 'הדיו עוד דהוי') : R.welcomed ? 'חימום הושלם' : 'ביקורת פתע הושלמה') : unit?.t}</H1>
         </View>
-        <OkStamp xp={R.xp} size={96} />
+        {/* A rough shift is filed, not approved: the stamp is honest, and the misses come back. */}
+        <OkStamp xp={R.xp} size={96} word={!R.n || R.ok / R.n >= 0.6 ? 'מאושר' : 'הוגש'} />
       </View>
       {perks.length > 0 && (
         <View style={styles.perks}>{perks.map((p) => <View key={p} style={styles.perk}><T_ style={{ fontFamily: F.black, fontSize: 14 }}>{p}</T_></View>)}</View>
       )}
       {inkReg && (
         <Card style={[styles.mile, { borderColor: inkReg.col, flexDirection: 'row', alignItems: 'center', gap: 14 }]}>
-          <StampDrop mute={s.mute}>{stamp(inkReg.id, inkReg.col, 70)}</StampDrop>
+          {R.inked!.days ? <StampDrop mute={s.mute}>{stamp(inkReg.id, inkReg.col, 70)}</StampDrop> : stamp(inkReg.id, inkReg.col, 70, true)}
           <View style={{ flex: 1, gap: 4 }}>
-            <Kicker>חותמת חודשה</Kicker>
-            <T_ style={{ fontFamily: F.display, fontSize: 22 }}>{inkReg.t} כמו חדש</T_>
-            <T_ style={{ fontSize: 15, lineHeight: 21 }}>הדיו יחזיק עכשיו לפחות {R.inked!.days} ימים. כל חידוש מחזיק פי שניים מהקודם.</T_>
+            <Kicker>{R.inked!.days ? 'חותמת חודשה' : 'צריך עוד סיבוב'}</Kicker>
+            <T_ style={{ fontFamily: F.display, fontSize: 22 }}>{R.inked!.days ? `${inkReg.t} כמו חדש` : `${inkReg.t} עוד דהוי`}</T_>
+            <T_ style={{ fontSize: 15, lineHeight: 21 }}>{R.inked!.days
+              ? `הדיו יחזיק עכשיו לפחות ${R.inked!.days} ימים. כל חידוש מחזיק פי שניים מהקודם.`
+              : `כדי לחדש את החותמת צריך לפחות ${Math.round(INK_PASS * 100)}% דיוק. מה שהתפספס יחזור, ואפשר לנסות שוב מהשולחן.`}</T_>
           </View>
         </Card>
       )}

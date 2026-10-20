@@ -1,6 +1,6 @@
 import { daily, markDay } from './attendance';
-import { renewInk } from './ink';
-import { BY, PLACES, shiftItems, STORY } from './catalog';
+import { INK_PASS, regionClosed, renewInk } from './ink';
+import { BY, PLACES, shiftItems, STORY, UNIT_BY } from './catalog';
 import { COPY, DIR_WORD } from './content';
 import { dist, nearest } from './geo';
 import { bump, fading, introduce, learned, mastery, qType, strength } from './memory';
@@ -193,6 +193,9 @@ export function finish(sess: Session, s: PlayerState, today: DayStr, now: number
     if (sh.every(Boolean) && !s.units[sess.unitId]) {
       s.units[sess.unitId] = true;
       card = true;
+      // A region closed just now starts its ink fresh, even if its first postcards were learned weeks ago.
+      const region = UNIT_BY[sess.unitId]?.region;
+      if (region && regionClosed(s, region) && !s.ink[region]) s.ink[region] = { at: now, n: 0 };
     }
   }
   if (sess.kind === 'review') {
@@ -207,7 +210,8 @@ export function finish(sess: Session, s: PlayerState, today: DayStr, now: number
     }
   }
   if (sess.kind === 'exam' && !sess.misses.length) s.legendary = true;
-  const inked = sess.ink ? { region: sess.ink, days: renewInk(s, sess.ink, now) } : null;
+  // A renewal stamps fresh ink only when it went well; days 0 means the ink is still faded.
+  const inked = sess.ink ? { region: sess.ink, days: sess.n && sess.ok / sess.n >= INK_PASS ? renewInk(s, sess.ink, now) : 0 } : null;
   if (sess.kind !== 'exam' && markDay(s, today)) streakUp = s.streak;
   s.note = null;
   s.lost = 0;

@@ -87,17 +87,17 @@ export function Meter({ pct, color = C.orange }: { pct: number; color?: string }
   );
 }
 
-/** The orange "approved" stamp with the XP earned. */
-export function OkStamp({ xp, size = 72 }: { xp: number; size?: number }) {
+/** The orange "approved" stamp with the XP earned (or another word, such as "הוגש" for a rough shift). */
+export function OkStamp({ xp, size = 72, word = 'מאושר' }: { xp: number; size?: number; word?: string }) {
   return (
-    <View style={{ width: size, height: size, transform: [{ rotate: '-12deg' }] }} accessibilityLabel={`מאושר, ${xp} ותק`}>
+    <View style={{ width: size, height: size, transform: [{ rotate: '-12deg' }] }} accessibilityLabel={`${word}, ${xp} ותק`}>
       <Svg width={size} height={size} viewBox="0 0 80 80">
         <Circle cx={40} cy={40} r={35} fill={C.orange} stroke={C.ink} strokeWidth={3} />
         <Circle cx={40} cy={40} r={27} fill="none" stroke={C.ink} strokeWidth={1.5} strokeDasharray={[3, 3]} />
       </Svg>
       <View style={StyleSheet.absoluteFill}>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <Text maxFontSizeMultiplier={1} style={{ fontFamily: F.stamp, fontSize: size * 0.33, color: C.ink, lineHeight: size * 0.36 }}>מאושר</Text>
+          <Text maxFontSizeMultiplier={1} style={{ fontFamily: F.stamp, fontSize: size * 0.33, color: C.ink, lineHeight: size * 0.36 }}>{word}</Text>
           <Text maxFontSizeMultiplier={1} style={{ fontFamily: F.black, fontSize: size * 0.13, color: C.ink }}>+{xp} ותק</Text>
         </View>
       </View>

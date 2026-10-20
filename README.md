@@ -57,7 +57,12 @@ To turn it on:
 1. Create a free project at supabase.com and run the migration (SQL editor, or `supabase db push`).
 2. Auth: enable Email (with "email OTP", 6 digits) and Apple (bundle id `com.wavefunc12.lishka`).
 3. Put the project's URL and publishable key in `.env` as `EXPO_PUBLIC_SUPABASE_URL` and
-   `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (and in EAS environment variables for builds).
+   `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and the same two under `build.production.env` in `eas.json`
+   (both are public by design), so the App Store build has rooms. A production build without them shows
+   "rooms aren't connected", which App Review rejects.
+4. For App Review: create one user in Authentication with a 6-digit password and set its address as
+   `EXPO_PUBLIC_REVIEW_EMAIL` in the same places; that address signs in with the password as its code
+   (see `docs/app-store.md`, Review notes).
 
 Without them the app stays fully offline and the rooms screen says rooms aren't connected yet.
 

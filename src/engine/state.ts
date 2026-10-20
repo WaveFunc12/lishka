@@ -20,6 +20,7 @@ export const freshState = (): PlayerState => ({
   seenComic: false,
   tales: [],
   mute: false,
+  rated: null,
   focus: null,
   remind: null,
   dailies: {},

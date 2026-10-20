@@ -12,6 +12,8 @@ import type { PlayerState } from './types';
 export const INK_FADED = 0.4;
 /** How many of the region's weakest places a renewal asks about. */
 export const INK_QS = 10;
+/** A renewal counts only with this share of right answers; below it the ink stays faded and Zvi asks again. */
+export const INK_PASS = 0.6;
 
 export const regionPlaces = (id: string): string[] => REGION_UNITS.filter((u) => u.region === id).flatMap((u) => u.items);
 export const regionClosed = (s: PlayerState, id: string): boolean => REGION_UNITS.filter((u) => u.region === id).every((u) => s.units[u.id]);
@@ -23,7 +25,7 @@ export function inkLevel(s: PlayerState, id: string, now: number): number {
 }
 
 /** Days a renewal holds, by how many renewals the region has had (1st: 4 days, 2nd: 8, 3rd: 16, then 30). */
-export const inkHold = (n: number): number => Math.min(30, 2 ** (n + 1));
+export const inkHold = (n: number): number => Math.min(30, 2 ** (Math.max(n, 1) + 1)); // n 0 is the region just closed: 4 days, like a first renewal
 
 /** A closed region whose ink has faded and whose last renewal no longer holds. */
 export function inkFaded(s: PlayerState, id: string, now: number): boolean {

@@ -17,7 +17,6 @@ export default function Rooms() {
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
-  const [bye, setBye] = useState(false);
 
   const load = useCallback(() => {
     if (session && profile) myRooms().then(setRooms).catch((e) => setErr(say(e)));
@@ -45,7 +44,11 @@ export default function Rooms() {
       ) : !ready ? null : !session ? (
         <SignIn />
       ) : !profile ? (
-        <PickName />
+        <>
+          <PickName />
+          {/* Signed in but not named yet: leaving or deleting the account must still be one tap away. */}
+          <AccountLinks />
+        </>
       ) : (
         <>
           <View style={{ gap: 10 }}>
@@ -72,26 +75,40 @@ export default function Rooms() {
           </Card>
           {!!err && <T_ style={{ color: C.bad, fontFamily: F.bold }}>{err}</T_>}
           <T_ style={{ color: C.muted, fontSize: 13, textAlign: 'center' }}>{t(`{מחובר|מחוברת} בתור ${profile.name}. ההתקדמות נשמרת בחשבון.`)}</T_>
-          <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 24 }}>
-            <LinkBtn label="להתנתק" onPress={() => { signOut().catch(() => {}); setRooms(null); }} />
-            <LinkBtn label="למחוק את החשבון" onPress={() => setBye(true)} />
-          </View>
-          {bye && (
-            <Card style={{ gap: 10, borderColor: C.bad }}>
-              <T_ style={{ fontFamily: F.black }}>למחוק את החשבון?</T_>
-              <T_ style={{ fontSize: 14 }}>השם, התוצאות בחדרים והגיבוי של ההתקדמות יימחקו מהשרת. חדרים שפתחת יעברו לחבר הבא בחדר. ההתקדמות בטלפון הזה נשארת.</T_>
-              <View style={{ flexDirection: 'row', gap: 8 }}>
-                <Btn style={{ flex: 1 }} alt label="ביטול" onPress={() => setBye(false)} />
-                <Btn style={{ flex: 1 }} tone="wrong" label="למחוק" disabled={busy} onPress={async () => {
-                  setBusy(true); setErr('');
-                  try { await deleteAccount(); setRooms(null); setBye(false); } catch (e) { setErr(say(e)); } finally { setBusy(false); }
-                }} />
-              </View>
-            </Card>
-          )}
+          <AccountLinks onGone={() => setRooms(null)} />
         </>
       )}
     </Screen>
+  );
+}
+
+
+/** Sign out, and delete the account after a confirmation: wherever a signed-in player is, both are one tap away. */
+function AccountLinks({ onGone }: { onGone?: () => void }) {
+  const [bye, setBye] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  return (
+    <>
+      <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 24 }}>
+        <LinkBtn label="להתנתק" onPress={() => { signOut().catch(() => {}); onGone?.(); }} />
+        <LinkBtn label="למחוק את החשבון" onPress={() => setBye(true)} />
+      </View>
+      {bye && (
+        <Card style={{ gap: 10, borderColor: C.bad }}>
+          <T_ style={{ fontFamily: F.black }}>למחוק את החשבון?</T_>
+          <T_ style={{ fontSize: 14 }}>השם, התוצאות בחדרים והגיבוי של ההתקדמות יימחקו מהשרת. חדרים שפתחת יעברו לחבר הבא בחדר. ההתקדמות בטלפון הזה נשארת.</T_>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <Btn style={{ flex: 1 }} alt label="ביטול" onPress={() => setBye(false)} />
+            <Btn style={{ flex: 1 }} tone="wrong" label="למחוק" disabled={busy} onPress={async () => {
+              setBusy(true); setErr('');
+              try { await deleteAccount(); onGone?.(); setBye(false); } catch (e) { setErr(say(e)); } finally { setBusy(false); }
+            }} />
+          </View>
+        </Card>
+      )}
+      {!!err && <T_ style={{ color: C.bad, fontFamily: F.bold }}>{err}</T_>}
+    </>
   );
 }
 

@@ -31,13 +31,15 @@ export default function RoomScreen() {
 
   const load = useCallback(() => {
     if (!id) return;
+    let live = true; // a reply that lands after leaving the screen is dropped
     Promise.all([getRoom(id), roomDay(id, d), roomWeek(id, end), roomWeek(id, lastEnd)])
-      .then(([r, a, b, c]) => { setRoom(r); setDay(a); setWeek(b); setPrev(c); })
-      .catch((e) => setErr(say(e)));
+      .then(([r, a, b, c]) => { if (live) { setRoom(r); setDay(a); setWeek(b); setPrev(c); } })
+      .catch((e) => { if (live) setErr(say(e)); });
+    return () => { live = false; };
   }, [id, d, end, lastEnd]);
   useFocusEffect(load);
 
-  const best = prev?.[0] && prev[0].points > 0 ? prev[0] : null;
+  const best = prev?.[0] && prev[0].days > 0 ? prev[0] : null; // whoever played most points (then fewest km) wins, even on 0
   const [copied, setCopied] = useState(false);
   const invite = () => room && shareText(`בואו להתחרות איתי ביומי של גלויות מהלשכה! החדר "${room.name}", קוד ${room.code}`).then((r) => setCopied(r === 'copied'));
   const owner = !!room && room.owner === session?.user.id;
@@ -79,12 +81,12 @@ export default function RoomScreen() {
           ))
           : (week || []).map((r, i) => (
             <Row key={r.user_id} n={String(i + 1)} me={r.me} name={r.name + (r.me ? meTag : '')}
-              mid={`${r.days} ${r.days === 1 ? 'יום' : 'ימים'}${i === 0 && r.points > 0 ? ' · בדרך לתעודה' : ''}`} right={`${r.points} נק׳ · ${kmText(r.total_km)}`} />
+              mid={`${r.days} ${r.days === 1 ? 'יום' : 'ימים'}${i === 0 && r.days > 0 ? ' · בדרך לתעודה' : ''}`} right={`${r.points} נק׳ · ${kmText(r.total_km)}`} />
           ))}
         {!day && !err && <T_ style={{ color: C.muted, padding: 8 }}>טוען…</T_>}
       </Card>
       <T_ style={{ color: C.muted, fontSize: 13 }}>
-        {tab === 'day' ? 'מי שצבר יותר נקודות מוביל. בתיקו, מי שסטה פחות קילומטרים.' : 'השבוע נסגר במוצאי שבת. מי שבראש הטבלה נהיה עובד/ת השבוע, והתעודה נתלית בראש החדר לשבוע שלם.'}
+        {tab === 'day' ? 'מי שצבר יותר נקודות מוביל. בתיקו, מי שסטה פחות קילומטרים.' : 'השבוע נסגר בשבת בחצות. מי שבראש הטבלה נהיה עובד/ת השבוע, והתעודה נתלית בראש החדר לשבוע שלם.'}
       </T_>
       {!played && <Btn big label="לשחק את היומי" onPress={() => router.push('/daily')} />}
       <Btn alt label="להזמין לחדר" onPress={invite} />

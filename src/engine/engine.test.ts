@@ -355,6 +355,29 @@ describe('fading ink', () => {
     expect(inkFaded(s, 'dan', NOW + 5 * DAY_MS)).toBe(true);
     expect(renewInk(s, 'dan', NOW + 5 * DAY_MS)).toBe(8);
   });
+  it('gives a region closed just now four days, even when its first postcards are old', () => {
+    expect(inkHold(0)).toBe(4);
+    const s = freshState(), rng = seeded(4);
+    const [first, last] = REGION_UNITS.filter((u) => u.region === 'gol');
+    first.items.forEach((p) => { s.mastery[p] = 2; s.seen[p] = NOW - 30 * DAY_MS; });
+    s.units[first.id] = true;
+    s.shifts[last.id] = [true, false];
+    const sess = startSession('shift', buildShift(s, last, 1, NOW, rng), rng, last.id, 1);
+    for (let done = false; !done; done = advance(sess, s, NOW, rng)) {
+      const q = sess.q[sess.i];
+      if (q.t !== 'intro') answer(sess, s, gradeTap({ ...q, t: 'tap' }, q.t === 'compare' ? compareAnswer(q) : q.id), NOW, rng);
+    }
+    expect(finish(sess, s, '2026-10-19', NOW).card).toBe(true);
+    expect(s.ink.gol).toEqual({ at: NOW, n: 0 });
+    expect(inkFaded(s, 'gol', NOW + DAY_MS)).toBe(false);
+  });
+  it('renews the ink only when the renewal went well', () => {
+    const s = freshState(), sess = { kind: 'review', ink: 'dan', q: [], i: 0, xp: 0, ok: 3, n: 10, best: 0, misses: [] } as unknown as Parameters<typeof finish>[0];
+    close(s, 'dan', 3, NOW - 10 * DAY_MS);
+    expect(finish(sess, s, '2026-10-19', NOW).inked).toEqual({ region: 'dan', days: 0 });
+    expect(s.ink.dan).toBeUndefined();
+    expect(finish({ ...sess, ok: 8 }, s, '2026-10-19', NOW).inked).toEqual({ region: 'dan', days: 4 });
+  });
 });
 
 describe('room weeks', () => {

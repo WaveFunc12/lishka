@@ -70,6 +70,8 @@ export type PlayerState = {
   /** Founding stories (comics) already shown, by place or region id. */
   tales: string[];
   mute: boolean;
+  /** When the App Store rating prompt was last asked for (ms), so it comes at most once a season. */
+  rated: number | null;
   /** The region chosen for the next postcards once the story is done; null = the default order. */
   focus: string | null;
   /** Hour of Zvi's daily reminder (device time), or null when off. */
@@ -142,6 +144,7 @@ export type SessionResult = {
   /** A milestone on the way to the whole country, passed in this session. */
   milestone: { at: number; title: string; short: string; say: string } | null;
   /** A region's ink renewed by this session, and how many days it now holds. */
+  /** A fading-ink renewal: how many days the fresh ink holds, or 0 when it went badly and the ink stays faded. */
   inked: { region: string; days: number } | null;
   earnedSick: boolean;
   welcomed: boolean;

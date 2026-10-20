@@ -50,10 +50,18 @@ function ok<R extends { data: unknown; error: unknown }>(r: R): NonNullable<R['d
 
 /** Sign in with the token from Sign in with Apple (iOS). */
 export const signInApple = async (identityToken: string) => ok(await need().auth.signInWithIdToken({ provider: 'apple', token: identityToken }));
+/* App Review can't read our inbox, so one review account (EXPO_PUBLIC_REVIEW_EMAIL, created in Supabase with a
+   password) signs in with a fixed code: no email is sent, and the "code" is that password. */
+const REVIEW = process.env.EXPO_PUBLIC_REVIEW_EMAIL?.trim().toLowerCase();
+const isReview = (email: string) => !!REVIEW && email.trim().toLowerCase() === REVIEW;
+
 /** Email a 6-digit sign-in code; on web and Android this is the way in. */
-export const sendEmailCode = async (email: string) => ok(await need().auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: true } }));
+export const sendEmailCode = async (email: string) =>
+  isReview(email) ? null : ok(await need().auth.signInWithOtp({ email: email.trim(), options: { shouldCreateUser: true } }));
 export const verifyEmailCode = async (email: string, code: string) =>
-  ok(await need().auth.verifyOtp({ email: email.trim(), token: code.trim(), type: 'email' }));
+  isReview(email)
+    ? ok(await need().auth.signInWithPassword({ email: email.trim(), password: code.trim() }))
+    : ok(await need().auth.verifyOtp({ email: email.trim(), token: code.trim(), type: 'email' }));
 export const signOut = async () => { await need().auth.signOut(); };
 /** Delete the account on the server (name, results, rooms' memberships, backup), then sign out here. */
 export async function deleteAccount() {
