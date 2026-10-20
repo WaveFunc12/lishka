@@ -1,12 +1,13 @@
 import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-audio';
 
 /* The game's sound effects (made by tools/make_sounds.py). Players are created on first use and kept,
-   since the same three sounds repeat all game long. They follow the phone's silent switch. */
+   since the same few sounds repeat all game long. They follow the phone's silent switch. */
 
 const SRC = {
   ok: require('../../assets/sounds/ok.wav'),
   bad: require('../../assets/sounds/bad.wav'),
   card: require('../../assets/sounds/card.wav'),
+  flip: require('../../assets/sounds/flip.wav'),
 };
 export type Sfx = keyof typeof SRC;
 

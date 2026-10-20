@@ -95,8 +95,9 @@ export default function File() {
             </T_>
           </View>
         )}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 6 }}>
           <LinkBtn label="על הלשכה וקרדיטים" onPress={() => router.push('/about')} />
+          <LinkBtn label="לצפות שוב בקומיקס" onPress={() => router.push('/story?replay=1')} />
           <LinkBtn label="להתחיל מחדש" onPress={confirmReset} />
         </View>
       </Card>
