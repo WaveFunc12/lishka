@@ -15,7 +15,7 @@ from scipy.sparse import coo_matrix
 from scipy.sparse.csgraph import dijkstra
 from scipy.spatial import cKDTree
 from shapely.geometry import LineString, Polygon, box
-from shapely.ops import unary_union, linemerge
+from shapely.ops import unary_union, linemerge, polygonize
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 CACHE = sys.argv[1]
@@ -215,14 +215,52 @@ def rel_d(g, tol, min_len=0.0):
             out.append(f'M{q[0][0]} {q[0][1]}l' + ' '.join(f'{a} {b}' for a, b in np.diff(q, axis=0)))
     return ''.join(out)
 
+def tidy(m):
+    """Collapse roundabouts to a point and drop short dead-end stubs: at map scale a roundabout is a knob and a
+    stub a stray tick on the road."""
+    rings = [p for p in polygonize(m) if p.area < 0.02 and 4 * math.pi * p.area / p.length ** 2 > 0.5]
+    if rings:
+        tree = shapely.STRtree([r.buffer(0.004) for r in rings])
+        cen = [r.centroid.coords[0] for r in rings]
+        def snap(c):
+            hit = tree.query(shapely.points(c), predicate='within')
+            out = c.copy()
+            for i, j in zip(*hit):
+                out[i] = cen[j]
+            return out
+        lines = [LineString(snap(np.asarray(g.coords))) for g in getattr(m, 'geoms', [m])]
+        m = linemerge(unary_union([g for g in lines if g.length > 0.002]))
+    for _ in range(2):
+        parts = list(getattr(m, 'geoms', [m]))
+        ends = {}
+        for g in parts:
+            for c in (g.coords[0], g.coords[-1]):
+                k = (round(c[0], 4), round(c[1], 4)); ends[k] = ends.get(k, 0) + 1
+        deg = lambda c: ends[(round(c[0], 4), round(c[1], 4))]
+        keep = [g for g in parts if not (g.length < 0.15 and min(deg(g.coords[0]), deg(g.coords[-1])) == 1 and max(deg(g.coords[0]), deg(g.coords[-1])) >= 3)]
+        m = linemerge(keep) if len(keep) > 1 else keep[0]
+    # A short stretch of a bigger class inside a smaller road (a trunk bit in a primary road) would draw as a
+    # blob; it moves down to the next class instead, where it joins the road around it.
+    parts = list(getattr(m, 'geoms', [m]))
+    ends = {}
+    for g in parts:
+        for c in (g.coords[0], g.coords[-1]):
+            k = (round(c[0], 4), round(c[1], 4)); ends[k] = ends.get(k, 0) + 1
+    lone = lambda g: g.length < 0.5 and all(ends[(round(c[0], 4), round(c[1], 4))] == 1 for c in (g.coords[0], g.coords[-1]))
+    down = [g for g in parts if lone(g)]
+    keep = [g for g in parts if not lone(g)]
+    return (linemerge(keep) if len(keep) > 1 else keep[0]), down
+
 def network(roads, home):
     """Every motorway, trunk, primary and secondary road inside the country, at two levels of detail.
     lod 0 (zoomed out, 90 km across or more, so about 4 px per km): simplified to 250 m. lod 1 (zoomed in): 8 m, cut into cells."""
     zone = home.buffer(1.5)
-    out = []
+    out, down = [], []
     for ci, cls in enumerate(NET_CLASSES):
-        u = unary_union([to_km(r['geom']) for r in roads if r['class'] == cls]).intersection(zone)
-        m = linemerge(u) if u.geom_type == 'MultiLineString' else u
+        u = unary_union([to_km(r['geom']) for r in roads if r['class'] == cls] + down).intersection(zone)
+        m, down = tidy(linemerge(u) if u.geom_type == 'MultiLineString' else u)
+        if ci == len(NET_CLASSES) - 1:
+            m = unary_union([m] + down)
         if ci < 3:
             d = rel_d(m, 0.25)
             out.append({'c': ci, 'l': 0, 'x': 0, 'y': 0, 'd': d})
