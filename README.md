@@ -11,6 +11,16 @@ npx expo start        # scan the QR code with Expo Go on your iPhone
 npx expo start --web  # or play in a browser
 ```
 
+## Build for iPhone (EAS)
+
+```sh
+npx eas-cli@latest build --profile development --platform ios   # dev build with Sign in with Apple and reminders
+npx eas-cli@latest build --profile production --platform ios    # App Store build (version number counts up by itself)
+npx eas-cli@latest submit --platform ios                        # send it to App Store Connect
+```
+
+The first run asks to log in to Expo and to the Apple Developer account, and creates the signing certificates.
+
 ## Check it
 
 ```sh
