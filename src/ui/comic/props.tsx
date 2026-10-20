@@ -72,9 +72,20 @@ export function StoneLion({ x, y, s = 1 }: { x: number; y: number; s?: number })
     <G transform={`translate(${x} ${y}) scale(${s})`}>
       <Rect x={-110} y={-40} width={220} height={40} fill="#A8A29A" {...INK} />
       <Path d="M-90 -40 L-90 -110 Q-60 -150 0 -140 L60 -130 Q90 -120 96 -90 L96 -40Z" fill="#B9B3AA" {...INK} />
-      <Path d="M-100 -110 Q-110 -170 -60 -190 Q-10 -200 0 -150 Q-20 -110 -60 -100Z" fill="#9C968E" {...INK} />
-      <Path d="M-92 -150 Q-60 -170 -40 -140 L-70 -126Z" fill="#6B655E" stroke={K.ink} strokeWidth={3} />
-      <Circle cx={-58} cy={-164} r={5} fill={K.ink} />
+      {/* The mane, the face, and the jaws open in a roar, up and to the left. */}
+      {Array.from({ length: 11 }, (_, i) => {
+        const t = (i / 11) * Math.PI * 2;
+        return <Circle key={i} cx={-40 + Math.cos(t) * 40} cy={-150 + Math.sin(t) * 40} r={18} fill="#8C867E" {...INK} strokeWidth={3} />;
+      })}
+      <Circle cx={-40} cy={-150} r={40} fill="#8C867E" />
+      <Path d="M-60 -176 L-112 -200 Q-122 -196 -118 -186 L-84 -164Z" fill="#C4BEB5" {...INK} strokeWidth={3} />
+      <Path d="M-64 -136 L-112 -142 Q-118 -134 -110 -128 L-66 -122Z" fill="#C4BEB5" {...INK} strokeWidth={3} />
+      <Path d="M-84 -164 L-118 -186 L-110 -142 L-66 -136Z" fill="#4A4540" />
+      <Path d="M-112 -186 L-108 -176 M-106 -140 L-102 -146" stroke="#FFFFFF" strokeWidth={3} />
+      <Circle cx={-116} cy={-196} r={5} fill={K.ink} />
+      <Circle cx={-44} cy={-150} r={30} fill="#C4BEB5" {...INK} strokeWidth={3} />
+      <Circle cx={-56} cy={-162} r={4.5} fill={K.ink} />
+      <Path d="M-68 -172 L-46 -176" stroke={K.ink} strokeWidth={3} strokeLinecap="round" />
       <Rect x={-90} y={-40} width={30} height={40} fill="url(#dots)" />
     </G>
   );

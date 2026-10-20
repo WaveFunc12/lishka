@@ -5,6 +5,8 @@ import { haifa } from './haifa';
 import { jerusalem } from './jerusalem';
 import { netanya } from './netanya';
 import { regions1 } from './regions1';
+import { regions2 } from './regions2';
+import { regions3 } from './regions3';
 import { telaviv } from './telaviv';
 
 /* Founding stories: a short comic for each big city, keyed by place id, and for each region, keyed `r-<region id>`
@@ -28,5 +30,5 @@ export const TALES: Record<string, Tale> = {
   bsh: beersheva,
   asd: ashdod,
   ntn: netanya,
-  ...Object.fromEntries(Object.entries(regions1).map(([id, tale]) => [regionTale(id), tale])),
+  ...Object.fromEntries(Object.entries({ ...regions1, ...regions2, ...regions3 }).map(([id, tale]) => [regionTale(id), tale])),
 };
