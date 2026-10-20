@@ -1,7 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, TextInput, View } from 'react-native';
+import { StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
 import {
   advance, anchorFor, answer, BY, compareAnswer, DIR_WORD, finish, fitView, gradeCompare, gradeName, gradePin, gradeTap,
   gradeType, learned, PIN_LIMIT, PLACES, popText, ANCHORS, shortName, viewAround, ZVI_MEMORY, type Grade, type Point, type View as Box,
@@ -18,6 +18,7 @@ export default function Shift() {
   const [typed, setTyped] = useState('');
   const [picked, setPicked] = useState<string | null>(null);
   const [guess, setGuess] = useState<Point | null>(null);
+  const winH = useWindowDimensions().height;
   if (!session) return null;
   const sess = session, q = sess.q[sess.i], it = BY[q.id], done = !!sess.fb, rng = Math.random;
   const known = new Set(learned(s).map((p) => p.id));
@@ -151,6 +152,9 @@ export default function Shift() {
   if (q.rev && sess.kind === 'shift') kind = 'תיק דוהה · ' + kind;
 
   const pct = Math.round((sess.i / sess.q.length) * 100);
+  // The map takes the height the question's answers leave free (with room for the feedback sheet), so tall phones show more map.
+  const free = { intro: 460, pin: 340, tap: 400, compare: 460, type: 520, name: 640 }[q.t];
+  const mapH = Math.round(Math.min(520, Math.max(q.t === 'intro' ? 220 : 300, winH - free)));
   return (
     <Screen>
       <View style={styles.head}>
@@ -162,7 +166,8 @@ export default function Shift() {
         <Kicker>{kind}</Kicker>
         {!!title && <T_ style={{ fontFamily: F.display, fontSize: 26, lineHeight: 32 }}>{title}</T_>}
       </View>
-      <MapView {...map} style={{ height: q.t === 'intro' ? 220 : 300 }} label="מפת השאלה" />
+      {/* A new height remounts the map: on the web a resize alone does not re-measure it. */}
+      <MapView key={mapH} {...map} style={{ height: mapH }} label="מפת השאלה" />
       {body}
       <View style={{ flex: 1 }} />
       {sess.fb ? (
