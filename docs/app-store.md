@@ -47,8 +47,9 @@ Data linked to the user, used for App Functionality only, not used for tracking:
 - User content › Other user content (display name, room names).
 - Usage data › Product interaction (daily scores and game progress backup).
 
-No data is collected without an account. Privacy policy: `docs/privacy.md` (host it, for example as a
-GitHub Pages page, and paste its URL; fill in the contact email first).
+No data is collected without an account. Privacy policy: `docs/privacy.md`. The repository is public, so once
+this branch is merged the policy URL is https://github.com/WaveFunc12/lishka/blob/main/docs/privacy.md
+(fill in the contact email first). The same URL works as the support URL.
 
 ## Screenshots
 
