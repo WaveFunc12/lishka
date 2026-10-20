@@ -1,11 +1,12 @@
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Share, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { dayNo, kmText } from '@/engine';
 import { getRoom, leaveRoom, roomDay, roomWeek, say, type DayRow, type Room, type WeekRow } from '@/net/backend';
 import { useAccount } from '@/net/account';
 import { useStore, useT } from '@/state/store';
 import { Btn, Card, H1, Kicker, LinkBtn, Screen, T_ } from '@/ui/kit';
+import { shareText } from '@/ui/share';
 import { C, F } from '@/ui/theme';
 
 /* One room's table: today's daily (who played, points, total distance) or the last seven days. */
@@ -31,7 +32,8 @@ export default function RoomScreen() {
   }, [id, d]);
   useFocusEffect(load);
 
-  const invite = () => room && Share.share({ message: `בואו להתחרות איתי ביומי של גלויות מהלשכה! החדר "${room.name}", קוד ${room.code}` }).catch(() => {});
+  const [copied, setCopied] = useState(false);
+  const invite = () => room && shareText(`בואו להתחרות איתי ביומי של גלויות מהלשכה! החדר "${room.name}", קוד ${room.code}`).then((r) => setCopied(r === 'copied'));
   const leave = () => {
     if (!room || !session) return;
     leaveRoom(room.id, session.user.id).then(() => router.back()).catch((e) => setErr(say(e)));
@@ -63,6 +65,7 @@ export default function RoomScreen() {
       {tab === 'day' && <T_ style={{ color: C.muted, fontSize: 13 }}>מי שצבר יותר נקודות מוביל. בתיקו, מי שסטה פחות קילומטרים.</T_>}
       {!played && <Btn big label="לשחק את היומי" onPress={() => router.push('/daily')} />}
       <Btn alt label="להזמין לחדר" onPress={invite} />
+      {copied && <T_ style={{ textAlign: 'center', color: C.ok, fontFamily: F.bold }}>ההזמנה הועתקה, עם קוד החדר. אפשר להדביק אותה בוואטסאפ.</T_>}
       {!!err && <T_ style={{ color: C.bad, fontFamily: F.bold }}>{err}</T_>}
       <View style={{ alignItems: 'center' }}>
         {sure ? <LinkBtn label="כן, לעזוב את החדר" onPress={leave} /> : <LinkBtn label="לעזוב את החדר" onPress={() => setSure(true)} />}

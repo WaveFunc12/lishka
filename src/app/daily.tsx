@@ -1,7 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Share, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import {
   ANCHORS, BY, COUNTRY, daily, dailyIds, dailyStats, DAILY_N, dayNo, dist, hit, HIT_KM, kmText, logEntry, markDay, msToNextDay, PLACES, points, shareText, shortName,
   squares, totalKm, untilText, type Point,
@@ -10,6 +10,7 @@ import { submitDaily } from '@/net/backend';
 import { useAccount } from '@/net/account';
 import { useStore, useT } from '@/state/store';
 import { MapView, type MapDot } from '@/ui/MapView';
+import { shareText as share } from '@/ui/share';
 import { sfx } from '@/ui/sound';
 import { Btn, Card, Kicker, LinkBtn, Screen, T_ } from '@/ui/kit';
 import { C, F } from '@/ui/theme';
@@ -71,6 +72,7 @@ export default function Daily() {
   // Signed in to rooms: the finished daily goes to the room tables by itself.
   const { session, profile } = useAccount();
   const [sent, setSent] = useState<'no' | 'yes' | 'failed'>('no');
+  const [shared, setShared] = useState<'shared' | 'copied' | 'failed' | null>(null);
   const uid = profile ? session?.user.id : undefined, complete = picks.length >= DAILY_N;
   useEffect(() => {
     if (uid && complete) submitDaily(uid, day, picks).then(() => setSent('yes'), () => setSent('failed'));
@@ -126,7 +128,8 @@ export default function Daily() {
           <T_ style={{ color: C.muted, textAlign: 'center' }}>סטייה כוללת {kmText(totalKm(picks))}. בתיקו, מי שסטה פחות מנצח.</T_>
         </Card>
         <Record today={day} score={points(picks)} />
-        <Btn big label="לשתף ולהתחרות" onPress={() => Share.share({ message: shareText(picks, day, s.g, dailyStats(s, day).run) }).catch(() => {})} />
+        <Btn big label="לשתף ולהתחרות" onPress={() => share(shareText(picks, day, s.g, dailyStats(s, day).run)).then(setShared)} />
+        {shared === 'copied' && <T_ style={{ textAlign: 'center', color: C.ok, fontFamily: F.bold }}>התוצאה הועתקה. אפשר להדביק אותה בוואטסאפ.</T_>}
         <Btn alt label={sent === 'yes' ? 'נשלח לחדרים. לטבלה' : 'חדרים פרטיים עם חברים'} onPress={() => router.push('/rooms')} />
         {sent === 'failed' && <T_ style={{ color: C.bad, textAlign: 'center' }}>לא הצלחנו לשלוח לחדרים. ננסה שוב כשתפתחו את המסך.</T_>}
         <NextDaily />
