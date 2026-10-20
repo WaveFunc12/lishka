@@ -2,7 +2,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { BY, COUNTRY, learned, mastery, PLACES, popText, REGIONS, shortName, strength, UNIT_BY } from '@/engine';
-import { useStore, useT } from '@/state/store';
+import { useStore } from '@/state/store';
 import { TALES } from '@/ui/comic/tales';
 import { MapView, type MapDot } from '@/ui/MapView';
 import { Btn, Card, H1, Kicker, LinkBtn, Meter, Screen, T_ } from '@/ui/kit';
@@ -12,7 +12,6 @@ import { C, F } from '@/ui/theme';
    `?v=x,y,w` opens at a given view (km). */
 export default function Atlas() {
   const { s, now } = useStore();
-  const t = useT();
   const { v: vq } = useLocalSearchParams<{ v?: string }>();
   const [sel, setSel] = useState<string | null>(null);
   const [all, setAll] = useState(false);
@@ -34,8 +33,8 @@ export default function Atlas() {
       <View><Kicker>{known.length} מתוך {PLACES.length} יישובים חזרו למפה</Kicker><H1>המפה שלי</H1></View>
       <MapView view={view} dots={dots} pickAny onPressDot={setSel} dotPx={5} mini style={{ height: 440 }} label="המפה שלי. אפשר ללחוץ על יישוב" />
       <View style={{ flexDirection: 'row', gap: 8 }}>
-        <Btn style={{ flex: 1 }} alt={all} label={t('מה שאני {יודע|יודעת}')} onPress={() => setAll(false)} />
-        <Btn style={{ flex: 1 }} alt={!all} label={`כל ה־${PLACES.length}`} onPress={() => setAll(true)} />
+        <Btn style={{ flex: 1 }} alt={all} label={`מוכרים לי (${known.length})`} onPress={() => setAll(false)} />
+        <Btn style={{ flex: 1 }} alt={!all} label={`כל ה־${PLACES.length.toLocaleString('en-US')}`} onPress={() => setAll(true)} />
       </View>
       {it ? (
         <Card style={{ gap: 6 }}>
@@ -55,7 +54,7 @@ export default function Atlas() {
           )}
         </Card>
       ) : (
-        <T_ style={{ color: C.muted }}>{known.length ? 'לחיצה על נקודה פותחת את התיק שלה. אפשר להתקרב עם שתי אצבעות או עם הכפתורים.' : 'המפה עוד ריקה. כל משמרת מחזירה אליה יישובים.'}</T_>
+        <T_ style={{ color: C.muted }}>{known.length ? 'לגעת ביישוב כדי לפתוח את התיק שלו.' : 'המפה עוד ריקה. כל משמרת מחזירה אליה יישובים.'}</T_>
       )}
     </Screen>
   );

@@ -37,7 +37,7 @@ export default function Rooms() {
     <Screen>
       <LinkBtn label="חזרה לשולחן" onPress={() => router.back()} />
       <View><Kicker>חדר הישיבות · קומה 4</Kicker><H1>חדרים פרטיים</H1></View>
-      <ZviSays text="כל חדר הוא טבלה של חברים או משפחה. כולם משחקים את אותו היומי, ורואים של מי הסימונים הכי קרובים." />
+      <ZviSays text="פותחים חדר לחברים או למשפחה, משחקים יחד ביומי ומשווים מי פגע הכי קרוב." />
       {!enabled ? (
         <Card style={{ gap: 6 }}>
           <T_ style={{ fontFamily: F.black }}>החדרים עוד לא מחוברים בגרסה הזאת</T_>

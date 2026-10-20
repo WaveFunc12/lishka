@@ -135,6 +135,8 @@ export type SessionResult = {
   card: boolean;
   streakUp: number | null;
   rankUp: string | null;
+  /** A milestone on the way to the whole country, passed in this session. */
+  milestone: { at: number; title: string; short: string; say: string } | null;
   earnedSick: boolean;
   welcomed: boolean;
 };

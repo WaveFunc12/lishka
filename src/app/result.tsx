@@ -1,7 +1,8 @@
 import { router } from 'expo-router';
 import { useEffect, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { BY, COPY, COUNTRY, learned, mastery, PLACES, regionProgress, rnd, shortName, STORY, storyDone, strength, UNIT_BY } from '@/engine';
+import { BY, COPY, COUNTRY, learned, mastery, peopleText, PLACES, regionProgress, rnd, shortName, STORY, storyDone, strength, UNIT_BY } from '@/engine';
+import { useStart } from '@/state/actions';
 import { useStore, useT } from '@/state/store';
 import { MapView, type MapDot } from '@/ui/MapView';
 import { sfx } from '@/ui/sound';
@@ -12,6 +13,7 @@ import { C, F } from '@/ui/theme';
 export default function Result() {
   const { s, now, result: R } = useStore();
   const t = useT();
+  const start = useStart();
   const say = useMemo(() => {
     if (!R) return '';
     const acc = R.n ? R.ok / R.n : 1;
@@ -20,7 +22,7 @@ export default function Result() {
     return rnd(acc >= 0.9 ? COPY.great : COPY.good, Math.random);
   }, [R]);
   // A new postcard in the mail gets its little tune, once.
-  const card = !!R?.card, mute = s.mute;
+  const card = !!R?.card || !!R?.milestone, mute = s.mute;
   useEffect(() => { if (card && !mute) sfx('card'); }, [card, mute]);
   if (!R) return null;
   const acc = R.n ? Math.round((R.ok / R.n) * 100) : 100;
@@ -48,10 +50,12 @@ export default function Result() {
     return (
       <Screen>
         <View><Kicker>מבחן הקביעות</Kicker><H1 size={36}>{win ? 'קביעות!' : 'כמעט קביעות'}</H1></View>
-        <ZviSays text={t(win ? COPY.confess : `פספסת ${R.misses.length}: ${R.misses.map((id) => BY[id].name).join(', ')}. קביעות לא נותנים בהנחות. {נסה|נסי} שוב מחר.`)} />
+        <ZviSays text={t(win ? COPY.confess : `פספסת ${R.misses.length}: ${R.misses.map((id) => BY[id].name).join(', ')}. קביעות לא נותנים בהנחות, אבל אפשר לנסות שוב מתי שרוצים. קודם {תעבור|תעברי} עליהם.`)} />
         <MapView view={COUNTRY} dots={missDots} dotPx={5} reveal={reveal} revealR={1.7} style={{ height: 380 }}
           label={win ? 'מפת הארץ' : `מפת הארץ, ובאדום ${R.misses.length} היישובים שפוספסו`} />
-        <Btn big label="חזרה לשולחן" onPress={() => router.replace('/home')} />
+        {!win && <Btn big label={`לחזור על ${R.misses.length} שפוספסו`} onPress={() => start.review(R.misses)} />}
+        {!win && <Btn alt label="לגשת שוב למבחן" onPress={() => start.exam()} />}
+        <Btn big={win} alt={!win} label="חזרה לשולחן" onPress={() => router.replace('/home')} />
       </Screen>
     );
   }
@@ -68,11 +72,30 @@ export default function Result() {
       {perks.length > 0 && (
         <View style={styles.perks}>{perks.map((p) => <View key={p} style={styles.perk}><T_ style={{ fontFamily: F.black, fontSize: 14 }}>{p}</T_></View>)}</View>
       )}
+      {R.milestone && (
+        <Card style={styles.mile}>
+          <Kicker>אבן דרך בדרך לכל הארץ</Kicker>
+          <View style={styles.top}>
+            <T_ style={{ fontFamily: F.display, fontSize: 44, color: C.orange }}>
+              {R.milestone.at < PLACES.length * 0.1 ? R.milestone.at : `${Math.round((R.milestone.at / PLACES.length) * 100)}%`}
+            </T_>
+            <T_ style={{ fontFamily: F.display, fontSize: 24, flex: 1 }}>{R.milestone.title.replace(/^\d+ /, '')}</T_>
+          </View>
+          <T_ style={{ fontSize: 16, lineHeight: 23 }}>{t(R.milestone.say)} — צבי</T_>
+        </Card>
+      )}
       <Card style={styles.stats}>
         <Stat n={`+${R.xp}`} l="ותק" />
         <Stat n={`${acc}%`} l="דיוק" />
         <Stat n={String(R.best)} l="רצף תשובות" />
       </Card>
+      {R.newIds.length > 0 && (
+        <Card style={{ gap: 6 }}>
+          <Kicker>חזרו למפה במשמרת הזאת</Kicker>
+          <T_ style={{ fontFamily: F.black, fontSize: 18, lineHeight: 26 }}>{R.newIds.map((id) => BY[id].name).join(' · ')}</T_>
+          <T_ style={{ color: C.muted }}>ביישובים שעל המפה שלך גרים {peopleText(learned(s).reduce((a, p) => a + (p.pop || 0), 0))}.</T_>
+        </Card>
+      )}
       {R.card && unit ? (
         <Card style={{ backgroundColor: '#FFF6E2', gap: 8, borderColor: unit.col }}>
           <Kicker>דואר נכנס · {unit.region ? `${unit.t} · גלויה ${unit.part} מתוך ${unit.parts}` : `גלויה ${STORY.indexOf(unit) + 1} מתוך ${STORY.length}`}</Kicker>
@@ -105,4 +128,5 @@ const styles = StyleSheet.create({
   perks: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   perk: { borderWidth: 2, borderColor: C.ink, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 4, backgroundColor: C.orange },
   stats: { flexDirection: 'row' },
+  mile: { gap: 6, borderColor: C.orange, borderWidth: 3, backgroundColor: '#FFF6E2' },
 });

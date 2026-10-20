@@ -35,7 +35,7 @@ export default function File() {
         <T_ style={{ fontSize: 13, color: C.muted }}>{t('{תעודת עובד|תעודת עובדת}')} · מס׳ 0042</T_>
         <T_ style={{ fontFamily: F.display, fontSize: 24 }}>{t(r.name)}</T_>
         <Meter pct={pct} />
-        <T_ style={{ fontSize: 13, color: C.muted }}>{r.next ? `${r.next[0] - s.xp} ותק עד ${t(r.next[1])}` : 'הדרגה הגבוהה ביותר בלשכה'}</T_>
+        <T_ style={{ fontSize: 13, color: C.muted }}>{r.next ? `עוד ${r.next[0] - s.xp} נקודות ותק לקידום ל${t(r.next[1])}` : 'הדרגה הגבוהה ביותר בלשכה'}</T_>
       </Card>
       <Card style={{ flexDirection: 'row' }}>
         {[[s.xp, 'ותק'], [`${learned(s).length}/${PLACES.length}`, 'יישובים'], [`${postcardsDone(s)}/${UNITS.length}`, 'גלויות']].map(([n, l]) => (

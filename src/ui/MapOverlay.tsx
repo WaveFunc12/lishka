@@ -95,12 +95,12 @@ export function routeBox(ref: string): Point[] {
   return [{ x: Math.min(...xs), y: Math.min(...ys) }, { x: Math.max(...xs), y: Math.max(...ys) }];
 }
 
-/** One numbered road drawn bold in the game's orange over a pale halo, for the road quiz. */
+/** One numbered road drawn bold in blue over a pale halo, for the road quiz. Blue stands apart from the brown road net. */
 export function RouteHighlight({ route, k }: { route: string; k: number }) {
   const ds = O.roads.filter((r) => r.ref === route).map((r) => r.d);
   return (
     <G>
-      {[[C.roadCase, 9], [C.target, 4.5]].map(([col, w]) => ds.map((d, i) => (
+      {[[C.roadCase, 11], [C.routeHi, 5.5]].map(([col, w]) => ds.map((d, i) => (
         <Path key={`${col}${i}`} d={d} fill="none" stroke={col as string} strokeWidth={(w as number) * k} strokeLinejoin="round" strokeLinecap="round" />
       )))}
     </G>

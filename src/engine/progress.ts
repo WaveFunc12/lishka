@@ -47,3 +47,26 @@ export const regionProgress = (s: PlayerState) =>
     return { ...g, units, done: units.filter((u) => s.units[u.id]).length, places: places.length,
       known: places.filter((id) => mastery(s, id) >= 1).length };
   });
+
+export type Milestone = { at: number; title: string; short: string; say: string };
+
+/** Stops on the way to the whole country: the first few places, then shares of it. */
+export function milestones(total: number = PLACES.length): Milestone[] {
+  const all: Milestone[] = [
+    { at: 10, title: '10 יישובים על המפה', short: '10 יישובים', say: 'עשרה יישובים חזרו למפה. ככה מתחילים, אחד אחד.' },
+    { at: 25, title: '25 יישובים על המפה', short: '25 יישובים', say: 'המפה כבר לא ריקה. עוד קצת והיא תתחיל להיראות כמו מדינה.' },
+    { at: Math.round(total * 0.1), title: 'עשירית מהארץ', short: 'עשירית מהארץ', say: 'עשירית מהארץ חזרה למפה. במשרד כבר מדברים עליך.' },
+    { at: Math.round(total * 0.25), title: 'רבע מהארץ על המפה', short: 'רבע מהארץ', say: 'רבע מהארץ! אני מזמין אותך לשוקו. לא על השרת.' },
+    { at: Math.round(total * 0.5), title: 'חצי מהארץ על המפה', short: 'חצי מהארץ', say: 'חצי מהארץ. מכאן כל יישוב שחוזר מקרב אותנו לסוף.' },
+    { at: Math.round(total * 0.75), title: 'שלושה רבעים מהארץ', short: 'שלושה רבעים מהארץ', say: 'שלושה רבעים. כבר אפשר לראות את הקצה של המפה.' },
+    { at: total, title: 'כל הארץ על המפה', short: 'כל הארץ', say: 'כל הארץ על המפה. 31 שנה חיכיתי {למישהו|למישהי} כמוך.' },
+  ];
+  return all.filter((m, i) => m.at <= total && all.findIndex((o) => o.at === m.at) === i).sort((a, b) => a.at - b.at);
+}
+
+/** The milestone a jump from `before` to `after` known places passed, the biggest if several. */
+export const crossedMilestone = (before: number, after: number, total: number = PLACES.length) =>
+  milestones(total).filter((m) => before < m.at && after >= m.at).pop() ?? null;
+
+/** The next milestone ahead of `known` places, or null once the whole country is back. */
+export const nextMilestone = (known: number, total: number = PLACES.length) => milestones(total).find((m) => m.at > known) ?? null;

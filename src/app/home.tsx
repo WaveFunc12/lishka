@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import {
-  BY, chapter, fading, learned, mastery, nextShift, PLACES, shiftItems, storyDone, strength, UNITS, zviSays, squares, points, dailyStats, DAILY_N,
+  BY, chapter, fading, learned, mastery, nextMilestone, nextShift, PLACES, shiftItems, storyDone, strength, UNITS, zviSays, squares, points, dailyStats, DAILY_N,
   shortName,
 } from '@/engine';
 import { useStart } from '@/state/actions';
@@ -17,7 +17,7 @@ export default function Home() {
   const t = useT();
   const start = useStart();
   // The postcard takes the room the screen has, so tall phones get a bigger map instead of a gap.
-  const mapH = Math.round(Math.min(540, Math.max(240, useWindowDimensions().height - 470)));
+  const mapH = Math.round(Math.min(540, Math.max(240, useWindowDimensions().height - 488)));
   const ns = nextShift(s);
   const u = ns ? ns.u : UNITS[UNITS.length - 1];
   const d = s.daily.day === today() ? s.daily : { shifts: 0, reviews: 0, picks: [] };
@@ -26,7 +26,7 @@ export default function Home() {
   const fad = fading(s, now()).length;
   const fresh = !s.xp;
   const act = s.welcome ? 'review' : ns ? 'shift' : 'exam';
-  const label = s.welcome ? 'לחמם מנועים' : !ns ? 'למבחן הקביעות' : fresh ? 'להחתים כרטיס' : 'בחזרה לשולחן';
+  const label = s.welcome ? 'לחמם מנועים' : !ns ? 'למבחן הקביעות' : fresh ? 'להחתים כרטיס' : 'למשמרת הבאה';
   // Progress is shown for the current chapter: the story's seven postcards, then one region at a time.
   const story = storyDone(s), ch = chapter(s, u.region ?? null);
   const examDue = story && !s.legendary && act !== 'exam';
@@ -40,6 +40,7 @@ export default function Home() {
   ];
   const reveal = learned(s).map((p) => ({ x: p.x, y: p.y, s: strength(s, p.id, now()) }));
 
+  const goal = nextMilestone(learned(s).length);
   const go = () => (act === 'review' ? start.review() : act === 'exam' ? start.exam() : start.shift());
 
   return (
@@ -104,6 +105,7 @@ export default function Home() {
             <T_ style={{ fontSize: 14, color: C.muted }}>{learned(s).length}/{PLACES.length} יישובים</T_>
           </View>
           <Meter pct={(learned(s).length / PLACES.length) * 100} color={C.accent} />
+          {!!goal && <T_ style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>אבן הדרך הבאה: {goal.short}, עוד {goal.at - learned(s).length}</T_>}
         </Pressable>
         <Pressable style={styles.dayrow} onPress={() => router.push('/daily')} accessibilityRole="button">
           <View style={{ flex: 1 }}>

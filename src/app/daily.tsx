@@ -32,7 +32,7 @@ function Record({ today, score }: { today: string; score: number }) {
   const rec = dailyStats(s, today), most = Math.max(1, ...rec.spread);
   return (
     <Card style={{ gap: 10 }}>
-      <T_ style={{ fontFamily: F.display, fontSize: 22 }}>הרישום שלך ביומי</T_>
+      <T_ style={{ fontFamily: F.display, fontSize: 22 }}>המאזן שלך ביומי</T_>
       <View style={{ flexDirection: 'row' }}>
         {([[rec.played, 'משחקים'], [rec.avg.toFixed(1), 'ממוצע'], [rec.run, 'ימים ברצף'], [rec.best, 'שיא רצף']] as const).map(([n, l]) => (
           <View key={l} style={{ flex: 1, alignItems: 'center' }}>
@@ -73,6 +73,8 @@ export default function Daily() {
   const { session, profile } = useAccount();
   const [sent, setSent] = useState<'no' | 'yes' | 'failed'>('no');
   const [shared, setShared] = useState<'shared' | 'copied' | 'failed' | null>(null);
+  // The pin placed on the map, not yet confirmed.
+  const [draft, setDraft] = useState<Point | null>(null);
   const uid = profile ? session?.user.id : undefined, complete = picks.length >= DAILY_N;
   useEffect(() => {
     if (uid && complete) submitDaily(uid, day, picks).then(() => setSent('yes'), () => setSent('failed'));
@@ -114,9 +116,6 @@ export default function Daily() {
           <Kicker>היומי · #{dayNo(day)}</Kicker>
           <T_ style={{ fontFamily: F.display, fontSize: 26 }}>{points(picks)} מתוך {DAILY_N} נקודות</T_>
         </View>
-        <MapView view={{ fit: all, pad: 0.25, minW: 60 }} style={{ height: 300 }} label="מפת התוצאות של היום"
-          dots={picks.map((p) => ({ ...BY[p.id], state: hit(p.d) ? 'right' : 'wrong', label: BY[p.id].name }))}
-          pins={picks.map((p) => p.g)} lines={picks.map((p) => [p.g, BY[p.id]] as [Point, Point])} />
         <Card style={{ gap: 8 }}>
           <T_ style={{ fontSize: 30, textAlign: 'center' }}>{squares(picks)}</T_>
           {picks.map((p) => (
@@ -127,9 +126,12 @@ export default function Daily() {
           ))}
           <T_ style={{ color: C.muted, textAlign: 'center' }}>סטייה כוללת {kmText(totalKm(picks))}. בתיקו, מי שסטה פחות מנצח.</T_>
         </Card>
-        <Record today={day} score={points(picks)} />
         <Btn big label="לשתף ולהתחרות" onPress={() => share(shareText(picks, day, s.g, dailyStats(s, day).run)).then(setShared)} />
         {shared === 'copied' && <T_ style={{ textAlign: 'center', color: C.ok, fontFamily: F.bold }}>התוצאה הועתקה. אפשר להדביק אותה בוואטסאפ.</T_>}
+        <MapView view={{ fit: all, pad: 0.25, minW: 60 }} style={{ height: 300 }} label="מפת התוצאות של היום"
+          dots={picks.map((p) => ({ ...BY[p.id], state: hit(p.d) ? 'right' : 'wrong', label: BY[p.id].name }))}
+          pins={picks.map((p) => p.g)} lines={picks.map((p) => [p.g, BY[p.id]] as [Point, Point])} />
+        <Record today={day} score={points(picks)} />
         <Btn alt label={sent === 'yes' ? 'נשלח לחדרים. לטבלה' : 'חדרים פרטיים עם חברים'} onPress={() => router.push('/rooms')} />
         {sent === 'failed' && <T_ style={{ color: C.bad, textAlign: 'center' }}>לא הצלחנו לשלוח לחדרים. ננסה שוב כשתפתחו את המסך.</T_>}
         <NextDaily />
@@ -148,9 +150,9 @@ export default function Daily() {
       <MapView key={i} view={pick ? { fit: [pick.g, it], pad: 0.5, minW: 40 } : COUNTRY} mini style={{ height: pick ? 300 : 420 }}
         label={pick ? 'המפה עם הסימון שלך' : `מפת הארץ. ${t('{סמן|סמני}')} את ${it.name}`}
         dots={pick ? [...anchors(false), { ...it, state: hit(pick.d) ? 'right' : 'wrong', label: it.name, size: 1.2 }] : anchors(true)}
-        pins={pick ? [pick.g] : undefined} lines={pick ? [[pick.g, it]] : undefined}
+        pins={pick ? [pick.g] : draft ? [draft] : undefined} lines={pick ? [[pick.g, it]] : undefined}
         rings={pick ? [{ x: it.x, y: it.y, r: HIT_KM }] : undefined}
-        onPressMap={pick ? undefined : place} />
+        onPressMap={pick ? undefined : setDraft} />
       {pick ? (
         <>
           <Card style={{ alignItems: 'center', gap: 4 }}>
@@ -161,9 +163,12 @@ export default function Daily() {
           <Btn big label={i + 1 < DAILY_N ? 'ליישוב הבא' : 'לתוצאה'} onPress={() => setShown(null)} />
         </>
       ) : (
-        <T_ style={{ color: C.muted }}>
-          {t(`ניסיון אחד לכל יישוב. פגיעה עד ${HIT_KM} ק״מ שווה נקודה. אפשר להתקרב עם שתי אצבעות או עם הכפתורים.`)}
-        </T_>
+        <>
+          <T_ style={{ color: C.muted }}>
+            {draft ? 'אפשר לגעת שוב במפה כדי להזיז את הסיכה.' : `ניסיון אחד לכל יישוב. פגיעה עד ${HIT_KM} ק״מ שווה נקודה.`}
+          </T_>
+          <Btn big label="לאשר את המיקום" disabled={!draft} onPress={() => { if (draft) { place(draft); setDraft(null); } }} />
+        </>
       )}
     </Screen>
   );

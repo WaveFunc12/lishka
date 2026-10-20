@@ -1,11 +1,11 @@
 import { daily, markDay } from './attendance';
-import { BY, shiftItems, STORY } from './catalog';
+import { BY, PLACES, shiftItems, STORY } from './catalog';
 import { COPY, DIR_WORD } from './content';
 import { dist, nearest } from './geo';
 import { bump, fading, introduce, learned, mastery, qType, strength } from './memory';
-import { rank } from './progress';
+import { crossedMilestone, rank } from './progress';
 import { pick, rnd, shuffle, type Rng } from './random';
-import { kmText, norm } from './text';
+import { kmText, near1, norm } from './text';
 import type { Dir, DayStr, Point, PlayerState, Question, Session, SessionKind, SessionResult, Unit } from './types';
 
 /** Pin answers within this many km count. Within 4 km is a bullseye. */
@@ -137,8 +137,12 @@ export function gradePin(q: Question, guess: Point, kind: SessionKind): Grade {
 
 export function gradeType(q: Question, typed: string): Grade {
   const it = BY[q.id], v = norm(typed);
-  const ok = !!v && [it.name, ...(it.alias || [])].some((n) => norm(n) === v);
-  return { ok, ids: [q.id], text: ok ? it.hint : `התשובה: ${it.name}` };
+  const names = [it.name, ...(it.alias || [])].map(norm);
+  if (v && names.includes(v)) return { ok: true, ids: [q.id], text: it.hint };
+  // One slip in a longer name still counts, unless what was typed is another place's name.
+  const slip = !!v && names.some((n) => n.length >= 4 && near1(n, v)) && !PLACES.some((p) => norm(p.name) === v);
+  if (slip) return { ok: true, ids: [q.id], text: `כמעט מדויק. כותבים ${it.name}. ${it.hint}` };
+  return { ok: false, ids: [q.id], text: `התשובה: ${it.name}` };
 }
 
 /** Apply an answer: XP with a combo bonus, mastery up or down, and one retry at the end for a miss. */
@@ -204,6 +208,8 @@ export function finish(sess: Session, s: PlayerState, today: DayStr): SessionRes
   s.note = null;
   s.lost = 0;
   const after = rank(s.xp).name;
+  // Places met in this session are new on the map, so the count before it is the count now minus them.
+  const newIds = sess.q.filter((q) => q.t === 'intro').map((q) => q.id), known = learned(s).length;
   return {
     kind: sess.kind,
     unitId: sess.unitId,
@@ -213,7 +219,8 @@ export function finish(sess: Session, s: PlayerState, today: DayStr): SessionRes
     n: sess.n,
     best: sess.best,
     misses: sess.misses,
-    newIds: sess.q.filter((q) => q.t === 'intro').map((q) => q.id),
+    newIds,
+    milestone: crossedMilestone(known - newIds.length, known),
     card,
     streakUp,
     rankUp: after !== before ? after : null,

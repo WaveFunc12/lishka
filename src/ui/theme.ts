@@ -27,6 +27,7 @@ export const C = {
   gold: '#C8971C',
   legend: '#6A3FB5',
   roadCase: '#FFF6E2',
+  routeHi: '#1F56D6',
   shield: '#D3202A',
   stream: '#3A8DB0',
   streamInk: '#1E5D78',

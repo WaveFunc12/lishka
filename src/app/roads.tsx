@@ -84,15 +84,15 @@ export default function Roads() {
   return (
     <Screen>
       <View style={styles.head}>
-        <LinkBtn label="הפסקת קפה" onPress={() => router.back()} />
+        <LinkBtn label="✕ הפסקת קפה" onPress={() => router.back()} />
         <View style={{ flex: 1 }}><Meter pct={(i / qs.length) * 100} /></View>
       </View>
       <View>
         <Kicker>חידון כבישים · {i + 1} מתוך {ROAD_QUIZ_N}</Kicker>
-        <T_ style={{ fontFamily: F.display, fontSize: 26, lineHeight: 32 }}>איזה כביש מסומן בכתום?</T_>
+        <T_ style={{ fontFamily: F.display, fontSize: 26, lineHeight: 32 }}>איזה כביש מודגש בכחול?</T_>
       </View>
       <MapView key={`${i}-${mapH}`} view={view} route={q.ref} noShields dots={dots} dotPx={5} style={{ height: mapH }}
-        label="מפה ועליה כביש מסומן בכתום" />
+        label="מפה ועליה כביש מודגש בכחול" />
       <View style={{ flexDirection: 'row', gap: 8 }}>
         {q.choices.map((ref) => (
           <Btn key={ref} alt big label={ref} style={{ flex: 1 }} disabled={!!picked}

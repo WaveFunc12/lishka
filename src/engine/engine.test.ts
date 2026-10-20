@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   BY, DAY_MS, UNITS, PLACES, STORY, REGION_UNITS, UNIT_BY, shiftItems, advance, anchorFor, buildExam, buildShift, bump, clone, compareAnswer, dailyIds, dailyStats, dayNo, dist, points, shareText, totalKm,
   fading, finish, freshState, reminderPlan, msToNextDay, untilText, gradePin, gradeType, israelDay, markDay, migrate, nextShift, onOpen, rank, seeded,
-  squares, startSession, strength, T, answer, gradeTap, zoomAt, clampView, COUNTRY, ROUTES, roadQuiz, routeTitle,
+  squares, startSession, strength, T, answer, gradeTap, zoomAt, clampView, COUNTRY, ROUTES, roadQuiz, routeTitle, milestones, crossedMilestone, nextMilestone,
 } from './index';
 
 const NOW = Date.parse('2026-10-19T09:00:00Z');
@@ -19,6 +19,9 @@ describe('text', () => {
     expect(gradeType(q, 'תל אביב יפו').ok).toBe(true);
     expect(gradeType(q, 'חיפה').ok).toBe(false);
     expect(gradeType(q, '   ').ok).toBe(false);
+    expect(gradeType(q, 'תל אביג').ok).toBe(true);
+    expect(gradeType(q, 'תלאבב').ok).toBe(true);
+    expect(gradeType(q, 'תל אביב').text).toBe(BY.tlv.hint);
   });
 });
 
@@ -301,5 +304,21 @@ describe('road quiz', () => {
     }
     expect(routeTitle('6')).toBe('כביש 6 · חוצה ישראל');
     expect(routeTitle('40')).toBe('כביש 40');
+  });
+});
+
+describe('milestones on the way to the whole country', () => {
+  it('runs from the first ten places to all 500, without repeats', () => {
+    expect(milestones(500).map((m) => m.at)).toEqual([10, 25, 50, 125, 250, 375, 500]);
+  });
+  it('reports the biggest milestone a session passed, and none when it passed nothing', () => {
+    expect(crossedMilestone(8, 12, 500)?.at).toBe(10);
+    expect(crossedMilestone(120, 126, 500)?.title).toBe('רבע מהארץ על המפה');
+    expect(crossedMilestone(9, 26, 500)?.at).toBe(25);
+    expect(crossedMilestone(12, 20, 500)).toBeNull();
+  });
+  it('points at the next one ahead, and at nothing once the map is full', () => {
+    expect(nextMilestone(42, 500)?.at).toBe(50);
+    expect(nextMilestone(500, 500)).toBeNull();
   });
 });

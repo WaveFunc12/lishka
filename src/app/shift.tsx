@@ -103,7 +103,7 @@ export default function Shift() {
     const v0 = fitView(pts, 0.9, 28, 1);
     map = { ...map, view: { fit: pts, pad: 0.9, minW: 28 }, onPressDot: done ? undefined : (id) => { setPicked(id); submit(gradeTap(q, id)); },
       dots: [...ctxDots(q.choices!, v0).map((d) => ({ ...d, label: '' })), ...q.choices!.map((id, i): MapDot => ({ ...BY[id],
-        num: done ? '' : i + 1, size: done ? 1.1 : 1.9,
+        num: done ? '' : i + 1, size: done ? 1.1 : 2.2,
         state: done ? (id === q.id ? 'right' : id === picked ? 'wrong' : 'ctx') : 'choice',
         label: done && (id === q.id || id === picked) ? BY[id].name : '' }))] };
     body = !done && (
@@ -134,8 +134,7 @@ export default function Shift() {
     title = 'מה שם היישוב המסומן?';
     body = (
       <View style={{ gap: 6 }}>
-        <T_ style={{ color: C.muted, fontSize: 14 }}>{t('{כתוב|כתבי} את השם, בלי אפשרויות בחירה.')}</T_>
-        <TextInput maxFontSizeMultiplier={1.3} value={typed} onChangeText={setTyped} editable={!done} autoCorrect={false} autoCapitalize="none" style={styles.input}
+        <TextInput maxFontSizeMultiplier={1.3} value={typed} placeholder="שם היישוב" placeholderTextColor={C.muted} onChangeText={setTyped} editable={!done} autoCorrect={false} autoCapitalize="none" style={styles.input}
           onSubmitEditing={() => typed.trim() && submit(gradeType(q, typed))} returnKeyType="done" accessibilityLabel="שם היישוב" />
       </View>
     );
@@ -160,10 +159,13 @@ export default function Shift() {
     kind = exam ? `מבחן הקביעות · ${sess.i + 1}/${sess.q.length}` : 'סימון על מפה ריקה';
     title = t(`{סמן|סמני} את ${it.name}`);
     map = { ...map, view: q.view!, dots: exam ? [] : ctxDots([it.id], q.view!),
-      onPressMap: done ? undefined : (g) => { setGuess(g); submit(gradePin(q, g, sess.kind)); } };
+      // A touch only places the pin; the guess counts once it is confirmed, so a slip while zooming costs nothing.
+      onPressMap: done ? undefined : (g) => setGuess(g), pins: guess ? [guess] : undefined };
     if (done && guess) map = { ...map, dots: [...map.dots!, { ...it, state: sess.fb!.ok ? 'right' : 'wrong', label: it.name, size: 1.2 }],
       pins: [guess], lines: [[guess, it]], rings: [{ x: it.x, y: it.y, r: lim }] };
-    body = !done && <T_ style={{ color: C.muted, fontSize: 14 }}>לחיצה על המיקום במפה. עד {lim} ק״מ נחשב פגיעה, עד 4 ק״מ זה בול.</T_>;
+    body = !done && (
+      <T_ style={{ color: C.muted, fontSize: 14 }}>{guess ? 'אפשר לגעת שוב במפה כדי להזיז את הסיכה.' : `לגעת במקום במפה. עד ${lim} ק״מ זו פגיעה, עד 4 ק״מ בול.`}</T_>
+    );
   }
   if (q.rev && sess.kind === 'shift') kind = 'תיק דוהה · ' + kind;
 
@@ -174,7 +176,7 @@ export default function Shift() {
   return (
     <Screen>
       <View style={styles.head}>
-        <LinkBtn label="הפסקת קפה" onPress={quit} />
+        <LinkBtn label="✕ הפסקת קפה" onPress={quit} />
         <View style={{ flex: 1 }}><Meter pct={pct} /></View>
         <T_ style={{ fontFamily: F.black, color: C.target, minWidth: 30 }}>{sess.combo >= 2 ? `×${sess.combo}` : ''}</T_>
       </View>
@@ -197,12 +199,14 @@ export default function Shift() {
           </View>
           <Btn label="הבא בתור" onPress={goNext} />
         </View>
+      ) : q.t === 'pin' ? (
+        <Btn label="לאשר את המיקום" disabled={!guess} onPress={() => guess && submit(gradePin(q, guess, sess.kind))} />
       ) : q.t === 'intro' ? (
         <Btn label="רשמתי, הבא בתור" onPress={goNext} />
       ) : q.t === 'type' ? (
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <LinkBtn label="להעביר לצבי" onPress={() => submit({ ok: false, ids: [q.id], text: `התשובה: ${it.name}` })} />
-          <Btn label="להגיש" disabled={!typed.trim()} onPress={() => submit(gradeType(q, typed))} />
+          <LinkBtn label={t('{לא יודע|לא יודעת}, צבי יגלה')} onPress={() => submit({ ok: false, ids: [q.id], text: `התשובה: ${it.name}` })} />
+          <Btn label="לבדוק" disabled={!typed.trim()} onPress={() => submit(gradeType(q, typed))} />
         </View>
       ) : null}
     </Screen>
