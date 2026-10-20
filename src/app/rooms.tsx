@@ -1,7 +1,7 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
-import { createRoom, joinRoom, myRooms, say, signOut, type Room } from '@/net/backend';
+import { createRoom, deleteAccount, joinRoom, myRooms, say, signOut, type Room } from '@/net/backend';
 import { useAccount } from '@/net/account';
 import { useT } from '@/state/store';
 import { Btn, Card, H1, Kicker, LinkBtn, Screen, T_, ZviSays } from '@/ui/kit';
@@ -17,6 +17,7 @@ export default function Rooms() {
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
+  const [bye, setBye] = useState(false);
 
   const load = useCallback(() => {
     if (session && profile) myRooms().then(setRooms).catch((e) => setErr(say(e)));
@@ -72,7 +73,23 @@ export default function Rooms() {
           </Card>
           {!!err && <T_ style={{ color: C.bad, fontFamily: F.bold }}>{err}</T_>}
           <T_ style={{ color: C.muted, fontSize: 13, textAlign: 'center' }}>{t(`{מחובר|מחוברת} בתור ${profile.name}. ההתקדמות נשמרת בחשבון.`)}</T_>
-          <View style={{ alignItems: 'center' }}><LinkBtn label="להתנתק" onPress={() => { signOut().catch(() => {}); setRooms(null); }} /></View>
+          <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 24 }}>
+            <LinkBtn label="להתנתק" onPress={() => { signOut().catch(() => {}); setRooms(null); }} />
+            <LinkBtn label="למחוק את החשבון" onPress={() => setBye(true)} />
+          </View>
+          {bye && (
+            <Card style={{ gap: 10, borderColor: C.bad }}>
+              <T_ style={{ fontFamily: F.black }}>למחוק את החשבון?</T_>
+              <T_ style={{ fontSize: 14 }}>השם, התוצאות בחדרים והגיבוי של ההתקדמות יימחקו מהשרת. חדרים שפתחת יעברו לחבר הבא בחדר. ההתקדמות בטלפון הזה נשארת.</T_>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <Btn style={{ flex: 1 }} alt label="ביטול" onPress={() => setBye(false)} />
+                <Btn style={{ flex: 1 }} tone="wrong" label="למחוק" disabled={busy} onPress={async () => {
+                  setBusy(true); setErr('');
+                  try { await deleteAccount(); setRooms(null); setBye(false); } catch (e) { setErr(say(e)); } finally { setBusy(false); }
+                }} />
+              </View>
+            </Card>
+          )}
         </>
       )}
     </Screen>

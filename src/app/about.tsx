@@ -30,6 +30,12 @@ export default function About() {
           </View>
         ))}
       </Card>
+      <Card style={{ gap: 6 }}>
+        <T_ style={{ fontFamily: F.display, fontSize: 22 }}>פרטיות</T_>
+        <T_ style={{ fontSize: 14, lineHeight: 20 }}>בלי חשבון, ההתקדמות נשמרת רק בטלפון ושום דבר לא נשלח לשרת.</T_>
+        <T_ style={{ fontSize: 14, lineHeight: 20 }}>עם חשבון לחדרים נשמרים מייל או מזהה Apple לכניסה, שם תצוגה ותוצאות היומי (רק חברי החדרים שלך רואים אותם), וגיבוי של ההתקדמות.</T_>
+        <T_ style={{ fontSize: 14, lineHeight: 20 }}>אין פרסומות ואין מעקב. אפשר למחוק את החשבון במסך החדרים.</T_>
+      </Card>
       <T_ style={{ fontSize: 13, color: C.muted, textAlign: 'center' }}>
         המפה מראה גבולות ושטחים לצורכי המשחק בלבד. צבי הוא דמות בדויה. השוקו אמיתי.
       </T_>

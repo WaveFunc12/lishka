@@ -54,6 +54,11 @@ export const sendEmailCode = async (email: string) => ok(await need().auth.signI
 export const verifyEmailCode = async (email: string, code: string) =>
   ok(await need().auth.verifyOtp({ email: email.trim(), token: code.trim(), type: 'email' }));
 export const signOut = async () => { await need().auth.signOut(); };
+/** Delete the account on the server (name, results, rooms' memberships, backup), then sign out here. */
+export async function deleteAccount() {
+  ok(await need().rpc('delete_my_account'));
+  await need().auth.signOut({ scope: 'local' });
+}
 
 export async function myProfile(uid: string): Promise<Profile | null> {
   const { data, error } = await need().from('profiles').select('id, name').eq('id', uid).maybeSingle();
