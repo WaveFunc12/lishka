@@ -37,10 +37,10 @@ export default function File() {
         <Meter pct={pct} />
         <T_ style={{ fontSize: 13, color: C.muted }}>{r.next ? `עוד ${r.next[0] - s.xp} נקודות ותק לקידום ל${t(r.next[1])}` : 'הדרגה הגבוהה ביותר בלשכה'}</T_>
       </Card>
-      <Card style={{ flexDirection: 'row' }}>
+      <Card style={{ flexDirection: 'row', gap: 8 }}>
         {[[s.xp, 'ותק'], [`${learned(s).length}/${PLACES.length}`, 'יישובים'], [`${postcardsDone(s)}/${UNITS.length}`, 'גלויות']].map(([n, l]) => (
           <View key={String(l)} style={{ flex: 1, alignItems: 'center' }}>
-            <T_ style={{ fontFamily: F.display, fontSize: 24 }}>{String(n)}</T_>
+            <T_ numberOfLines={1} adjustsFontSizeToFit style={{ fontFamily: F.display, fontSize: 22 }}>{String(n)}</T_>
             <T_ style={{ color: C.muted, fontSize: 13 }}>{String(l)}</T_>
           </View>
         ))}

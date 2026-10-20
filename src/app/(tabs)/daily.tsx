@@ -149,14 +149,18 @@ export default function Daily() {
     );
   }
 
+  // The way on is pinned below the map, so it stays on screen on an iPhone SE, even with large text.
+  const footer = pick
+    ? <Btn big label={i + 1 < DAILY_N ? 'ליישוב הבא' : 'לתוצאה'} onPress={() => setShown(null)} />
+    : <Btn big label="לאשר את המיקום" disabled={!draft} onPress={() => { if (draft) { place(draft); setDraft(null); } }} />;
   return (
-    <Screen tab>
+    <Screen tab footer={footer}>
       <View style={{ gap: 2 }}>
         <Kicker>היומי · #{dayNo(day)} · יישוב {i + 1} מתוך {DAILY_N}</Kicker>
         <T_ style={{ fontFamily: F.display, fontSize: 26 }}>{pick ? it.name : t(`{סמן|סמני} את ${it.name}`)}</T_>
         <T_ style={{ fontSize: 18 }}>{squares(picks)}</T_>
       </View>
-      {/* Sized to the phone, so the confirm button stays on screen without scrolling, even on an iPhone SE. */}
+      {/* Sized to the phone, so the whole question fits without scrolling, even on an iPhone SE. */}
       <MapView key={`${i}-${pick ? 1 : 0}`} view={pick ? { fit: [pick.g, it], pad: 0.5, minW: 40 } : COUNTRY} mini style={{ height: pick ? Math.round(Math.max(220, Math.min(300, winH - 420))) : Math.round(Math.max(260, Math.min(420, winH - 350))) }}
         label={pick ? 'המפה עם הסימון שלך' : `מפת הארץ. ${t('{סמן|סמני}')} את ${it.name}`}
         dots={pick ? [...anchors(false), { ...it, state: hit(pick.d) ? 'right' : 'wrong', label: it.name, size: 1.2 }] : anchors(true)}
@@ -164,21 +168,15 @@ export default function Daily() {
         rings={pick ? [{ x: it.x, y: it.y, r: HIT_KM }] : undefined}
         onPressMap={pick ? undefined : setDraft} />
       {pick ? (
-        <>
-          <Card style={{ alignItems: 'center', gap: 4 }}>
-            <T_ style={{ fontFamily: F.black, fontSize: 22, color: hit(pick.d) ? C.ok : C.bad }}>{hit(pick.d) ? 'פגיעה! נקודה' : 'פספוס'}</T_>
-            <T_ style={{ fontFamily: F.black }}>{kmText(pick.d)} מהמיקום האמיתי</T_>
-            <T_ style={{ color: C.muted }}>{it.hint}</T_>
-          </Card>
-          <Btn big label={i + 1 < DAILY_N ? 'ליישוב הבא' : 'לתוצאה'} onPress={() => setShown(null)} />
-        </>
+        <Card style={{ alignItems: 'center', gap: 4 }}>
+          <T_ style={{ fontFamily: F.black, fontSize: 22, color: hit(pick.d) ? C.ok : C.bad }}>{hit(pick.d) ? 'פגיעה! נקודה' : 'פספוס'}</T_>
+          <T_ style={{ fontFamily: F.black }}>{kmText(pick.d)} מהמיקום האמיתי</T_>
+          <T_ style={{ color: C.muted }}>{it.hint}</T_>
+        </Card>
       ) : (
-        <>
-          <T_ style={{ color: C.muted }}>
-            {draft ? 'אפשר לגעת שוב במפה כדי להזיז את הסיכה.' : `ניסיון אחד לכל יישוב. פגיעה עד ${HIT_KM} ק״מ שווה נקודה.`}
-          </T_>
-          <Btn big label="לאשר את המיקום" disabled={!draft} onPress={() => { if (draft) { place(draft); setDraft(null); } }} />
-        </>
+        <T_ style={{ color: C.muted }}>
+          {draft ? 'אפשר לגעת שוב במפה כדי להזיז את הסיכה.' : `ניסיון אחד לכל יישוב. פגיעה עד ${HIT_KM} ק״מ שווה נקודה.`}
+        </T_>
       )}
     </Screen>
   );

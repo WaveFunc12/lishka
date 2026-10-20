@@ -131,13 +131,13 @@ export function ComicPlayer({ panels, doneLabel, onDone, onSkip, mute, title }: 
   const label = p.bubbles.map((b) => b.text).join(' ');
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-      {!!title && <Text style={styles.title}>{title}</Text>}
+      {!!title && <Text maxFontSizeMultiplier={1.3} style={styles.title}>{title}</Text>}
       <View style={styles.top}>
         <View style={styles.bars}>
           {panels.map((_, n) => <View key={n} style={[styles.bar, n <= i && { backgroundColor: C.orange }]} />)}
         </View>
         <Pressable onPress={onSkip} hitSlop={12} accessibilityRole="button">
-          <Text style={styles.skip}>דילוג</Text>
+          <Text maxFontSizeMultiplier={1.3} style={styles.skip}>דילוג</Text>
         </Pressable>
       </View>
       <View style={styles.frame} onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
@@ -152,14 +152,14 @@ export function ComicPlayer({ panels, doneLabel, onDone, onSkip, mute, title }: 
       <View style={styles.foot}>
         {last ? (
           <Pressable onPress={onDone} style={styles.cta} accessibilityRole="button">
-            <Text style={styles.ctaText}>{doneLabel}</Text>
+            <Text maxFontSizeMultiplier={1.3} style={styles.ctaText}>{doneLabel}</Text>
           </Pressable>
         ) : (
           <View style={styles.next}>
-            <Text style={styles.hint}>{i === 0 ? 'נגיעה בתמונה להמשך' : `${i + 1} / ${panels.length}`}</Text>
+            <Text maxFontSizeMultiplier={1.3} style={styles.hint}>{i === 0 ? 'נגיעה בתמונה להמשך' : `${i + 1} / ${panels.length}`}</Text>
             {/* A visible way on, for anyone who swipes or doesn't notice the hint. */}
             <Pressable onPress={() => go(1)} style={styles.nextBtn} accessibilityRole="button" accessibilityLabel="לתמונה הבאה" hitSlop={8}>
-              <Text style={styles.nextText}>הבא ←</Text>
+              <Text maxFontSizeMultiplier={1.3} style={styles.nextText}>הבא ←</Text>
             </Pressable>
           </View>
         )}

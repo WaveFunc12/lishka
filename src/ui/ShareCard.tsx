@@ -16,8 +16,8 @@ export function ShareCard({ picks, day, run, ask, ref }: { picks: DailyPick[]; d
     <View ref={ref} collapsable={false} style={st.card}>
       <View style={st.top}>
         <View style={{ flex: 1, gap: 2 }}>
-          <Text style={st.kicker}>הלשכה למיפוי · גלויות מהלשכה</Text>
-          <Text style={st.title}>היומי #{dayNo(day)}</Text>
+          <Text maxFontSizeMultiplier={1} style={st.kicker}>הלשכה למיפוי · גלויות מהלשכה</Text>
+          <Text maxFontSizeMultiplier={1} style={st.title}>היומי #{dayNo(day)}</Text>
         </View>
         {/* The stamp: the country in miniature, perforated like the ones in the personal file. */}
         <View style={st.stamp}>
@@ -27,30 +27,30 @@ export function ShareCard({ picks, day, run, ask, ref }: { picks: DailyPick[]; d
         </View>
       </View>
       <View style={st.score}>
-        <Text style={st.big}>{n}/{DAILY_N}</Text>
-        <Text style={st.sq}>{squares(picks)}</Text>
+        <Text maxFontSizeMultiplier={1} style={st.big}>{n}/{DAILY_N}</Text>
+        <Text maxFontSizeMultiplier={1} style={st.sq}>{squares(picks)}</Text>
       </View>
       <View style={{ gap: 7 }}>
         {picks.map((p, i) => (
           <View key={i} style={st.row}>
-            <Text style={st.n}>{i + 1}</Text>
+            <Text maxFontSizeMultiplier={1} style={st.n}>{i + 1}</Text>
             <View style={st.track}>
               <View style={[st.bar, { width: `${Math.max(4, 100 - Math.min(100, (p.d / 50) * 100))}%`, backgroundColor: hit(p.d) ? C.ok : C.bad }]} />
             </View>
-            <Text style={[st.km, { color: hit(p.d) ? C.ok : C.bad }]}>{kmText(p.d)}</Text>
+            <Text maxFontSizeMultiplier={1} style={[st.km, { color: hit(p.d) ? C.ok : C.bad }]}>{kmText(p.d)}</Text>
           </View>
         ))}
       </View>
       <View style={{ flex: 1 }} />
       <View style={st.foot}>
-        <Text style={st.footT}>סטייה כוללת {kmText(totalKm(picks))}{run > 1 ? ` · ${run} ימים ברצף` : ''}</Text>
-        <Text style={st.ask}>{ask}</Text>
+        <Text maxFontSizeMultiplier={1} style={st.footT}>סטייה כוללת {kmText(totalKm(picks))}{run > 1 ? ` · ${run} ימים ברצף` : ''}</Text>
+        <Text maxFontSizeMultiplier={1} style={st.ask}>{ask}</Text>
       </View>
       <Svg width={86} height={86} style={st.postmark} viewBox="0 0 80 80">
         <Circle cx={40} cy={40} r={34} fill="none" stroke={C.kicker} strokeWidth={3} opacity={0.75} />
         <Circle cx={40} cy={40} r={27} fill="none" stroke={C.kicker} strokeWidth={1.5} strokeDasharray={[3, 3]} opacity={0.75} />
       </Svg>
-      <Text style={st.postT}>{day.split('-').reverse().slice(0, 2).map(Number).join('.')}</Text>
+      <Text maxFontSizeMultiplier={1} style={st.postT}>{day.split('-').reverse().slice(0, 2).map(Number).join('.')}</Text>
     </View>
   );
 }

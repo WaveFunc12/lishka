@@ -18,7 +18,7 @@ export function Screen({ children, scroll = true, style, tab, footer }: { childr
   );
 }
 
-export const T_ = ({ style, children, ...rest }: { style?: StyleProp<TextStyle>; children: ReactNode; accessibilityRole?: 'header' }) => (
+export const T_ = ({ style, children, ...rest }: { style?: StyleProp<TextStyle>; children: ReactNode; accessibilityRole?: 'header'; numberOfLines?: number; adjustsFontSizeToFit?: boolean }) => (
   <Text maxFontSizeMultiplier={1.3} style={[styles.text, style]} {...rest}>{children}</Text>
 );
 
