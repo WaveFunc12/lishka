@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { mastery, nextShift, regionProgress, storyDone } from '@/engine';
 import { useStart } from '@/state/actions';
 import { useStore, useT } from '@/state/store';
+import { regionTale, TALES } from '@/ui/comic/tales';
 import { H1, Kicker, LinkBtn, Meter, Screen, T_, ZviSays } from '@/ui/kit';
 import { BW, C, F, SHADOW_SM } from '@/ui/theme';
 
@@ -41,6 +42,9 @@ export default function Archive() {
                 </View>
                 <Meter pct={(g.done / g.units.length) * 100} color={g.col} />
                 <T_ style={{ fontSize: 12, color: C.muted }}>{g.done}/{g.units.length} גלויות · {g.known}/{g.places} יישובים חזרו למפה</T_>
+                {s.tales.includes(regionTale(g.id)) && TALES[regionTale(g.id)] && (
+                  <LinkBtn label="איך הכול התחיל: הקומיקס" onPress={() => router.push(`/tale/${regionTale(g.id)}`)} />
+                )}
                 {g.known >= 4 && (
                   <LinkBtn label={`לתרגל את ${g.known} היישובים שחזרו`}
                     onPress={() => start.review(g.units.flatMap((u) => u.items).filter((id) => mastery(s, id) >= 1))} />

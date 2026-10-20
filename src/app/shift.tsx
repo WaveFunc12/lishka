@@ -7,7 +7,7 @@ import {
   gradeType, learned, PIN_LIMIT, PLACES, popText, ANCHORS, shortName, UNIT_BY, viewAround, ZVI_MEMORY, type Grade, type Point, type View as Box,
 } from '@/engine';
 import { useStore, useT } from '@/state/store';
-import { TALES } from '@/ui/comic/tales';
+import { regionTale, TALES } from '@/ui/comic/tales';
 import { MapView, type MapDot } from '@/ui/MapView';
 import { sfx } from '@/ui/sound';
 import { Btn, Card, Kicker, LinkBtn, Meter, Mentor, OkStamp, Screen, T_, ZviSays } from '@/ui/kit';
@@ -25,7 +25,7 @@ export default function Shift() {
   const unseen = (k?: string | null) => (k && TALES[k] && !s.tales.includes(k) ? k : null);
   const region = session?.unitId && session.i === 0 ? UNIT_BY[session.unitId]?.region : null;
   const introId = session?.q[session.i]?.t === 'intro' ? session.q[session.i].id : null;
-  const tale = unseen(region) ?? unseen(introId);
+  const tale = unseen(region && regionTale(region)) ?? unseen(introId);
   useEffect(() => {
     if (!tale) return;
     update((d) => { d.tales = [...d.tales, tale]; });

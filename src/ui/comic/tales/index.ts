@@ -4,10 +4,12 @@ import { beersheva } from './beersheva';
 import { haifa } from './haifa';
 import { jerusalem } from './jerusalem';
 import { netanya } from './netanya';
+import { regions1 } from './regions1';
 import { telaviv } from './telaviv';
 
-/* Founding stories: a short comic for each big city (and, later, each region), keyed by place or region id.
-   A story plays the first time its city opens a file in a shift, and can be watched again from the map. */
+/* Founding stories: a short comic for each big city, keyed by place id, and for each region, keyed `r-<region id>`
+   (Haifa is both a city and a region). A city's story plays the first time its file opens in a shift, a region's as
+   its first postcard starts; both can be watched again, from the map and from the archive. */
 
 export type Tale = {
   /** Shown over the panels. */
@@ -16,6 +18,9 @@ export type Tale = {
   panels: (t: (s: string) => string, today: string) => Panel[];
 };
 
+/** The key of a region's story in TALES. */
+export const regionTale = (regionId: string) => `r-${regionId}`;
+
 export const TALES: Record<string, Tale> = {
   jlm: jerusalem,
   tlv: telaviv,
@@ -23,4 +28,5 @@ export const TALES: Record<string, Tale> = {
   bsh: beersheva,
   asd: ashdod,
   ntn: netanya,
+  ...Object.fromEntries(Object.entries(regions1).map(([id, tale]) => [regionTale(id), tale])),
 };

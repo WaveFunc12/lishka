@@ -7,7 +7,7 @@ import { K } from './parts';
 
 const INK = { stroke: K.ink, strokeWidth: 4, strokeLinejoin: 'round' as const };
 
-export type Hat = 'none' | 'fedora' | 'boater' | 'fez' | 'tembel' | 'slouch' | 'cloth' | 'crown' | 'scarf' | 'cap' | 'kippah' | 'turban' | 'feathers';
+export type Hat = 'none' | 'fedora' | 'boater' | 'fez' | 'tembel' | 'slouch' | 'cloth' | 'crown' | 'scarf' | 'cap' | 'kippah' | 'turban' | 'feathers' | 'bicorne' | 'shtreimel' | 'helmet';
 export type Pose = 'down' | 'wave' | 'point' | 'hold' | 'cheer' | 'hips';
 
 /** A person, feet at (x, y), about 220 tall at scale 1. `flip` turns them to face left.
@@ -32,7 +32,7 @@ export function Person({ x, y, s = 1, flip, coat = K.navy, pants = '#3B3B3B', sk
     return { x: +m[1], y: +m[2] };
   };
   const hc = hatColor ?? ({ fedora: '#4A3B2E', boater: '#E9CF8E', fez: K.red, tembel: '#C8B27A', slouch: '#8C7A54', cloth: '#E8DDC8', crown: '#F2C230',
-    scarf: K.teal, cap: '#4A4A4A', kippah: K.navy, turban: '#F4F1EA', feathers: '#F4F1EA', none: '' } as const)[hat];
+    scarf: K.teal, cap: '#4A4A4A', kippah: K.navy, turban: '#F4F1EA', feathers: '#F4F1EA', bicorne: '#1E1E1E', shtreimel: '#5A3A22', helmet: '#6E7F3B', none: '' } as const)[hat];
   return (
     <G transform={`translate(${x} ${y}) scale(${flip ? -s : s} ${s})`}>
       {/* Legs and shoes, unless a robe covers them. */}
@@ -94,6 +94,9 @@ export function Person({ x, y, s = 1, flip, coat = K.navy, pants = '#3B3B3B', sk
           <Rect x={-28} y={-216} width={56} height={12} fill={K.orange} {...INK} strokeWidth={3} />
         </G>
       )}
+      {hat === 'bicorne' && <G><Path d="M-46 -212 Q0 -262 46 -212 Q0 -224 -46 -212Z" fill={hc} {...INK} strokeWidth={3.5} /><Circle cx={0} cy={-232} r={6} fill={K.red} stroke={K.ink} strokeWidth={2} /></G>}
+      {hat === 'shtreimel' && <G><Ellipse cx={0} cy={-212} rx={34} ry={14} fill={hc} {...INK} strokeWidth={3.5} /><Path d="M-18 -220 Q0 -246 18 -220Z" fill={K.ink} /></G>}
+      {hat === 'helmet' && <Path d="M-30 -204 Q-30 -246 0 -246 Q30 -246 30 -204Z" fill={hc} {...INK} strokeWidth={3.5} />}
       {hat === 'turban' && <Path d="M-28 -200 Q-34 -238 0 -240 Q34 -238 28 -200 Q0 -210 -28 -200Z M-20 -226 Q0 -216 22 -230" fill={hc} {...INK} strokeWidth={3.5} />}
     </G>
   );
