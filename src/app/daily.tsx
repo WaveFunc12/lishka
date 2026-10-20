@@ -10,6 +10,7 @@ import { submitDaily } from '@/net/backend';
 import { useAccount } from '@/net/account';
 import { useStore, useT } from '@/state/store';
 import { MapView, type MapDot } from '@/ui/MapView';
+import { sfx } from '@/ui/sound';
 import { Btn, Card, Kicker, LinkBtn, Screen, T_ } from '@/ui/kit';
 import { C, F } from '@/ui/theme';
 
@@ -59,7 +60,10 @@ export default function Daily() {
       if (dd.picks.length === DAILY_N) markDay(draft, day);
     });
     setShown(i);
-    if (!s.mute) Haptics.notificationAsync(hit(d) ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Warning).catch(() => {});
+    if (!s.mute) {
+      Haptics.notificationAsync(hit(d) ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Warning).catch(() => {});
+      sfx(hit(d) ? 'ok' : 'bad');
+    }
   };
 
   if (done) {

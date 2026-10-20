@@ -1,9 +1,10 @@
 import { router } from 'expo-router';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { BY, COPY, COUNTRY, learned, mastery, PLACES, rnd, STORY, storyDone, strength, UNIT_BY } from '@/engine';
 import { useStore, useT } from '@/state/store';
 import { MapView, type MapDot } from '@/ui/MapView';
+import { sfx } from '@/ui/sound';
 import { Btn, Card, H1, Kicker, OkStamp, Screen, T_, ZviSays } from '@/ui/kit';
 import { C, F } from '@/ui/theme';
 
@@ -18,6 +19,9 @@ export default function Result() {
     if (R.kind === 'shift' && R.shift === 0) return 'חצי גלויה מוכנה. עוד משמרת אחת והיא נשלחת אליך.';
     return rnd(acc >= 0.9 ? COPY.great : COPY.good, Math.random);
   }, [R]);
+  // A new postcard in the mail gets its little tune, once.
+  const card = !!R?.card, mute = s.mute;
+  useEffect(() => { if (card && !mute) sfx('card'); }, [card, mute]);
   if (!R) return null;
   const acc = R.n ? Math.round((R.ok / R.n) * 100) : 100;
   const unit = R.unitId ? UNIT_BY[R.unitId] : null;

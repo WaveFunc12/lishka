@@ -8,6 +8,7 @@ import {
 } from '@/engine';
 import { useStore, useT } from '@/state/store';
 import { MapView, type MapDot } from '@/ui/MapView';
+import { sfx } from '@/ui/sound';
 import { Btn, Card, Kicker, LinkBtn, Meter, Mentor, OkStamp, Screen, T_, ZviSays } from '@/ui/kit';
 import { BW, C, F } from '@/ui/theme';
 
@@ -32,7 +33,10 @@ export default function Shift() {
     const next = { ...sess, q: sess.q.slice() };
     update((d) => answer(next, d, g, now(), rng));
     setSession(next);
-    if (!s.mute) Haptics.notificationAsync(g.ok ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Error).catch(() => {});
+    if (!s.mute) {
+      Haptics.notificationAsync(g.ok ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Error).catch(() => {});
+      sfx(g.ok ? 'ok' : 'bad');
+    }
   };
 
   const goNext = () => {
