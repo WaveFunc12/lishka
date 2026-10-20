@@ -34,7 +34,13 @@
       "expo-font",
       "expo-audio",
       "expo-splash-screen",
-      "expo-apple-authentication"
+      "expo-apple-authentication",
+      [
+        "expo-notifications",
+        {
+          "enableRemoteNotifications": false
+        }
+      ]
     ],
     "scheme": "lishka",
     "experiments": {

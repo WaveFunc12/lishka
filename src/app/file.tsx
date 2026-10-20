@@ -1,7 +1,9 @@
 import { router } from 'expo-router';
+import { useState } from 'react';
 import { Alert, Platform, View } from 'react-native';
 import { learned, PLACES, postcardsDone, rank, STORY, tiers, UNITS } from '@/engine';
 import { useStart } from '@/state/actions';
+import { allowReminders, remindersSupported } from '@/state/reminders';
 import { useStore, useT } from '@/state/store';
 import { Btn, Card, H1, Kicker, LinkBtn, Meter, Screen, T_ } from '@/ui/kit';
 import { C, F } from '@/ui/theme';
@@ -11,7 +13,13 @@ export default function File() {
   const { s, update, skipDays, reset, today } = useStore();
   const t = useT();
   const start = useStart();
+  const [denied, setDenied] = useState(false);
   const r = rank(s.xp), tr = tiers(s);
+  const setRemind = async (h: number | null) => {
+    setDenied(false);
+    if (h !== null && !(await allowReminders().catch(() => false))) return setDenied(true);
+    update((d) => { d.remind = h; });
+  };
   const pct = r.next ? ((s.xp - r.from) / (r.next[0] - r.from)) * 100 : 100;
   const confirmReset = () => {
     const doIt = () => { reset(); router.replace('/hello'); };
@@ -58,6 +66,19 @@ export default function File() {
           <Btn style={{ flex: 1 }} alt={s.mute} label="צלילים ורטט פועלים" onPress={() => update((d) => { d.mute = false; })} />
           <Btn style={{ flex: 1 }} alt={!s.mute} label="כבויים" onPress={() => update((d) => { d.mute = true; })} />
         </View>
+        {remindersSupported && (
+          <View style={{ gap: 6 }}>
+            <T_ style={{ fontFamily: F.black }}>תזכורת יומית מצבי</T_>
+            <View style={{ flexDirection: 'row', gap: 6 }}>
+              {([null, 8, 13, 20] as const).map((h) => (
+                <Btn key={String(h)} style={{ flex: 1, paddingHorizontal: 4 }} alt={s.remind !== h} label={h === null ? 'בלי' : `${h}:00`} onPress={() => setRemind(h)} />
+              ))}
+            </View>
+            <T_ style={{ color: C.muted, fontSize: 13 }}>
+              {denied ? 'הטלפון לא מאשר התראות. אפשר לאשר בהגדרות של הטלפון, תחת גלויות מהלשכה.' : 'ביום שכבר שיחקת בו, צבי לא מזכיר.'}
+            </T_>
+          </View>
+        )}
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
           <LinkBtn label="על הלשכה וקרדיטים" onPress={() => router.push('/about')} />
           <LinkBtn label="להתחיל מחדש" onPress={confirmReset} />

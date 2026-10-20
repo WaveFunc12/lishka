@@ -70,6 +70,8 @@ export type PlayerState = {
   mute: boolean;
   /** The region chosen for the next postcards once the story is done; null = the default order. */
   focus: string | null;
+  /** Hour of Zvi's daily reminder (device time), or null when off. */
+  remind: number | null;
   /** picks: today's daily pins, in order. */
   daily: { day: DayStr | null; shifts: number; reviews: number; picks: DailyPick[] };
 };

@@ -19,6 +19,7 @@ export const freshState = (): PlayerState => ({
   seenComic: false,
   mute: false,
   focus: null,
+  remind: null,
   daily: { day: null, shifts: 0, reviews: 0, picks: [] },
 });
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   BY, DAY_MS, UNITS, PLACES, STORY, REGION_UNITS, UNIT_BY, shiftItems, advance, anchorFor, buildExam, buildShift, bump, clone, compareAnswer, dailyIds, dayNo, dist, points, shareText, totalKm,
-  fading, finish, freshState, gradePin, gradeType, israelDay, markDay, migrate, nextShift, onOpen, rank, seeded,
+  fading, finish, freshState, reminderPlan, gradePin, gradeType, israelDay, markDay, migrate, nextShift, onOpen, rank, seeded,
   squares, startSession, strength, T, answer, gradeTap, zoomAt, clampView, COUNTRY,
 } from './index';
 
@@ -225,5 +225,28 @@ describe('map zoom', () => {
     expect(far.w).toBe(200);
     expect(far.x + far.w / 2).toBe(COUNTRY.x + COUNTRY.w / 2); // wider than the map: centred
     expect(far.y + far.h).toBe(COUNTRY.y + COUNTRY.h); // fits in height: pushed back inside
+  });
+});
+
+describe('reminders', () => {
+  const at = new Date(2026, 9, 19, 10, 0, 0).getTime(); // 10:00 device time
+  it('plans a week at the chosen hour, from today when not played', () => {
+    const s = freshState();
+    const plan = reminderPlan(s, '2026-10-19', at, 20);
+    expect(plan).toHaveLength(7);
+    expect(new Date(plan[0].at).getHours()).toBe(20);
+    expect(new Date(plan[0].at).getDate()).toBe(19);
+  });
+  it('skips today once played, and guards the streak first', () => {
+    const s = freshState();
+    s.g = 'f'; s.streak = 4; s.lastDay = '2026-10-19';
+    const plan = reminderPlan(s, '2026-10-19', at, 20);
+    expect(plan).toHaveLength(6);
+    expect(new Date(plan[0].at).getDate()).toBe(20);
+    expect(plan[0].body).toContain('4 ימי נוכחות');
+    expect(plan.every((r) => !/[{}|]/.test(r.body))).toBe(true);
+  });
+  it('skips an hour that already passed today', () => {
+    expect(reminderPlan(freshState(), '2026-10-19', at, 8)).toHaveLength(6);
   });
 });
