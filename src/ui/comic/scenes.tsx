@@ -402,7 +402,7 @@ export function chapterOne(t: (s: string) => string): Panel[] {
     {
       art: mission, focus: [0.5, 0.52], amount: 1.14,
       bubbles: [
-        { kind: 'cap', text: 'המשימה שלך: להחזיר את היישובים למפה, אחד אחד.', x: 0.05, y: 0.04, w: 0.9 },
+        { kind: 'cap', text: 'המשימה שלך: להחזיר את כל הארץ למפה, יישוב אחרי יישוב.', x: 0.05, y: 0.04, w: 0.9 },
         { kind: 'cap', text: 'כל גלויה, אזור אחד.', x: 0.06, y: 0.87, w: 0.5 },
       ],
     },

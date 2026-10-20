@@ -14,5 +14,7 @@ export function zviSays(s: PlayerState, today: DayStr, next: { u: Unit; s: numbe
   if (next.u.region && !archiveStarted && next.s === 0)
     return `הסיפור מאחורינו, אבל העבודה רק מתחילה: עוד ${PLACES.length - STORY.flatMap((u) => u.items).length} יישובים מחכים בארכיון. ${s.legendary ? '' : 'ואת מבחן הקביעות שלי {תעשה|תעשי} מתי {שתרצה|שתרצי}. '}${next.u.z}`;
   if (next.s === 1) return 'חצי גלויה כבר מוכנה. עוד משמרת אחת והיא בדרך אליך.';
+  // A region's first postcard reminds what it is all for.
+  if (next.u.region && next.u.part === 1) return `${next.u.z} עוד אזור אחד בדרך לכל הארץ.`;
   return next.u.z;
 }

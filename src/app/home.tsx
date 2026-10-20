@@ -8,7 +8,7 @@ import {
 import { useStart } from '@/state/actions';
 import { useStore, useT } from '@/state/store';
 import { MapView, type MapDot } from '@/ui/MapView';
-import { Btn, LinkBtn, Screen, T_, ZviSays } from '@/ui/kit';
+import { Btn, LinkBtn, Meter, Screen, T_, ZviSays } from '@/ui/kit';
 import { BW, C, F, SHADOW } from '@/ui/theme';
 
 /* Home, variant A from the prototype: one big postcard, one button, a quiet status line. */
@@ -17,7 +17,7 @@ export default function Home() {
   const t = useT();
   const start = useStart();
   // The postcard takes the room the screen has, so tall phones get a bigger map instead of a gap.
-  const mapH = Math.round(Math.min(540, Math.max(240, useWindowDimensions().height - 430)));
+  const mapH = Math.round(Math.min(540, Math.max(240, useWindowDimensions().height - 470)));
   const ns = nextShift(s);
   const u = ns ? ns.u : UNITS[UNITS.length - 1];
   const d = s.daily.day === today() ? s.daily : { shifts: 0, reviews: 0, picks: [] };
@@ -96,6 +96,15 @@ export default function Home() {
             })}
           </View>
         </View>
+        {/* The goal of the whole game, always in view: every place in the country back on the map. */}
+        <Pressable onPress={() => router.push(learned(s).length ? '/atlas' : '/file')} accessibilityRole="button"
+          accessibilityLabel={`המטרה: כל הארץ על המפה. ${learned(s).length} מתוך ${PLACES.length} יישובים כבר חזרו`}>
+          <View style={styles.segLbl}>
+            <T_ style={{ fontFamily: F.black, fontSize: 14 }}>המטרה: כל הארץ על המפה</T_>
+            <T_ style={{ fontSize: 14, color: C.muted }}>{learned(s).length}/{PLACES.length} יישובים</T_>
+          </View>
+          <Meter pct={(learned(s).length / PLACES.length) * 100} color={C.accent} />
+        </Pressable>
         <Pressable style={styles.dayrow} onPress={() => router.push('/daily')} accessibilityRole="button">
           <View style={{ flex: 1 }}>
             <T_ style={{ fontFamily: F.black }}>היומי</T_>

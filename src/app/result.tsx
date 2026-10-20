@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useEffect, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { BY, COPY, COUNTRY, learned, mastery, PLACES, rnd, shortName, STORY, storyDone, strength, UNIT_BY } from '@/engine';
+import { BY, COPY, COUNTRY, learned, mastery, PLACES, regionProgress, rnd, shortName, STORY, storyDone, strength, UNIT_BY } from '@/engine';
 import { useStore, useT } from '@/state/store';
 import { MapView, type MapDot } from '@/ui/MapView';
 import { sfx } from '@/ui/sound';
@@ -29,6 +29,7 @@ export default function Result() {
   const todo = (id: string) => (unit?.region ? BY[id].region === unit.region : STORY.some((u) => u.items.includes(id)));
   const dots: MapDot[] = PLACES.filter((p) => mastery(s, p.id) >= 1 || todo(p.id))
     .map((p) => ({ ...p, state: mastery(s, p.id) >= 1 ? 'lit' : 'dim', size: mastery(s, p.id) >= 1 ? 1 : 0.6, label: R.newIds.includes(p.id) ? p.name : '' }));
+  const regionsLeft = regionProgress(s).filter((g) => g.done < g.units.length).length;
   const storyEnd = R.card && unit?.id === STORY[STORY.length - 1].id && storyDone(s);
   const reveal = learned(s).map((p) => ({ x: p.x, y: p.y, s: strength(s, p.id, now()) }));
   const perks = [
@@ -78,15 +79,15 @@ export default function Result() {
           <T_ style={{ fontFamily: F.display, fontSize: 24 }}>גלויה חדשה הגיעה</T_>
           <T_ style={{ fontSize: 18, lineHeight: 26 }}>{t(unit.card)}</T_>
           {!!unit.clue && <T_ style={{ color: C.muted }}>נ.ב. {unit.clue}</T_>}
-          {unit.region && unit.part === unit.parts && <T_ style={{ fontFamily: F.bold }}>נ.ב. 2: אות אזורי חדש נכנס לתיק האישי.</T_>}
-          {storyEnd && <T_ style={{ fontFamily: F.bold }}>{t('נ.ב. 2: הארכיון נפתח. עוד מאות יישובים, אזור אחרי אזור. ואת מבחן הקביעות {תעשה|תעשי} כשמתחשק לך.')}</T_>}
+          {unit.region && unit.part === unit.parts && <T_ style={{ fontFamily: F.bold }}>{`נ.ב. 2: אות אזורי חדש נכנס לתיק האישי. ${regionsLeft ? `עוד ${regionsLeft} אזורים, וכל הארץ על המפה.` : 'וזהו: כל הארץ על המפה.'}`}</T_>}
+          {storyEnd && <T_ style={{ fontFamily: F.bold }}>{t('נ.ב. 2: הארכיון נפתח. עוד מאות יישובים, אזור אחרי אזור, עד שכל הארץ חוזרת למפה. ואת מבחן הקביעות {תעשה|תעשי} כשמתחשק לך.')}</T_>}
           <T_ style={{ fontFamily: F.display, fontSize: 20 }}>צבי</T_>
         </Card>
       ) : (
         <ZviSays text={t(say)} />
       )}
       <MapView view={COUNTRY} dots={dots} dotPx={5} reveal={reveal} revealR={1.7} style={{ height: 340 }}
-        tag={`${learned(s).length}/${PLACES.length} יישובים חזרו למפה`} label="המפה הלאומית" />
+        tag={`${learned(s).length}/${PLACES.length} יישובים חזרו למפה · המטרה: כל הארץ`} label="המפה הלאומית" />
       <Btn big label={R.kind === 'shift' && R.shift === 0 ? 'הבא בתור' : 'חזרה לשולחן'} onPress={() => router.replace('/home')} />
     </Screen>
   );
