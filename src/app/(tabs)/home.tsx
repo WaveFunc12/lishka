@@ -58,8 +58,8 @@ export default function Home() {
         </View>
       </View>
 
-      <View style={styles.pcard} accessibilityLabel={`הגלויה הבאה: ${u.t}`}>
-        <MapView zoom={false} view={{ fit: pts, pad: 0.55, minW: 34 }} dots={dots} dotPx={5} reveal={reveal} revealR={0.6} style={{ height: mapH }} cornerCard={{ w: 0.66, h: 100 }} label="מפת האזור של הגלויה הבאה">
+      <View style={styles.pcard}>
+        <MapView zoom={false} view={{ fit: pts, pad: 0.55, minW: 34 }} dots={dots} dotPx={5} reveal={reveal} revealR={0.6} style={{ height: mapH }} cornerCard={{ w: 0.66, h: 100 }} label={`הגלויה הבאה: ד״ש מ${u.t}${u.parts && u.parts > 1 ? `, גלויה ${u.part} מתוך ${u.parts} באזור` : ''}${ns ? `, משמרת ${ns.s + 1} מתוך 2` : ''}`}>
           <View style={styles.region} pointerEvents="none">
             <T_ style={{ fontSize: 13 }}>ד״ש מ</T_>
             <T_ style={{ fontFamily: F.display, fontSize: 22, lineHeight: 26 }}>{u.t}</T_>
@@ -87,7 +87,7 @@ export default function Home() {
             <T_ style={{ fontFamily: F.black, fontSize: 14 }}>{u.region ? u.s : 'הסיפור'} · {ch.done}/{ch.units.length} גלויות</T_>
             <T_ style={{ fontSize: 14, color: quota ? C.ok : C.muted }}>{quota ? '✓ המכסה של היום בוצעה' : 'המכסה של היום: משמרת אחת'}</T_>
           </View>
-          <View style={styles.segs} accessibilityLabel={`${ch.done} מתוך ${ch.units.length} גלויות הושלמו`}>
+          <View style={styles.segs} accessible accessibilityLabel={`${ch.done} מתוך ${ch.units.length} גלויות הושלמו`}>
             {ch.units.map((x) => {
               const sh = s.shifts[x.id] || [];
               const f = s.units[x.id] ? 1 : sh.filter(Boolean).length / 2;

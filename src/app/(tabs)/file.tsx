@@ -39,7 +39,7 @@ export default function File() {
       </Card>
       <Card style={{ flexDirection: 'row', gap: 8 }}>
         {[[s.xp, 'ותק'], [`${learned(s).length}/${PLACES.length}`, 'יישובים'], [`${postcardsDone(s)}/${UNITS.length}`, 'גלויות']].map(([n, l]) => (
-          <View key={String(l)} style={{ flex: 1, alignItems: 'center' }}>
+          <View key={String(l)} style={{ flex: 1, alignItems: 'center' }} accessible accessibilityLabel={`${String(n).replace('/', ' מתוך ')} ${l}`}>
             <T_ numberOfLines={1} adjustsFontSizeToFit style={{ fontFamily: F.display, fontSize: 22 }}>{String(n)}</T_>
             <T_ style={{ color: C.muted, fontSize: 13 }}>{String(l)}</T_>
           </View>
@@ -58,7 +58,7 @@ export default function File() {
             ['gold', 'זהב', tr.gold, `שליטה בכל היישובים (${Math.round(tr.mast * 100)}%)`],
             ['legend', '★', tr.legend, 'מבחן הקביעות על מפה ריקה'],
           ] as const).map(([tier, face, got, what]) => (
-            <View key={tier} style={styles.medal} accessibilityLabel={`${tier === 'legend' ? 'קביעות' : face}: ${what}. ${got ? 'הושג' : 'עוד לא'}`}>
+            <View key={tier} style={styles.medal} accessible accessibilityLabel={`${tier === 'legend' ? 'קביעות' : face}: ${what}. ${got ? 'הושג' : 'עוד לא'}`}>
               <Medal tier={tier} face={face} earned={!!got} size={58} />
               <T_ style={styles.badgeName}>{tier === 'legend' ? 'קביעות' : face}</T_>
               <T_ style={styles.badgeNote}>{what}</T_>
@@ -89,13 +89,13 @@ export default function File() {
         {/* Each setting is a label and two choices; the chosen one is filled and ticked. */}
         <View style={styles.setRow}>
           <T_ style={styles.setLbl}>לשון פנייה</T_>
-          <Btn style={styles.seg} alt={s.g !== 'm'} label={s.g === 'm' ? '✓ זכר' : 'זכר'} onPress={() => update((d) => { d.g = 'm'; })} />
-          <Btn style={styles.seg} alt={s.g !== 'f'} label={s.g === 'f' ? '✓ נקבה' : 'נקבה'} onPress={() => update((d) => { d.g = 'f'; })} />
+          <Btn style={styles.seg} alt={s.g !== 'm'} label="זכר" selected={s.g === 'm'} onPress={() => update((d) => { d.g = 'm'; })} />
+          <Btn style={styles.seg} alt={s.g !== 'f'} label="נקבה" selected={s.g === 'f'} onPress={() => update((d) => { d.g = 'f'; })} />
         </View>
         <View style={styles.setRow}>
           <T_ style={styles.setLbl}>צלילים ורטט</T_>
-          <Btn style={styles.seg} alt={s.mute} label={!s.mute ? '✓ פועלים' : 'פועלים'} onPress={() => update((d) => { d.mute = false; })} />
-          <Btn style={styles.seg} alt={!s.mute} label={s.mute ? '✓ כבויים' : 'כבויים'} onPress={() => update((d) => { d.mute = true; })} />
+          <Btn style={styles.seg} alt={s.mute} label="פועלים" selected={!s.mute} onPress={() => update((d) => { d.mute = false; })} />
+          <Btn style={styles.seg} alt={!s.mute} label="כבויים" selected={s.mute} onPress={() => update((d) => { d.mute = true; })} />
         </View>
         {remindersSupported && (
           <View style={{ gap: 6 }}>

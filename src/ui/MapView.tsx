@@ -273,6 +273,8 @@ export function MapView(p: Props) {
   return (
     <GestureDetector gesture={gesture}>
       <View style={[styles.box, p.style]} onLayout={onLayout} collapsable={false}
+        // A map with nothing to press reads as one picture with its label, instead of every town name in turn.
+        accessible={!canZoom && !p.onPressMap && !p.onPressDot}
         accessibilityRole={p.onPressMap || p.onPressDot ? 'button' : 'image'} accessibilityLabel={p.label}>
         {box.w > 0 && (
           <Animated.View style={[{ position: 'absolute', left: -W * M, top: -H * M }, moved]}>{svg}</Animated.View>

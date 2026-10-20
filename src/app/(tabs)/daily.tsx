@@ -43,7 +43,7 @@ function Record({ today, score }: { today: string; score: number }) {
           </View>
         ))}
       </View>
-      <View style={{ gap: 4 }} accessibilityLabel={`התפלגות הנקודות: ${rec.spread.map((n, k) => `${k} נקודות ${n} פעמים`).reverse().join(', ')}`}>
+      <View style={{ gap: 4 }} accessible accessibilityLabel={`התפלגות הנקודות: ${rec.spread.map((n, k) => `${k} נקודות ${n} פעמים`).reverse().join(', ')}`}>
         {rec.spread.map((_, k) => DAILY_N - k).map((k) => (
           <View key={k} style={st.row}>
             <T_ style={{ width: 14, fontFamily: F.black, textAlign: 'center' }}>{k}</T_>
