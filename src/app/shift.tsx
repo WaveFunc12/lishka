@@ -25,7 +25,7 @@ export default function Shift() {
   /** Faint context: places already known plus the big-city anchors, never the ones being asked. */
   const ctxDots = (ex: string[], v: Box): MapDot[] =>
     PLACES.filter((p) => !ex.includes(p.id) && p.x > v.x && p.x < v.x + v.w && p.y > v.y && p.y < v.y + v.h && (known.has(p.id) || ANCHORS.includes(p.id)))
-      .map((p) => ({ ...p, state: known.has(p.id) ? 'ctx' : 'anc', size: 0.75, label: p.name }));
+      .map((p) => ({ ...p, state: known.has(p.id) ? 'ctx' : 'anc', size: 0.75, label: shortName(p) }));
 
   const submit = (g: Grade) => {
     const next = { ...sess, q: sess.q.slice() };
@@ -64,7 +64,7 @@ export default function Shift() {
     kind = 'יישוב חדש';
     const an = anchorFor(it.id, [...known]), A = an && BY[an.id];
     map = { ...map, view: A ? { fit: [it, A], pad: 0.7, minW: 36 } : viewAround(it, 45), tag: it.district,
-      dots: [...(A ? [{ ...A, state: 'ctx' as const, label: A.name }] : []), { ...it, state: 'target', label: it.name, size: 1.2, pulse: true }],
+      dots: [...(A ? [{ ...A, state: 'ctx' as const, label: shortName(A) }] : []), { ...it, state: 'target', label: it.name, size: 1.2, pulse: true }],
       lines: A ? [[A, it, 'aline']] : [] };
     body = (
       <>

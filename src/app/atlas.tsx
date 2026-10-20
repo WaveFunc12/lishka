@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { BY, COUNTRY, learned, mastery, PLACES, popText, REGIONS, strength, UNIT_BY } from '@/engine';
+import { BY, COUNTRY, learned, mastery, PLACES, popText, REGIONS, shortName, strength, UNIT_BY } from '@/engine';
 import { useStore, useT } from '@/state/store';
 import { MapView, type MapDot } from '@/ui/MapView';
 import { Btn, Card, H1, Kicker, LinkBtn, Meter, Screen, T_ } from '@/ui/kit';
@@ -21,7 +21,7 @@ export default function Atlas() {
 
   const dots: MapDot[] = [
     ...(all ? PLACES.filter((p) => mastery(s, p.id) < 1 && p.id !== sel).map((p): MapDot => ({ ...p, state: 'dim', size: 0.55 })) : []),
-    ...known.filter((p) => p.id !== sel).map((p): MapDot => ({ ...p, state: 'lit', size: 0.8, label: p.name })),
+    ...known.filter((p) => p.id !== sel).map((p): MapDot => ({ ...p, state: 'lit', size: 0.8, label: shortName(p) })),
     ...(it ? [{ ...it, state: 'target' as const, size: 1.3, label: it.name }] : []),
   ];
   const m = it ? mastery(s, it.id) : 0, unit = it ? UNIT_BY[it.unit] : null;

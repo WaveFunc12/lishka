@@ -155,11 +155,16 @@ export function MapView(p: Props) {
   // With a tag in the bottom corner, the scale bar sits just above it.
   const lift = p.tag ? 34 : 0;
   const px = (x: number, y: number, w: number, h: number): MapBox => ({ x: v.x + x * k, y: v.y + y * k, w: w * k, h: h * k });
+  // The scale bar takes the bottom corner with no place dot under it (bottom left unless a dot is there).
+  const scW = niceScale(v.w) / k + 24;
+  const hasDot = (b: MapBox) => (p.dots || []).some((d) => d.x > b.x && d.x < b.x + b.w && d.y > b.y && d.y < b.y + b.h);
+  const scLeft = px(0, H - 34 - lift, scW, 34), scRight = px(W - scW, H - 34, scW, 34);
+  const scaleRight = !p.noScale && hasDot(scLeft) && !hasDot(scRight);
   const reserved = [
     ...(canZoom ? [px(0, 0, 50, zoomed ? 122 : 84)] : []),
     ...(p.mini ? [px(W - 54, 0, 54, 106)] : []),
     ...(p.tag ? [px(0, H - 40, 12 + p.tag.length * 8, 40)] : []),
-    ...(!p.noScale ? [px(0, H - 34 - lift, 90, 34)] : []),
+    ...(!p.noScale ? [scaleRight ? scRight : scLeft] : []),
   ];
 
   // Keep map labels clear of the game's dots, pins and place names (names run leftwards from their dot).
@@ -257,7 +262,7 @@ export function MapView(p: Props) {
         )}
         {box.w > 0 && !p.noScale && (
           <Svg width={W} height={H} viewBox={`${v.x} ${v.y} ${v.w} ${v.h}`} style={StyleSheet.absoluteFill} pointerEvents="none">
-            <ScaleBar v={v} k={k} lift={lift} />
+            <ScaleBar v={v} k={k} lift={scaleRight ? 0 : lift} right={scaleRight} />
           </Svg>
         )}
         {p.mini && box.w > 0 && <MiniMap v={v} />}
@@ -303,11 +308,15 @@ function placeDotLabels(dots: MapDot[], r: number, fs: number, marks: Point[], v
     ...marks.map((m) => ({ x0: m.x - fs * 0.6, x1: m.x + fs * 0.6, y0: m.y - fs * 1.6, y1: m.y + fs * 0.3 })),
     ...reserved.map((b) => ({ x0: b.x, x1: b.x + b.w, y0: b.y, y1: b.y + b.h })),
   ];
+  // A name that ends right beside another dot reads as that dot's name, so other dots keep a wider berth.
+  const berth = dots.map((o) => {
+    const rr = r * (o.size || 1); return { x0: o.x - rr - fs * 0.6, x1: o.x + rr + fs * 0.6, y0: o.y - rr - fs * 0.2, y1: o.y + rr + fs * 0.2 };
+  });
   const inside = (b: Spot) => b.x0 > v.x && b.x1 < v.x + v.w && b.y0 > v.y && b.y1 < v.y + v.h;
   const hit = (a: (typeof taken)[0], b: (typeof taken)[0]) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
   const order = dots.filter((d) => d.label).sort((a, b) => LABEL_RANK[a.state] - LABEL_RANK[b.state]);
   for (const d of order) {
-    const rr = r * (d.size || 1), w = d.label!.length * fs * 0.5, gap = rr + fs * 0.3, dg = rr * 0.7 + fs * 0.15;
+    const rr = r * (d.size || 1), w = d.label!.length * fs * 0.58, gap = rr + fs * 0.3, dg = rr * 0.7 + fs * 0.15;
     const at = (tx: number, ty: number, anchor: Spot['anchor']): Spot => {
       const x0 = anchor === 'end' ? tx - w : anchor === 'start' ? tx : tx - w / 2;
       return { tx, ty, anchor, x0, x1: x0 + w, y0: ty - fs * 0.85, y1: ty + fs * 0.25 };
@@ -322,7 +331,8 @@ function placeDotLabels(dots: MapDot[], r: number, fs: number, marks: Point[], v
       at(d.x - dg, d.y + dg + fs * 0.8, 'end'),
       at(d.x + dg, d.y + dg + fs * 0.8, 'start'),
     ];
-    const free = tries.find((t) => inside(t) && !taken.some((b) => hit(t, b)));
+    // A name that ends right beside another dot reads as that dot's name, so other dots keep a wider berth.
+    const free = tries.find((t) => inside(t) && !taken.some((b) => hit(t, b)) && !berth.some((b, i) => dots[i] !== d && hit(t, b)));
     const sp = free || (LABEL_RANK[d.state] === 0 ? tries.find(inside) || tries[0] : null);
     if (sp) { out.set(d.id, sp); taken.push(sp); }
   }
@@ -338,8 +348,8 @@ function Label({ x, y, fs, text, faint, anchor = 'end' }: { x: number; y: number
   );
 }
 
-function ScaleBar({ v, k, lift }: { v: MapBox; k: number; lift: number }) {
-  const sc = niceScale(v.w), sx = v.x + 12 * k, sy = v.y + v.h - (14 + lift) * k;
+function ScaleBar({ v, k, lift, right }: { v: MapBox; k: number; lift: number; right: boolean }) {
+  const sc = niceScale(v.w), sx = right ? v.x + v.w - 12 * k - sc : v.x + 12 * k, sy = v.y + v.h - (14 + lift) * k;
   return (
     <G>
       <Path d={`M${sx} ${sy}h${sc}M${sx} ${sy - 4 * k}v${8 * k}M${sx + sc} ${sy - 4 * k}v${8 * k}`} stroke={C.ink} strokeWidth={2 * k} fill="none" />

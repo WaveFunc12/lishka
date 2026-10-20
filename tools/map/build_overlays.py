@@ -49,6 +49,13 @@ ROUTES = {
     '90': [(33.270, 35.580), (33.200, 35.570), (32.970, 35.560), (32.790, 35.530), (32.500, 35.500), (31.860, 35.460), (31.500, 35.390), (31.200, 35.360), (30.600, 35.170), (29.560, 34.950)],
     '98': [(32.683, 35.660), (32.820, 35.800), (32.980, 35.770), (33.270, 35.770)],
 }
+# OSM names of numbered roads. A route prefers roads with its own name and avoids roads named for another
+# route, so a waypoint near two parallel roads (2 and 4 along the Carmel coast) still follows the right one.
+ROUTE_NAMES = {
+    '1': ['כביש ירושלים תל אביב'], '2': ['כביש החוף'], '4': ['כביש חיפה רעננה', 'כביש חיפה-רעננה', 'כביש גהה'],
+    '5': ['חוצה שומרון'], '6': ['כביש חוצה ישראל'], '20': ['איילון'], '35': ['חוצה יהודה'], '65': ['ואדי עארה'],
+    '75': ['דרך העמקים'], '90': ['הערבה', 'דרך ים המלח', 'גנדי'],
+}
 COST = {'motorway': 1.0, 'trunk': 1.0, 'primary': 1.35, 'secondary': 2.2}
 # Roads that run right beside Route 6 and would otherwise be routed onto it.
 NO_MOTORWAY = {'40', '70'}
@@ -99,12 +106,15 @@ def path_d(line, tol):
 def trace_routes(roads, home):
     zone = home.buffer(1.5)
     keyid, xs, ys = {}, [], []
-    edges = []
+    edges, owner = [], []
     main = []
     for r in roads:
         g = to_km(r['geom'])
         if not zone.intersects(g):
             continue
+        name = (r['names'] or {}).get('primary') or ''
+        refs = {x['ref'] for x in r['routes'] or [] if x['ref']}
+        mine = next((k for k, ns in ROUTE_NAMES.items() if k in refs or any(n in name for n in ns)), None)
         cs = list(g.coords)
         ids = []
         for c in cs:
@@ -116,19 +126,24 @@ def trace_routes(roads, home):
         for a, b in zip(ids, ids[1:]):
             if a != b:
                 edges.append((a, b, w * math.dist((xs[a], ys[a]), (xs[b], ys[b])), r['class'] == 'motorway'))
+                owner.append(mine)
         if r['class'] in ('motorway', 'trunk', 'primary'):
             for i in ids:
                 main[i] = True
     n = len(xs)
     a, b, w, mw = map(np.array, zip(*edges))
     graph = lambda w: coo_matrix((np.r_[w, w], (np.r_[a, b], np.r_[b, a])), shape=(n, n)).tocsr()
-    G_all, G_nomw = graph(w), graph(np.where(mw, w * 6, w))
+    owner = np.array(owner, dtype=object)
     pts = np.column_stack([xs, ys])
     mi = np.flatnonzero(main)
     tree = cKDTree(pts[mi])
     out = []
     for ref, wps in ROUTES.items():
-        G = G_nomw if ref in NO_MOTORWAY else G_all
+        key = ref.rstrip('N')
+        rw = np.where(mw, w * 6, w) if ref in NO_MOTORWAY else w
+        if key in ROUTE_NAMES:
+            rw = np.where(owner == key, rw * 0.5, np.where(owner != None, rw * 3, rw))  # noqa: E711
+        G = graph(rw)
         nodes = [mi[tree.query(km(lon, lat))[1]] for lat, lon in wps]
         seq = []
         for s, t in zip(nodes, nodes[1:]):

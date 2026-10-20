@@ -5,6 +5,7 @@ import { Share, StyleSheet, View } from 'react-native';
 import {
   ANCHORS, BY, COUNTRY, daily, dailyIds, DAILY_N, dayNo, dist, hit, HIT_KM, kmText, PLACES, points, shareText, squares, totalKm,
   type Point,
+  shortName,
 } from '@/engine';
 import { submitDaily } from '@/net/backend';
 import { useAccount } from '@/net/account';
@@ -38,7 +39,7 @@ export default function Daily() {
 
   // On the whole-country map only a few far-apart cities fit with their names; zoomed to an answer, all the big ones do.
   const anchors = (few: boolean): MapDot[] =>
-    PLACES.filter((p) => (few ? COUNTRY_ANCHORS : ANCHORS).includes(p.id) && !ids.includes(p.id)).map((p) => ({ ...p, state: 'anc', size: 0.75, label: p.name }));
+    PLACES.filter((p) => (few ? COUNTRY_ANCHORS : ANCHORS).includes(p.id) && !ids.includes(p.id)).map((p) => ({ ...p, state: 'anc', size: 0.75, label: shortName(p) }));
   const place = (g: Point) => {
     const d = dist(g, it);
     update((draft) => {

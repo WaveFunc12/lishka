@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import {
   BY, chapter, fading, learned, mastery, nextShift, PLACES, shiftItems, storyDone, strength, UNITS, zviSays, squares, points, DAILY_N,
+  shortName,
 } from '@/engine';
 import { useStart } from '@/state/actions';
 import { useStore, useT } from '@/state/store';
@@ -32,8 +33,8 @@ export default function Home() {
   const pts = u.items.map((id) => BY[id]);
   const lit = (id: string) => mastery(s, id) >= 1;
   const dots: MapDot[] = [
-    ...PLACES.filter((p) => lit(p.id) && !u.items.includes(p.id)).map((p): MapDot => ({ ...p, state: 'ctx', size: 0.7, label: p.name })),
-    ...pts.map((p): MapDot => (lit(p.id) ? { ...p, state: 'lit', label: p.name } : cur.includes(p.id) ? { ...p, state: 'mystery', size: 1.1, num: '?' } : { ...p, state: 'dim', size: 0.7 })),
+    ...PLACES.filter((p) => lit(p.id) && !u.items.includes(p.id)).map((p): MapDot => ({ ...p, state: 'ctx', size: 0.7, label: shortName(p) })),
+    ...pts.map((p): MapDot => (lit(p.id) ? { ...p, state: 'lit', label: shortName(p) } : cur.includes(p.id) ? { ...p, state: 'mystery', size: 1.1, num: '?' } : { ...p, state: 'dim', size: 0.7 })),
   ];
   const reveal = learned(s).map((p) => ({ x: p.x, y: p.y, s: strength(s, p.id, now()) }));
 
