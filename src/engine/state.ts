@@ -1,3 +1,4 @@
+import { DAILY_N, logEntry } from './daily';
 import type { PlayerState } from './types';
 
 export const freshState = (): PlayerState => ({
@@ -20,6 +21,7 @@ export const freshState = (): PlayerState => ({
   mute: false,
   focus: null,
   remind: null,
+  dailies: {},
   daily: { day: null, shifts: 0, reviews: 0, picks: [] },
 });
 
@@ -30,7 +32,11 @@ export function migrate(raw: unknown): PlayerState {
   const s = raw as Partial<PlayerState>;
   // Saves from before the five-place daily have one pick in `dp`; that day's daily just starts over.
   const { dp: _old, ...d } = (s.daily || {}) as Partial<PlayerState['daily']> & { dp?: unknown };
-  return { ...base, ...s, v: 1, daily: { ...base.daily, ...d, picks: Array.isArray(d.picks) ? d.picks : [] } };
+  const out: PlayerState = { ...base, ...s, v: 1, daily: { ...base.daily, ...d, picks: Array.isArray(d.picks) ? d.picks : [] } };
+  // Saves from before the daily log still have the last finished daily; keep it.
+  const last = out.daily;
+  if (last.day && last.picks.length >= DAILY_N && !out.dailies[last.day]) out.dailies = { ...out.dailies, [last.day]: logEntry(last.picks) };
+  return out;
 }
 
 /** Engine functions mutate a draft; the store clones first so React sees a new object. */

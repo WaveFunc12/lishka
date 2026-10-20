@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  BY, DAY_MS, UNITS, PLACES, STORY, REGION_UNITS, UNIT_BY, shiftItems, advance, anchorFor, buildExam, buildShift, bump, clone, compareAnswer, dailyIds, dayNo, dist, points, shareText, totalKm,
+  BY, DAY_MS, UNITS, PLACES, STORY, REGION_UNITS, UNIT_BY, shiftItems, advance, anchorFor, buildExam, buildShift, bump, clone, compareAnswer, dailyIds, dailyStats, dayNo, dist, points, shareText, totalKm,
   fading, finish, freshState, reminderPlan, msToNextDay, untilText, gradePin, gradeType, israelDay, markDay, migrate, nextShift, onOpen, rank, seeded,
   squares, startSession, strength, T, answer, gradeTap, zoomAt, clampView, COUNTRY,
 } from './index';
@@ -196,6 +196,20 @@ describe('daily', () => {
     expect(totalKm(picks)).toBe(63.5);
     expect(squares(picks)).toBe('🟩🟩🟥🟥⬜');
     expect(shareText(picks, '2026-10-19', 'f')).toContain('2/5');
+    expect(shareText(picks, '2026-10-19', 'f', 3)).toContain('3 ימים ברצף');
+    expect(shareText(picks, '2026-10-19', 'f', 1)).not.toContain('ברצף');
+  });
+  it('keeps a record of games, runs of days and the score spread', () => {
+    const s = freshState();
+    s.dailies = { '2026-10-10': [5, 4], '2026-10-11': [3, 30], '2026-10-12': [4, 12], '2026-10-15': [2, 50], '2026-10-16': [5, 3] };
+    const st = dailyStats(s, '2026-10-17');
+    expect(st.played).toBe(5);
+    expect(st.avg).toBeCloseTo(3.8);
+    expect(st.run).toBe(2); // yesterday still counts until today is over
+    expect(st.best).toBe(3);
+    expect(st.spread).toEqual([0, 0, 1, 1, 1, 2]);
+    expect(dailyStats(s, '2026-10-18').run).toBe(0);
+    expect(dailyStats(freshState(), '2026-10-18')).toEqual({ played: 0, avg: 0, run: 0, best: 0, spread: [0, 0, 0, 0, 0, 0] });
   });
 });
 
@@ -209,6 +223,12 @@ describe('state', () => {
     expect(s.mastery).toEqual({});
     expect(s.focus).toBeNull();
     expect(clone(s)).toEqual(s);
+  });
+  it('logs a finished daily from a save made before the daily log', () => {
+    const at = (d: number) => ({ id: 'x', d, g: { x: 0, y: 0 } });
+    const s = migrate({ daily: { day: '2026-10-19', picks: [at(1), at(2), at(30), at(4), at(5.04)] } });
+    expect(s.dailies).toEqual({ '2026-10-19': [4, 42] });
+    expect(migrate({ daily: { day: '2026-10-19', picks: [at(1)] } }).dailies).toEqual({});
   });
 });
 

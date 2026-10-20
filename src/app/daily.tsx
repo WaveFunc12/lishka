@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Share, StyleSheet, View } from 'react-native';
 import {
-  ANCHORS, BY, COUNTRY, daily, dailyIds, DAILY_N, dayNo, dist, hit, HIT_KM, kmText, markDay, msToNextDay, PLACES, points, shareText, shortName,
+  ANCHORS, BY, COUNTRY, daily, dailyIds, dailyStats, DAILY_N, dayNo, dist, hit, HIT_KM, kmText, logEntry, markDay, msToNextDay, PLACES, points, shareText, shortName,
   squares, totalKm, untilText, type Point,
 } from '@/engine';
 import { submitDaily } from '@/net/backend';
@@ -23,6 +23,37 @@ function NextDaily() {
     return () => clearInterval(id);
   }, []);
   return <T_ style={{ textAlign: 'center', color: C.muted }}>חמישה יישובים חדשים בעוד {untilText(msToNextDay(now()))}.</T_>;
+}
+
+/** The player's daily record: games, average, runs of days, and a bar per score with today's marked. */
+function Record({ today, score }: { today: string; score: number }) {
+  const { s } = useStore();
+  const rec = dailyStats(s, today), most = Math.max(1, ...rec.spread);
+  return (
+    <Card style={{ gap: 10 }}>
+      <T_ style={{ fontFamily: F.display, fontSize: 22 }}>הרישום שלך ביומי</T_>
+      <View style={{ flexDirection: 'row' }}>
+        {([[rec.played, 'משחקים'], [rec.avg.toFixed(1), 'ממוצע'], [rec.run, 'ימים ברצף'], [rec.best, 'שיא רצף']] as const).map(([n, l]) => (
+          <View key={l} style={{ flex: 1, alignItems: 'center' }}>
+            <T_ style={{ fontFamily: F.display, fontSize: 24 }}>{String(n)}</T_>
+            <T_ style={{ color: C.muted, fontSize: 13 }}>{l}</T_>
+          </View>
+        ))}
+      </View>
+      <View style={{ gap: 4 }} accessibilityLabel={`התפלגות הנקודות: ${rec.spread.map((n, k) => `${k} נקודות ${n} פעמים`).reverse().join(', ')}`}>
+        {rec.spread.map((_, k) => DAILY_N - k).map((k) => (
+          <View key={k} style={st.row}>
+            <T_ style={{ width: 14, fontFamily: F.black, textAlign: 'center' }}>{k}</T_>
+            <View style={{ flex: 1 }}>
+              <View style={{ width: `${Math.max(8, (rec.spread[k] / most) * 100)}%`, backgroundColor: k === score ? C.ok : C.track, borderRadius: 4, paddingHorizontal: 6, paddingVertical: 1 }}>
+                <T_ style={{ fontFamily: F.black, fontSize: 13, color: k === score ? C.accentInk : C.ink }}>{rec.spread[k]}</T_>
+              </View>
+            </View>
+          </View>
+        ))}
+      </View>
+    </Card>
+  );
 }
 
 const COUNTRY_ANCHORS = ['hfa', 'tlv', 'jlm', 'bsh', 'elt'];
@@ -57,7 +88,10 @@ export default function Daily() {
       const dd = daily(draft, day);
       if (dd.picks.length === i) dd.picks.push({ id: it.id, d, g });
       // Finishing the daily counts as showing up at the office.
-      if (dd.picks.length === DAILY_N) markDay(draft, day);
+      if (dd.picks.length === DAILY_N) {
+        markDay(draft, day);
+        draft.dailies[day] = logEntry(dd.picks);
+      }
     });
     setShown(i);
     if (!s.mute) {
@@ -91,7 +125,8 @@ export default function Daily() {
           ))}
           <T_ style={{ color: C.muted, textAlign: 'center' }}>סטייה כוללת {kmText(totalKm(picks))}. בתיקו, מי שסטה פחות מנצח.</T_>
         </Card>
-        <Btn big label="לשתף ולהתחרות" onPress={() => Share.share({ message: shareText(picks, day, s.g) }).catch(() => {})} />
+        <Record today={day} score={points(picks)} />
+        <Btn big label="לשתף ולהתחרות" onPress={() => Share.share({ message: shareText(picks, day, s.g, dailyStats(s, day).run) }).catch(() => {})} />
         <Btn alt label={sent === 'yes' ? 'נשלח לחדרים. לטבלה' : 'חדרים פרטיים עם חברים'} onPress={() => router.push('/rooms')} />
         {sent === 'failed' && <T_ style={{ color: C.bad, textAlign: 'center' }}>לא הצלחנו לשלוח לחדרים. ננסה שוב כשתפתחו את המסך.</T_>}
         <NextDaily />

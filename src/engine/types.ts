@@ -72,6 +72,8 @@ export type PlayerState = {
   focus: string | null;
   /** Hour of Zvi's daily reminder (device time), or null when off. */
   remind: number | null;
+  /** Every finished daily: points and total km off. */
+  dailies: Record<DayStr, [number, number]>;
   /** picks: today's daily pins, in order. */
   daily: { day: DayStr | null; shifts: number; reviews: number; picks: DailyPick[] };
 };
