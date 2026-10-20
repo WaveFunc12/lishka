@@ -38,7 +38,7 @@ bash supabase/tests/run.sh   # rooms database rules, on a throwaway local Postgr
 - `src/data/` — the 500 biggest places (CBS 2023, built by `tools/places/build_places.py`) and the map data.
   The first 42 are the story's seven postcards; the rest are the archive's 83 regional postcards.
 - `src/app/` — screens (Expo Router): hello, story, home, shift, result, daily, archive, atlas (my map),
-  rooms and room/[id], file, about.
+  roads (the road quiz), rooms and room/[id], file, about.
 - `src/net/` — sign-in and private rooms (Supabase). Off unless the project is configured (below).
 - `src/ui/` — the map (`MapView`, react-native-svg), Zvi, buttons, theme.
 - `src/state/` — the store; progress is saved on the phone with AsyncStorage.
