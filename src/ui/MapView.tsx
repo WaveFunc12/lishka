@@ -36,6 +36,8 @@ type Props = {
   onPressDot?: (id: string) => void;
   /** Any dot can be tapped, not only the numbered choices. */
   pickAny?: boolean;
+  /** A card laid over the bottom-right corner (share of the width, height in px), kept clear of map labels. */
+  cornerCard?: { w: number; h: number };
   /** Pinch, drag and zoom buttons. On by default. */
   zoom?: boolean;
   children?: ReactNode;
@@ -165,6 +167,7 @@ export function MapView(p: Props) {
     ...(p.mini ? [px(W - 54, 0, 54, 106)] : []),
     ...(p.tag ? [px(0, H - 40, 12 + p.tag.length * 8, 40)] : []),
     ...(!p.noScale ? [scaleRight ? scRight : scLeft] : []),
+    ...(p.cornerCard ? [px(W * (1 - p.cornerCard.w), H - p.cornerCard.h, W * p.cornerCard.w, p.cornerCard.h)] : []),
   ];
 
   // Keep map labels clear of the game's dots, pins and place names (names run leftwards from their dot).

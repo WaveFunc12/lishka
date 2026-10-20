@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import {
-  BY, chapter, fading, learned, mastery, nextShift, PLACES, shiftItems, storyDone, strength, UNITS, zviSays, squares, points, DAILY_N,
+  BY, chapter, fading, learned, mastery, nextShift, PLACES, shiftItems, storyDone, strength, UNITS, zviSays, squares, points, dailyStats, DAILY_N,
   shortName,
 } from '@/engine';
 import { useStart } from '@/state/actions';
@@ -21,7 +21,7 @@ export default function Home() {
   const ns = nextShift(s);
   const u = ns ? ns.u : UNITS[UNITS.length - 1];
   const d = s.daily.day === today() ? s.daily : { shifts: 0, reviews: 0, picks: [] };
-  const dn = d.picks.length, dailyDone = dn >= DAILY_N;
+  const dn = d.picks.length, dailyDone = dn >= DAILY_N, run = dailyStats(s, today()).run;
   const quota = d.shifts > 0 || d.reviews > 0;
   const fad = fading(s, now()).length;
   const fresh = !s.xp;
@@ -56,7 +56,7 @@ export default function Home() {
       </View>
 
       <View style={styles.pcard} accessibilityLabel={`הגלויה הבאה: ${u.t}`}>
-        <MapView zoom={false} view={{ fit: pts, pad: 0.55, minW: 34 }} dots={dots} dotPx={5} reveal={reveal} revealR={0.6} style={{ height: mapH }} label="מפת האזור של הגלויה הבאה">
+        <MapView zoom={false} view={{ fit: pts, pad: 0.55, minW: 34 }} dots={dots} dotPx={5} reveal={reveal} revealR={0.6} style={{ height: mapH }} cornerCard={{ w: 0.66, h: 100 }} label="מפת האזור של הגלויה הבאה">
           <View style={styles.region} pointerEvents="none">
             <T_ style={{ fontSize: 13 }}>ד״ש מ</T_>
             <T_ style={{ fontFamily: F.display, fontSize: 22, lineHeight: 26 }}>{u.t}</T_>
@@ -100,7 +100,8 @@ export default function Home() {
           <View style={{ flex: 1 }}>
             <T_ style={{ fontFamily: F.black }}>היומי</T_>
             <T_ style={{ fontSize: 13, color: C.muted }}>
-              {dn ? `${squares(d.picks)} · ${points(d.picks)}/${DAILY_N}` : 'חמישה יישובים. פגיעה עד 10 ק״מ שווה נקודה.'}
+              {dn ? `${squares(d.picks)} · ${points(d.picks)}/${DAILY_N}${dailyDone && run > 1 ? ` · ${run} ימים ברצף` : ''}`
+                : run ? `${run === 1 ? 'שיחקת אתמול' : `${run} ימים ברצף`}. היום ממשיכים את הרצף?` : 'חמישה יישובים. פגיעה עד 10 ק״מ שווה נקודה.'}
             </T_>
           </View>
           <T_ style={{ fontFamily: F.black, color: C.accent }}>{dailyDone ? 'לשתף' : dn ? 'להמשיך' : 'לשחק'}</T_>
