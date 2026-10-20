@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Platform, View } from 'react-native';
-import { learned, PLACES, postcardsDone, rank, STORY, tiers, UNITS } from '@/engine';
+import { learned, PLACES, postcardsDone, rank, regionProgress, STORY, tiers, UNITS } from '@/engine';
 import { useStart } from '@/state/actions';
 import { allowReminders, remindersSupported } from '@/state/reminders';
 import { useStore, useT } from '@/state/store';
@@ -15,6 +15,7 @@ export default function File() {
   const start = useStart();
   const [denied, setDenied] = useState(false);
   const r = rank(s.xp), tr = tiers(s);
+  const regions = regionProgress(s), closed = regions.filter((g) => g.done === g.units.length).length;
   const setRemind = async (h: number | null) => {
     setDenied(false);
     if (h !== null && !(await allowReminders().catch(() => false))) return setDenied(true);
@@ -55,6 +56,21 @@ export default function File() {
         <T_>{tr.gold ? '✓' : '○'} זהב: שליטה בכל היישובים ({Math.round(tr.mast * 100)}%)</T_>
         <T_>{tr.legend ? '✓' : '○'} קביעות: מבחן הקביעות על מפה ריקה</T_>
         <Btn alt label={tr.legend ? 'לנסות שוב את מבחן הקביעות' : 'למבחן הקביעות'} onPress={() => start.exam()} style={{ marginTop: 8 }} />
+      </Card>
+      <Card style={{ gap: 8 }}>
+        <T_ style={{ fontFamily: F.display, fontSize: 22 }}>אותות אזוריים · {closed}/{regions.length}</T_>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+          {regions.map((g) => {
+            const full = g.done === g.units.length;
+            return (
+              <View key={g.id} accessibilityLabel={`${g.t}: ${full ? 'הושלם' : `${g.done} מתוך ${g.units.length} גלויות`}`}
+                style={{ borderWidth: full ? 3 : 2, borderColor: full ? g.col : C.track, backgroundColor: full ? C.surface : 'transparent', borderRadius: 999, paddingVertical: 4, paddingHorizontal: 10 }}>
+                <T_ style={{ fontFamily: F.bold, fontSize: 13, lineHeight: 18, color: full ? C.ink : C.muted }}>{full && <T_ style={{ color: g.col }}>★ </T_>}{g.s}</T_>
+              </View>
+            );
+          })}
+        </View>
+        <T_ style={{ color: C.muted, fontSize: 13 }}>אות על כל אזור שכל הגלויות שלו תויקו בארכיון.</T_>
       </Card>
       <Card style={{ gap: 10 }}>
         <T_ style={{ fontFamily: F.display, fontSize: 22 }}>הגדרות</T_>

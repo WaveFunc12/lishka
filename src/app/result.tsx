@@ -68,6 +68,7 @@ export default function Result() {
           <T_ style={{ fontFamily: F.display, fontSize: 24 }}>גלויה חדשה הגיעה</T_>
           <T_ style={{ fontSize: 18, lineHeight: 26 }}>{t(unit.card)}</T_>
           {!!unit.clue && <T_ style={{ color: C.muted }}>נ.ב. {unit.clue}</T_>}
+          {unit.region && unit.part === unit.parts && <T_ style={{ fontFamily: F.bold }}>נ.ב. 2: אות אזורי חדש נכנס לתיק האישי.</T_>}
           {storyEnd && <T_ style={{ fontFamily: F.bold }}>{t('נ.ב. 2: הארכיון נפתח. עוד מאות יישובים, אזור אחרי אזור. ואת מבחן הקביעות {תעשה|תעשי} כשמתחשק לך.')}</T_>}
           <T_ style={{ fontFamily: F.display, fontSize: 20 }}>צבי</T_>
         </Card>
