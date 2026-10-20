@@ -69,6 +69,31 @@ delete from public.room_members where user_id = auth.uid();
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
 select pg_temp.check((select count(*) from public.room_day(:'room_id', public.israel_today())) = 1, 'leaving removes you from the table');
 
+-- Leaving is reversible: Noa rejoins. Only the owner can remove someone (Gal removes Dan), and a removed player can't come back.
+select set_config('t.code', :'room_code', false), set_config('t.room', :'room_id', false);
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
+select public.join_room(:'room_code');
+do $$ begin
+  perform public.remove_member(current_setting('t.room')::uuid, '00000000-0000-0000-0000-00000000000a');
+  raise exception 'FAILED: a member removed the owner';
+exception when raise_exception then
+  if sqlerrm like 'FAILED%' then raise; end if;
+  raise notice 'ok: only the owner removes';
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');
+select public.join_room(:'room_code');
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
+select public.remove_member(:'room_id', '00000000-0000-0000-0000-00000000000c');
+select pg_temp.check((select count(*) from public.room_day(:'room_id', public.israel_today())) = 2, 'removed member is off the table');
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');
+do $$ begin
+  perform public.join_room(current_setting('t.code'));
+  raise exception 'FAILED: removed player rejoined';
+exception when raise_exception then
+  if sqlerrm like 'FAILED%' then raise; end if;
+  raise notice 'ok: removed player cannot rejoin (%)', sqlerrm;
+end $$;
+
 -- Anonymous visitors can't call anything.
 reset role;
 set role anon;

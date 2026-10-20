@@ -1,4 +1,4 @@
--- Deleting an account. Runs after the other tests (Gal owns a room; Noa left it).
+-- Deleting an account. Runs after the other tests (Gal owns a room with Noa in it; Dan was removed from it).
 \set ON_ERROR_STOP 1
 create or replace function pg_temp.as_user(u text) returns void language plpgsql as $$
 begin perform set_config('request.jwt.claim.sub', u, false); end $$;
@@ -6,7 +6,7 @@ create or replace function pg_temp.check(ok boolean, what text) returns void lan
 begin if not ok then raise exception 'FAILED: %', what; end if; raise notice 'ok: %', what; end $$;
 
 set role authenticated;
--- Noa rejoins Gal's room; Dan opens a room of his own.
+-- Noa joins Gal's room again (a no-op); Dan opens a room of his own.
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
 select code as room_code, id as room_id from public.rooms limit 1 \gset
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');

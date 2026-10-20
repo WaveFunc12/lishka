@@ -28,6 +28,7 @@ export type WeekRow = { user_id: string; name: string; points: number; total_km:
 const WORDS: [RegExp, string][] = [
   [/no such room/, 'אין חדר עם הקוד הזה. כדאי לבדוק שוב את האותיות.'],
   [/room is full/, 'החדר מלא (50 משתתפים).'],
+  [/removed from room/, 'מי שפתח את החדר הוציא את החשבון הזה ממנו, ואי אפשר להצטרף אליו שוב.'],
   [/too many rooms/, 'אפשר להיות בעד 20 חדרים.'],
   [/fetch|network|Failed to fetch/i, 'אין חיבור לשרת כרגע. כדאי לנסות שוב עוד מעט.'],
   [/Token has expired|invalid/i, 'הקוד לא נכון או שפג תוקפו. אפשר לבקש קוד חדש.'],
@@ -82,6 +83,9 @@ export const joinRoom = async (code: string): Promise<Room> => ok(await need().r
 export async function leaveRoom(room: string, uid: string) {
   ok(await need().from('room_members').delete().eq('room_id', room).eq('user_id', uid));
 }
+
+/** The room's owner takes someone out; they can't rejoin with the code. */
+export const removeMember = async (room: string, uid: string) => ok(await need().rpc('remove_member', { p_room: room, p_user: uid }));
 export const roomDay = async (room: string, day: string): Promise<DayRow[]> => ok(await need().rpc('room_day', { p_room: room, p_day: day }));
 export const roomWeek = async (room: string, end: string): Promise<WeekRow[]> => ok(await need().rpc('room_week', { p_room: room, p_end: end }));
 

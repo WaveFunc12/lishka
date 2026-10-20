@@ -1,8 +1,8 @@
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useState, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { dayNo, kmText, weekEnd, weekText } from '@/engine';
-import { getRoom, leaveRoom, roomDay, roomWeek, say, type DayRow, type Room, type WeekRow } from '@/net/backend';
+import { getRoom, leaveRoom, removeMember, roomDay, roomWeek, say, type DayRow, type Room, type WeekRow } from '@/net/backend';
 import { useAccount } from '@/net/account';
 import { useStore, useT } from '@/state/store';
 import { Medal } from '@/ui/Badges';
@@ -24,6 +24,8 @@ export default function RoomScreen() {
   const [prev, setPrev] = useState<WeekRow[] | null>(null);
   const [err, setErr] = useState('');
   const [sure, setSure] = useState(false);
+  const [manage, setManage] = useState(false);
+  const [out, setOut] = useState<string | null>(null);
   const d = today(), end = weekEnd(d), lastEnd = weekEnd(d, 1);
   const played = s.daily.day === d && s.daily.picks.length >= 5;
 
@@ -38,6 +40,8 @@ export default function RoomScreen() {
   const best = prev?.[0] && prev[0].points > 0 ? prev[0] : null;
   const [copied, setCopied] = useState(false);
   const invite = () => room && shareText(`בואו להתחרות איתי ביומי של גלויות מהלשכה! החדר "${room.name}", קוד ${room.code}`).then((r) => setCopied(r === 'copied'));
+  const owner = !!room && room.owner === session?.user.id;
+  const remove = (uid: string) => room && removeMember(room.id, uid).then(() => { setOut(null); load(); }).catch((e) => setErr(say(e)));
   const leave = () => {
     if (!room || !session) return;
     leaveRoom(room.id, session.user.id).then(() => router.back()).catch((e) => setErr(say(e)));
@@ -68,7 +72,10 @@ export default function RoomScreen() {
         {tab === 'day'
           ? (day || []).map((r, i) => (
             <Row key={r.user_id} n={r.points === null ? '' : String(i + 1)} me={r.me} name={r.name + (r.me ? meTag : '')}
-              mid={r.squares ?? 'עוד לא שיחק היום'} right={r.points === null ? '' : `${r.points}/5 · ${kmText(r.total_km ?? 0)}`} />
+              mid={r.squares ?? 'עוד לא שיחק היום'} right={r.points === null ? '' : `${r.points}/5 · ${kmText(r.total_km ?? 0)}`}
+              action={manage && !r.me ? (out === r.user_id
+                ? <LinkBtn label={`בטוח? להוציא את ${r.name}`} onPress={() => remove(r.user_id)} />
+                : <LinkBtn label="להוציא מהחדר" onPress={() => setOut(r.user_id)} />) : null} />
           ))
           : (week || []).map((r, i) => (
             <Row key={r.user_id} n={String(i + 1)} me={r.me} name={r.name + (r.me ? meTag : '')}
@@ -83,6 +90,12 @@ export default function RoomScreen() {
       <Btn alt label="להזמין לחדר" onPress={invite} />
       {copied && <T_ style={{ textAlign: 'center', color: C.ok, fontFamily: F.bold }}>ההזמנה הועתקה, עם קוד החדר. אפשר להדביק אותה בוואטסאפ.</T_>}
       {!!err && <T_ style={{ color: C.bad, fontFamily: F.bold }}>{err}</T_>}
+      {owner && tab === 'day' && (
+        <View style={{ alignItems: 'center' }}>
+          <LinkBtn label={manage ? 'סיום' : 'לנהל את המשתתפים'} onPress={() => { setManage(!manage); setOut(null); }} />
+          {manage && <T_ style={{ color: C.muted, fontSize: 13, textAlign: 'center' }}>מי שהוצא מהחדר לא יוכל להצטרף אליו שוב עם הקוד.</T_>}
+        </View>
+      )}
       <View style={{ alignItems: 'center' }}>
         {sure ? <LinkBtn label="כן, לעזוב את החדר" onPress={leave} /> : <LinkBtn label="לעזוב את החדר" onPress={() => setSure(true)} />}
       </View>
@@ -90,15 +103,18 @@ export default function RoomScreen() {
   );
 }
 
-function Row({ n, name, mid, right, me }: { n: string; name: string; mid: string; right: string; me: boolean }) {
+function Row({ n, name, mid, right, me, action }: { n: string; name: string; mid: string; right: string; me: boolean; action?: ReactNode }) {
   return (
-    <View style={[st.row, me && { backgroundColor: C.track }]}>
-      <T_ style={{ fontFamily: F.black, width: 22, color: C.muted }}>{n}</T_>
-      <View style={{ flex: 1 }}>
-        <T_ style={{ fontFamily: F.black }}>{name}</T_>
-        <T_ style={{ fontSize: 13, color: C.muted }}>{mid}</T_>
+    <View>
+      <View style={[st.row, me && { backgroundColor: C.track }]}>
+        <T_ style={{ fontFamily: F.black, width: 22, color: C.muted }}>{n}</T_>
+        <View style={{ flex: 1 }}>
+          <T_ style={{ fontFamily: F.black }}>{name}</T_>
+          <T_ style={{ fontSize: 13, color: C.muted }}>{mid}</T_>
+        </View>
+        <T_ style={{ fontFamily: F.bold, fontSize: 14 }}>{right}</T_>
       </View>
-      <T_ style={{ fontFamily: F.bold, fontSize: 14 }}>{right}</T_>
+      {action && <View style={{ alignItems: 'flex-start', paddingHorizontal: 36, marginTop: -6 }}>{action}</View>}
     </View>
   );
 }
