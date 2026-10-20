@@ -41,6 +41,11 @@ const B = 'http://localhost:8096';
     const off = [[1.5, -2], [-3, 1], [2, 2.5], [-1, -1], [14, 9]];
     st.daily.picks = st.daily.picks.map((k, i) => { const q = P.find((x) => x.id === k.id); const g = { x: q.x + off[i][0], y: q.y + off[i][1] };
       return { id: k.id, g, d: Math.hypot(off[i][0], off[i][1]) }; });
+    // A few weeks of earlier dailies, the last six in a row, so the record card has something to show.
+    const t0 = Date.parse(st.daily.day + 'T00:00:00Z'), day = (n) => new Date(t0 - n * 864e5).toISOString().slice(0, 10);
+    const pts = [3, 4, 2, 5, 3, 4, 3, 4, 5, 2, 3, 4, 3, 4, 4, 5, 3, 4];
+    st.dailies = { [st.daily.day]: [4, 27] };
+    pts.forEach((n, i) => { st.dailies[day(i < 5 ? i + 1 : i + 2 + (i > 11 ? 1 : 0))] = [n, 60 - 10 * n]; });
     localStorage.setItem('lishka-progress-v1', JSON.stringify(st));
   }, places.map((q) => ({ id: q.id, x: q.x, y: q.y })));
   await p.goto(B + '/daily'); await p.waitForTimeout(2500); await shot('3-daily');

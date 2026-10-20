@@ -317,7 +317,8 @@ function placeDotLabels(dots: MapDot[], r: number, fs: number, marks: Point[], v
   const out = new Map<string, Spot>();
   const taken: { x0: number; x1: number; y0: number; y1: number }[] = [
     ...dots.map((d) => { const rr = r * (d.size || 1) + fs * 0.15; return { x0: d.x - rr, x1: d.x + rr, y0: d.y - rr, y1: d.y + rr }; }),
-    ...marks.map((m) => ({ x0: m.x - fs * 0.6, x1: m.x + fs * 0.6, y0: m.y - fs * 1.6, y1: m.y + fs * 0.3 })),
+    // A pin's head stands about 5.6 dot radii above its point and 1.6 to each side.
+    ...marks.map((m) => ({ x0: m.x - r * 1.7, x1: m.x + r * 1.7, y0: m.y - r * 5.7, y1: m.y + fs * 0.3 })),
     ...reserved.map((b) => ({ x0: b.x, x1: b.x + b.w, y0: b.y, y1: b.y + b.h })),
   ];
   // A name that ends right beside another dot reads as that dot's name, so other dots keep a wider berth.
