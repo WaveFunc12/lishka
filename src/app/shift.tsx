@@ -180,8 +180,25 @@ export default function Shift() {
   // The map takes the height the question's answers leave free (with room for the feedback sheet), so tall phones show more map.
   const free = { intro: 500, pin: 340, tap: 400, compare: 460, type: 520, name: 640 }[q.t];
   const mapH = Math.round(Math.min(520, Math.max(q.t === 'intro' ? 220 : 300, winH - free)));
+  // The answer's feedback and the main button stay pinned at the bottom, so even a small phone never scrolls to go on.
+  const footer = sess.fb ? (
+    <View style={[styles.sheet, { backgroundColor: sess.fb.ok ? C.sheetOk : C.sheetBad }]} accessibilityLiveRegion="polite">
+      <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
+        {sess.fb.ok ? <OkStamp xp={sess.fb.xp || 0} /> : <Mentor size={56} />}
+        <View style={{ flex: 1 }}>
+          <T_ style={{ fontFamily: F.display, fontSize: 22 }}>{t(sess.fb.title)}</T_>
+          <T_>{sess.fb.text}</T_>
+        </View>
+      </View>
+      <Btn label="הבא בתור" onPress={goNext} />
+    </View>
+  ) : q.t === 'pin' ? (
+    <Btn label="לאשר את המיקום" disabled={!guess} onPress={() => guess && submit(gradePin(q, guess, sess.kind))} />
+  ) : q.t === 'intro' ? (
+    <Btn label="רשמתי, הבא בתור" onPress={goNext} />
+  ) : null;
   return (
-    <Screen>
+    <Screen footer={footer}>
       <View style={styles.head}>
         <LinkBtn label="✕ הפסקת קפה" onPress={quit} />
         <View style={{ flex: 1 }}><Meter pct={pct} /></View>
@@ -194,23 +211,6 @@ export default function Shift() {
       {/* A new height remounts the map: on the web a resize alone does not re-measure it. */}
       <MapView key={mapH} {...map} style={{ height: mapH }} label="מפת השאלה" />
       {body}
-      <View style={{ flex: 1 }} />
-      {sess.fb ? (
-        <View style={[styles.sheet, { backgroundColor: sess.fb.ok ? C.sheetOk : C.sheetBad }]} accessibilityLiveRegion="polite">
-          <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
-            {sess.fb.ok ? <OkStamp xp={sess.fb.xp || 0} /> : <Mentor size={56} />}
-            <View style={{ flex: 1 }}>
-              <T_ style={{ fontFamily: F.display, fontSize: 22 }}>{t(sess.fb.title)}</T_>
-              <T_>{sess.fb.text}</T_>
-            </View>
-          </View>
-          <Btn label="הבא בתור" onPress={goNext} />
-        </View>
-      ) : q.t === 'pin' ? (
-        <Btn label="לאשר את המיקום" disabled={!guess} onPress={() => guess && submit(gradePin(q, guess, sess.kind))} />
-      ) : q.t === 'intro' ? (
-        <Btn label="רשמתי, הבא בתור" onPress={goNext} />
-      ) : null}
     </Screen>
   );
 }
