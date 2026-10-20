@@ -6,7 +6,7 @@ import Svg, { Circle, Defs, G, Image as SvgImage, Line, Mask, Path, RadialGradie
 import geo from '@/data/geo.json';
 import { clampView, COUNTRY, fitAspect, fitView, niceScale, zoomAt, type Point, type View as MapBox } from '@/engine';
 import { MapLabels, MapOverlayBase } from './MapOverlay';
-import { OVERVIEW, OVERVIEW_PX_PER_KM, TILES } from './mapTiles';
+import { OVERVIEW, OVERVIEW_PX_PER_KM, TILES, WIDE } from './mapTiles';
 import { BW, C, F, SHADOW } from './theme';
 
 /* The map: a shaded-relief basemap (no names, roads or towns, so it gives nothing away) with the game drawn on top.
@@ -184,6 +184,10 @@ export function MapView(p: Props) {
     <Svg width={W * (1 + 2 * M)} height={H * (1 + 2 * M)} viewBox={`${sv.x} ${sv.y} ${sv.w} ${sv.h}`} accessibilityLabel={p.label || 'מפה'}>
       <Rect x={sv.x} y={sv.y} width={sv.w} height={sv.h} fill={C.sea} />
       {BEYOND.map((d, i) => <Path key={'by' + i} d={d} fill={BEYOND_LAND} />)}
+      {/* Wide views reach past the overview: a coarser image of the wider region fills in around it. */}
+      {(sv.x < OVERVIEW.x || sv.x + sv.w > OVERVIEW.x + OVERVIEW.w || sv.y < OVERVIEW.y || sv.y + sv.h > OVERVIEW.y + OVERVIEW.h) && (
+        <SvgImage href={WIDE.src} x={WIDE.x} y={WIDE.y} width={WIDE.w} height={WIDE.h} preserveAspectRatio="none" />
+      )}
       <SvgImage href={OVERVIEW.src} x={OVERVIEW.x} y={OVERVIEW.y} width={OVERVIEW.w} height={OVERVIEW.h} preserveAspectRatio="none" />
       {tiles.map((t) => (
         <SvgImage key={`${t.x},${t.y}`} href={t.src} x={t.x} y={t.y} width={t.w} height={t.h} preserveAspectRatio="none" />

@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useEffect, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { BY, COPY, COUNTRY, learned, mastery, PLACES, rnd, STORY, storyDone, strength, UNIT_BY } from '@/engine';
+import { BY, COPY, COUNTRY, learned, mastery, PLACES, rnd, shortName, STORY, storyDone, strength, UNIT_BY } from '@/engine';
 import { useStore, useT } from '@/state/store';
 import { MapView, type MapDot } from '@/ui/MapView';
 import { sfx } from '@/ui/sound';
@@ -39,11 +39,17 @@ export default function Result() {
 
   if (R.kind === 'exam') {
     const win = !R.misses.length;
+    // The places missed stand out in red with their names, so the map shows what to go over.
+    const missDots: MapDot[] = [
+      ...dots.filter((d) => !R.misses.includes(d.id)).map((d) => ({ ...d, size: 0.7, label: '' })),
+      ...R.misses.map((id): MapDot => ({ ...BY[id], state: 'wrong', size: 1.1, label: shortName(BY[id]) })),
+    ];
     return (
       <Screen>
         <View><Kicker>מבחן הקביעות</Kicker><H1 size={36}>{win ? 'קביעות!' : 'כמעט קביעות'}</H1></View>
         <ZviSays text={t(win ? COPY.confess : `פספסת ${R.misses.length}: ${R.misses.map((id) => BY[id].name).join(', ')}. קביעות לא נותנים בהנחות. {נסה|נסי} שוב מחר.`)} />
-        <MapView view={COUNTRY} dots={dots} dotPx={5} reveal={reveal} revealR={1.7} style={{ height: 380 }} />
+        <MapView view={COUNTRY} dots={missDots} dotPx={5} reveal={reveal} revealR={1.7} style={{ height: 380 }}
+          label={win ? 'מפת הארץ' : `מפת הארץ, ובאדום ${R.misses.length} היישובים שפוספסו`} />
         <Btn big label="חזרה לשולחן" onPress={() => router.replace('/home')} />
       </Screen>
     );
