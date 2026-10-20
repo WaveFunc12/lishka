@@ -172,7 +172,9 @@ export function MapView(p: Props) {
 
   // Keep map labels clear of the game's dots, pins and place names (names run leftwards from their dot).
   const spots = placeDotLabels(p.dots || [], r, fs, [...(p.pins || []), ...(p.cross || [])], v, reserved);
-  const avoid: Point[] = [...(p.pins || []), ...(p.cross || [])];
+  // A cross's arms reach past the usual mark box, so their ends count too.
+  const arm = r * 4.2;
+  const avoid: Point[] = [...(p.pins || []), ...(p.cross || []).flatMap((c) => [c, { x: c.x - arm, y: c.y }, { x: c.x + arm, y: c.y }, { x: c.x, y: c.y - arm }, { x: c.x, y: c.y + arm }])];
   for (const d of p.dots || []) {
     avoid.push(d);
     const sp = spots.get(d.id);
@@ -245,11 +247,14 @@ export function MapView(p: Props) {
         );
       })}
       {(p.cross || []).map((c, i) => {
-        const a = r * 1.8, b = r * 4.2;
+        const a = r * 1.8, b = arm;
         return (
           <G key={'x' + i}>
-            <Path d={`M${c.x} ${c.y - b}V${c.y - a}M${c.x} ${c.y + a}V${c.y + b}M${c.x - b} ${c.y}H${c.x - a}M${c.x + a} ${c.y}H${c.x + b}`}
-              stroke={C.target} strokeWidth={2.5 * k} strokeLinecap="round" />
+            {/* A pale halo under the arms keeps the cross readable over a dense road net. */}
+            {[C.roadCase, C.target].map((col, j) => (
+              <Path key={col} d={`M${c.x} ${c.y - b}V${c.y - a}M${c.x} ${c.y + a}V${c.y + b}M${c.x - b} ${c.y}H${c.x - a}M${c.x + a} ${c.y}H${c.x + b}`}
+                stroke={col} strokeWidth={(j ? 2.5 : 5.5) * k} strokeLinecap="round" />
+            ))}
             <Circle cx={c.x} cy={c.y} r={r * 0.55} fill={C.target} />
           </G>
         );
