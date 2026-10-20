@@ -92,7 +92,6 @@ export default function Shift() {
           <T_><T_ style={{ fontFamily: F.black }}>לזכור:</T_> {it.hint}</T_>
         </Card>
         {ZVI_MEMORY[it.id] && <ZviSays size={40} text={t(ZVI_MEMORY[it.id])} />}
-        {TALES[it.id] && <LinkBtn label={`איך הכול התחיל ב${shortName(it)}? לקומיקס`} onPress={() => router.push(`/tale/${it.id}`)} />}
       </>
     );
   }
@@ -103,7 +102,7 @@ export default function Shift() {
     const v0 = fitView(pts, 0.9, 28, 1);
     map = { ...map, view: { fit: pts, pad: 0.9, minW: 28 }, onPressDot: done ? undefined : (id) => { setPicked(id); submit(gradeTap(q, id)); },
       dots: [...ctxDots(q.choices!, v0).map((d) => ({ ...d, label: '' })), ...q.choices!.map((id, i): MapDot => ({ ...BY[id],
-        num: done ? '' : i + 1, size: done ? 1.1 : 2.2,
+        num: done ? '' : i + 1, size: done ? (id === q.id || id === picked ? 1.7 : 0.9) : 2.2,
         state: done ? (id === q.id ? 'right' : id === picked ? 'wrong' : 'ctx') : 'choice',
         label: done && (id === q.id || id === picked) ? BY[id].name : '' }))] };
     body = !done && (
@@ -115,7 +114,7 @@ export default function Shift() {
   if (q.t === 'name' || q.t === 'type') {
     const v = viewAround(it, 40, q.off);
     map = { ...map, view: v, dots: ctxDots(q.choices || [it.id], v), cross: done ? [] : [it] };
-    if (done) map.dots = [...map.dots!, { ...it, state: sess.fb!.ok ? 'right' : 'wrong', label: it.name, size: 1.2 }];
+    if (done) map.dots = [...map.dots!, { ...it, state: sess.fb!.ok ? 'right' : 'wrong', label: it.name, size: 1.7 }];
   }
   if (q.t === 'name') {
     kind = 'זיהוי';
@@ -136,6 +135,13 @@ export default function Shift() {
       <View style={{ gap: 6 }}>
         <TextInput maxFontSizeMultiplier={1.3} value={typed} placeholder="שם היישוב" placeholderTextColor={C.muted} onChangeText={setTyped} editable={!done} autoCorrect={false} autoCapitalize="none" style={styles.input}
           onSubmitEditing={() => typed.trim() && submit(gradeType(q, typed))} returnKeyType="done" accessibilityLabel="שם היישוב" />
+        {/* Right under the box, so the keyboard never covers them. */}
+        {!done && (
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <LinkBtn label={t('{לא יודע|לא יודעת}, צבי יגלה')} onPress={() => submit({ ok: false, ids: [q.id], text: `התשובה: ${it.name}` })} />
+            <Btn label="לבדוק" disabled={!typed.trim()} onPress={() => submit(gradeType(q, typed))} />
+          </View>
+        )}
       </View>
     );
   }
@@ -171,7 +177,7 @@ export default function Shift() {
 
   const pct = Math.round((sess.i / sess.q.length) * 100);
   // The map takes the height the question's answers leave free (with room for the feedback sheet), so tall phones show more map.
-  const free = { intro: 460, pin: 340, tap: 400, compare: 460, type: 520, name: 640 }[q.t];
+  const free = { intro: 500, pin: 340, tap: 400, compare: 460, type: 520, name: 640 }[q.t];
   const mapH = Math.round(Math.min(520, Math.max(q.t === 'intro' ? 220 : 300, winH - free)));
   return (
     <Screen>
@@ -203,11 +209,6 @@ export default function Shift() {
         <Btn label="לאשר את המיקום" disabled={!guess} onPress={() => guess && submit(gradePin(q, guess, sess.kind))} />
       ) : q.t === 'intro' ? (
         <Btn label="רשמתי, הבא בתור" onPress={goNext} />
-      ) : q.t === 'type' ? (
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <LinkBtn label={t('{לא יודע|לא יודעת}, צבי יגלה')} onPress={() => submit({ ok: false, ids: [q.id], text: `התשובה: ${it.name}` })} />
-          <Btn label="לבדוק" disabled={!typed.trim()} onPress={() => submit(gradeType(q, typed))} />
-        </View>
       ) : null}
     </Screen>
   );

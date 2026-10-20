@@ -37,7 +37,7 @@ export default function Archive() {
                 <View style={st.line}>
                   <T_ style={{ fontFamily: F.black, fontSize: 17, flex: 1 }}>{g.t}</T_>
                   <T_ style={{ fontSize: 13, color: here ? g.col : C.muted, fontFamily: F.bold }}>
-                    {full ? 'מתויק ✓' : here ? 'עובדים עליו' : `${g.places} יישובים`}
+                    {full ? 'מתויק ✓' : here ? 'עובדים עליו' : storyDone(s) ? 'לעבוד על האזור ←' : `${g.places} יישובים`}
                   </T_>
                 </View>
                 <Meter pct={(g.done / g.units.length) * 100} color={g.col} />

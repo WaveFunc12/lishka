@@ -155,7 +155,13 @@ export function ComicPlayer({ panels, doneLabel, onDone, onSkip, mute, title }: 
             <Text style={styles.ctaText}>{doneLabel}</Text>
           </Pressable>
         ) : (
-          <Text style={styles.hint}>{i === 0 ? 'נגיעה בתמונה להמשך' : `${i + 1} / ${panels.length}`}</Text>
+          <View style={styles.next}>
+            <Text style={styles.hint}>{i === 0 ? 'נגיעה בתמונה להמשך' : `${i + 1} / ${panels.length}`}</Text>
+            {/* A visible way on, for anyone who swipes or doesn't notice the hint. */}
+            <Pressable onPress={() => go(1)} style={styles.nextBtn} accessibilityRole="button" accessibilityLabel="לתמונה הבאה" hitSlop={8}>
+              <Text style={styles.nextText}>הבא ←</Text>
+            </Pressable>
+          </View>
         )}
       </View>
     </SafeAreaView>
@@ -172,6 +178,9 @@ const styles = StyleSheet.create({
   frame: { flex: 1, marginHorizontal: 12, borderWidth: BW, borderColor: C.ink, borderRadius: 10, overflow: 'hidden', backgroundColor: C.bg, direction: 'ltr' },
   foot: { height: 72, justifyContent: 'center', paddingHorizontal: 12 },
   hint: { color: C.surface, opacity: 0.7, textAlign: 'center', fontFamily: F.body, fontSize: 14 },
+  next: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', direction: 'rtl' },
+  nextBtn: { borderWidth: 2, borderColor: C.surface, borderRadius: 12, paddingHorizontal: 18, paddingVertical: 8 },
+  nextText: { color: C.surface, fontFamily: F.bold, fontSize: 16 },
   cta: { backgroundColor: C.orange, borderWidth: BW, borderColor: C.ink, borderRadius: 14, paddingVertical: 14, alignItems: 'center' },
   ctaText: { fontFamily: F.black, fontSize: 20, color: C.ink },
   bubble: { borderWidth: BW, borderColor: C.ink, paddingHorizontal: 12, paddingVertical: 8 },

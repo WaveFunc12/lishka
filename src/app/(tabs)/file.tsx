@@ -85,13 +85,16 @@ export default function File() {
       </Card>
       <Card style={{ gap: 10 }}>
         <T_ style={{ fontFamily: F.display, fontSize: 22 }}>הגדרות</T_>
-        <View style={{ flexDirection: 'row', gap: 8 }}>
-          <Btn style={{ flex: 1 }} alt={s.g !== 'm'} label="לשון זכר" onPress={() => update((d) => { d.g = 'm'; })} />
-          <Btn style={{ flex: 1 }} alt={s.g !== 'f'} label="לשון נקבה" onPress={() => update((d) => { d.g = 'f'; })} />
+        {/* Each setting is a label and two choices; the chosen one is filled and ticked. */}
+        <View style={styles.setRow}>
+          <T_ style={styles.setLbl}>לשון פנייה</T_>
+          <Btn style={styles.seg} alt={s.g !== 'm'} label={s.g === 'm' ? '✓ זכר' : 'זכר'} onPress={() => update((d) => { d.g = 'm'; })} />
+          <Btn style={styles.seg} alt={s.g !== 'f'} label={s.g === 'f' ? '✓ נקבה' : 'נקבה'} onPress={() => update((d) => { d.g = 'f'; })} />
         </View>
-        <View style={{ flexDirection: 'row', gap: 8 }}>
-          <Btn style={{ flex: 1 }} alt={s.mute} label="צלילים ורטט פועלים" onPress={() => update((d) => { d.mute = false; })} />
-          <Btn style={{ flex: 1 }} alt={!s.mute} label="כבויים" onPress={() => update((d) => { d.mute = true; })} />
+        <View style={styles.setRow}>
+          <T_ style={styles.setLbl}>צלילים ורטט</T_>
+          <Btn style={styles.seg} alt={s.mute} label={!s.mute ? '✓ פועלים' : 'פועלים'} onPress={() => update((d) => { d.mute = false; })} />
+          <Btn style={styles.seg} alt={!s.mute} label={s.mute ? '✓ כבויים' : 'כבויים'} onPress={() => update((d) => { d.mute = true; })} />
         </View>
         {remindersSupported && (
           <View style={{ gap: 6 }}>
@@ -133,5 +136,8 @@ const styles = StyleSheet.create({
   stamps: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', columnGap: 10, rowGap: 12 },
   stamp: { width: 72, alignItems: 'center', gap: 2 },
   badgeName: { fontFamily: F.black, fontSize: 13, lineHeight: 17, textAlign: 'center' },
+  setRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  setLbl: { width: 92, fontFamily: F.black, fontSize: 15 },
+  seg: { flex: 1, paddingHorizontal: 4, paddingVertical: 10 },
   badgeNote: { fontSize: 11, lineHeight: 14, color: C.muted, textAlign: 'center' },
 });

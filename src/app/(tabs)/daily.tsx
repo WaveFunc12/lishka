@@ -1,7 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import {
   ANCHORS, BY, COUNTRY, daily, dailyIds, dailyStats, DAILY_N, dayNo, dist, hit, HIT_KM, kmText, logEntry, markDay, msToNextDay, PLACES, points, shareText, shortName,
   squares, totalKm, untilText, type Point,
@@ -63,6 +63,7 @@ const COUNTRY_ANCHORS = ['hfa', 'tlv', 'jlm', 'bsh', 'elt'];
    The share shows squares and the score without giving the places away. */
 export default function Daily() {
   const { s, update, today } = useStore();
+  const winH = useWindowDimensions().height;
   const t = useT();
   const day = today(), ids = dailyIds(day), places = ids.map((id) => BY[id]);
   const picks = s.daily.day === day ? s.daily.picks : [];
@@ -115,8 +116,8 @@ export default function Daily() {
           <Kicker>היומי · #{dayNo(day)}</Kicker>
           <T_ style={{ fontFamily: F.display, fontSize: 26 }}>{points(picks)} מתוך {DAILY_N} נקודות</T_>
         </View>
-        <Card style={{ gap: 8 }}>
-          <T_ style={{ fontSize: 30, textAlign: 'center' }}>{squares(picks)}</T_>
+        <Card style={{ gap: 4, paddingVertical: 12 }}>
+          <T_ style={{ fontSize: 26, textAlign: 'center' }}>{squares(picks)}</T_>
           {picks.map((p) => (
             <View key={p.id} style={st.row}>
               <T_ style={{ flex: 1, fontFamily: F.black }}>{BY[p.id].name}</T_>
@@ -127,7 +128,7 @@ export default function Daily() {
         </Card>
         <Btn big label="לשתף ולהתחרות" onPress={() => share(shareText(picks, day, s.g, dailyStats(s, day).run)).then(setShared)} />
         {shared === 'copied' && <T_ style={{ textAlign: 'center', color: C.ok, fontFamily: F.bold }}>התוצאה הועתקה. אפשר להדביק אותה בוואטסאפ.</T_>}
-        <MapView view={{ fit: all, pad: 0.25, minW: 60 }} style={{ height: 300 }} label="מפת התוצאות של היום"
+        <MapView view={{ fit: all, pad: 0.25, minW: 60 }} style={{ height: Math.round(Math.max(240, Math.min(360, winH - 540))) }} label="מפת התוצאות של היום"
           dots={picks.map((p) => ({ ...BY[p.id], state: hit(p.d) ? 'right' : 'wrong', label: BY[p.id].name }))}
           pins={picks.map((p) => p.g)} lines={picks.map((p) => [p.g, BY[p.id]] as [Point, Point])} />
         <Record today={day} score={points(picks)} />

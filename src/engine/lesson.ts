@@ -50,8 +50,10 @@ export function buildShift(s: PlayerState, u: Unit, shift: number, now: number, 
     .filter((p) => !ids.includes(p.id))
     .slice(0, 2)
     .forEach((p) => q.push({ t: qType(s, p.id), id: p.id, rev: true }));
+  // A postcard's first shift ends on a blank-map pin; typing a name from memory waits for its second shift.
   const sh = shuffle(ids.slice(), rng);
-  q.push({ t: 'pin', id: sh[0] }, { t: 'type', id: sh[1 % sh.length] });
+  q.push({ t: 'pin', id: sh[0] });
+  if (shift > 0) q.push({ t: 'type', id: sh[1 % sh.length] });
   return q;
 }
 

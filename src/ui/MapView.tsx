@@ -255,12 +255,12 @@ export function MapView(p: Props) {
         const a = r * 1.8, b = arm;
         return (
           <G key={'x' + i}>
-            {/* A pale halo under the arms keeps the cross readable over a dense road net. */}
-            {[C.roadCase, C.target].map((col, j) => (
+            {/* Blue, the colour that asks (as in the road quiz), over a pale halo, so it never reads as a road junction. */}
+            {[C.roadCase, C.routeHi].map((col, j) => (
               <Path key={col} d={`M${c.x} ${c.y - b}V${c.y - a}M${c.x} ${c.y + a}V${c.y + b}M${c.x - b} ${c.y}H${c.x - a}M${c.x + a} ${c.y}H${c.x + b}`}
                 stroke={col} strokeWidth={(j ? 3.2 : 7) * k} strokeLinecap="round" />
             ))}
-            <Circle cx={c.x} cy={c.y} r={r * 0.7} fill={C.target} stroke={C.roadCase} strokeWidth={1.5 * k} />
+            <Circle cx={c.x} cy={c.y} r={r * 0.7} fill={C.routeHi} stroke={C.roadCase} strokeWidth={1.5 * k} />
           </G>
         );
       })}

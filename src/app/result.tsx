@@ -50,18 +50,18 @@ export default function Result() {
     return (
       <Screen>
         <View><Kicker>מבחן הקביעות</Kicker><H1 size={36}>{win ? 'קביעות!' : 'כמעט קביעות'}</H1></View>
-        <ZviSays text={t(win ? COPY.confess : `פספסת ${R.misses.length}: ${R.misses.map((id) => BY[id].name).join(', ')}. קביעות לא נותנים בהנחות, אבל אפשר לנסות שוב מתי שרוצים. קודם {תעבור|תעברי} עליהם.`)} />
+        <ZviSays text={t(win ? COPY.confess : `פספסת ${R.misses.length}: ${R.misses.map((id) => BY[id].name).join(', ')}. קביעות לא נותנים בהנחות. {תעבור|תעברי} שוב על ${R.misses.length} שפספסת, ו{גש|גשי} למועד ב׳.`)} />
         <MapView view={COUNTRY} dots={missDots} dotPx={5} reveal={reveal} revealR={1.7} style={{ height: 380 }}
           label={win ? 'מפת הארץ' : `מפת הארץ, ובאדום ${R.misses.length} היישובים שפוספסו`} />
         {!win && <Btn big label={`לחזור על ${R.misses.length} שפוספסו`} onPress={() => start.review(R.misses)} />}
-        {!win && <Btn alt label="לגשת שוב למבחן" onPress={() => start.exam()} />}
+        {!win && <Btn alt label="למועד ב׳" onPress={() => start.exam()} />}
         <Btn big={win} alt={!win} label="חזרה לשולחן" onPress={goHome} />
       </Screen>
     );
   }
 
   return (
-    <Screen>
+    <Screen footer={<Btn big label={R.kind === 'shift' && R.shift === 0 ? 'הבא בתור' : 'חזרה לשולחן'} onPress={goHome} />}>
       <View style={styles.top}>
         <View style={{ flex: 1 }}>
           <Kicker>סוף משמרת{R.kind === 'shift' ? ` · ${R.shift + 1} מתוך 2` : ''}</Kicker>
@@ -111,7 +111,6 @@ export default function Result() {
       )}
       <MapView view={COUNTRY} dots={dots} dotPx={5} reveal={reveal} revealR={1.7} style={{ height: 340 }}
         tag={`${learned(s).length}/${PLACES.length} יישובים חזרו למפה · המטרה: כל הארץ`} label="המפה הלאומית" />
-      <Btn big label={R.kind === 'shift' && R.shift === 0 ? 'הבא בתור' : 'חזרה לשולחן'} onPress={goHome} />
     </Screen>
   );
 }

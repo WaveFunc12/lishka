@@ -29,7 +29,7 @@ export default function Home() {
   const story = storyDone(s), ch = chapter(s, u.region ?? null);
   const examDue = story && !s.legendary && act !== 'exam';
   // The postcard takes the room the screen has left, so tall phones get a bigger map instead of a gap.
-  const mapH = Math.round(Math.min(540, Math.max(240, winH - (examDue ? 566 : 500))));
+  const mapH = Math.round(Math.min(540, Math.max(240, winH - 524)));
 
   const cur = ns ? shiftItems(u, ns.s) : [];
   const pts = u.items.map((id) => BY[id]);
@@ -79,7 +79,6 @@ export default function Home() {
       <View style={{ gap: 10, marginTop: 'auto' }}>
         <Btn big label={label} onPress={go}
           right={act === 'exam' ? undefined : <T_ style={styles.xp}>+{(s.welcome ? 8 : 14) * 10} ותק · 2 דק׳</T_>} />
-        {examDue && <Btn alt label="למבחן הקביעות" onPress={() => start.exam()} />}
         <View>
           <View style={styles.segLbl}>
             <T_ style={{ fontFamily: F.black, fontSize: 14 }}>{u.region ? u.s : 'הסיפור'} · {ch.done}/{ch.units.length} גלויות</T_>
@@ -105,12 +104,16 @@ export default function Home() {
             <T_ style={{ fontSize: 14, color: C.muted }}>{learned(s).length}/{PLACES.length} יישובים</T_>
           </View>
           <Meter pct={(learned(s).length / PLACES.length) * 100} color={C.accent} />
-          {!!goal && <T_ style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>אבן הדרך הבאה: {goal.short}, עוד {goal.at - learned(s).length}</T_>}
+          {!!goal && <T_ style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>אבן הדרך הבאה: {goal.short} (עוד {goal.at - learned(s).length} יישובים)</T_>}
         </Pressable>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', columnGap: 22, rowGap: 6 }}>
-          {story && <LinkBtn label="הארכיון" onPress={() => router.push('/archive')} />}
-          {!fresh && <LinkBtn label="כבישים" onPress={() => router.push('/roads')} />}
-        </View>
+        {/* The other ways in, one row: the tenure exam once it's due, the archive's regions, the road quiz. */}
+        {(story || !fresh) && (
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            {examDue && <Btn alt style={styles.more} label="מבחן" onPress={() => start.exam()} />}
+            {story && <Btn alt style={styles.more} label="אזורים" onPress={() => router.push('/archive')} />}
+            {!fresh && <Btn alt style={styles.more} label="כבישים" onPress={() => router.push('/roads')} />}
+          </View>
+        )}
       </View>
     </Screen>
   );
@@ -122,6 +125,7 @@ const styles = StyleSheet.create({
   pcard: { backgroundColor: C.surface, borderWidth: BW, borderColor: C.ink, borderRadius: 6, padding: 10, transform: [{ rotate: '-0.6deg' }], ...SHADOW },
   region: { position: 'absolute', bottom: 10, right: 10, backgroundColor: C.surface, borderWidth: 2, borderColor: C.ink, borderRadius: 6, paddingHorizontal: 10, paddingVertical: 4, maxWidth: '62%', direction: 'rtl' },
   hint: { position: 'absolute', top: 8, left: 8, backgroundColor: C.surface, borderWidth: 2, borderColor: C.ink, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2, direction: 'rtl' },
+  more: { flex: 1, paddingVertical: 10, paddingHorizontal: 4 },
   xp: { color: C.accentInk, fontSize: 13, fontFamily: F.bold },
   segLbl: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
   segs: { flexDirection: 'row', gap: 4 },

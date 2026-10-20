@@ -6,12 +6,14 @@ import { BW, C, F, SHADOW, SHADOW_SM } from './theme';
 
 /* Small shared pieces. Every screen sits in an RTL root; maps opt back into LTR. */
 
-/** A screen: safe-area padded and scrolling. On a tab the tab bar takes the bottom inset. */
-export function Screen({ children, scroll = true, style, tab }: { children: ReactNode; scroll?: boolean; style?: StyleProp<ViewStyle>; tab?: boolean }) {
+/** A screen: safe-area padded and scrolling. On a tab the tab bar takes the bottom inset.
+    A `footer` (the way on) stays pinned below the scrolling part, so it is always in view. */
+export function Screen({ children, scroll = true, style, tab, footer }: { children: ReactNode; scroll?: boolean; style?: StyleProp<ViewStyle>; tab?: boolean; footer?: ReactNode }) {
   const body = <View style={[styles.screen, style]}>{children}</View>;
   return (
     <SafeAreaView style={styles.safe} edges={tab ? ['top'] : ['top', 'bottom']}>
       {scroll ? <ScrollView contentContainerStyle={{ flexGrow: 1 }}>{body}</ScrollView> : body}
+      {!!footer && <View style={styles.footer}>{footer}</View>}
     </SafeAreaView>
   );
 }
@@ -106,6 +108,7 @@ export function OkStamp({ xp, size = 72 }: { xp: number; size?: number }) {
 export const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: C.bg, direction: 'rtl' },
   screen: { flex: 1, padding: 16, gap: 16, direction: 'rtl' },
+  footer: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 12, borderTopWidth: 2, borderTopColor: C.track, backgroundColor: C.bg, direction: 'rtl' },
   text: { fontFamily: F.body, fontSize: 17, color: C.ink, textAlign: 'right', writingDirection: 'rtl' },
   kicker: { fontFamily: F.black, fontSize: 13, color: C.kicker, letterSpacing: 0.5 },
   h1: { fontFamily: F.display, color: C.ink },

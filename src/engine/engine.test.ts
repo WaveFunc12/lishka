@@ -89,7 +89,10 @@ describe('shift', () => {
     expect(q.filter((x) => x.t === 'intro').map((x) => x.id)).toEqual(ids);
     expect(q.filter((x) => x.t === 'tap')).toHaveLength(3);
     expect(q.filter((x) => x.t === 'name')).toHaveLength(3);
-    expect(q.slice(-2).map((x) => x.t)).toEqual(['pin', 'type']);
+    // The first shift ends on a pin; typing a name waits for the second shift.
+    expect(q[q.length - 1].t).toBe('pin');
+    expect(q.some((x) => x.t === 'type')).toBe(false);
+    expect(buildShift(s, u, 1, NOW, seeded(1)).slice(-2).map((x) => x.t)).toEqual(['pin', 'type']);
   });
   it('anchors a new place to the nearest known one', () => {
     const a = anchorFor('rmg', []);

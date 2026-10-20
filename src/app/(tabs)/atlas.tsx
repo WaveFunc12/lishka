@@ -63,7 +63,7 @@ export default function Atlas() {
           )}
         </Card>
       ) : (
-        <T_ style={{ color: C.muted }}>{known.length ? 'לגעת ביישוב כדי לפתוח את התיק שלו.' : 'המפה עוד ריקה. כל משמרת מחזירה אליה יישובים.'}</T_>
+        <T_ style={{ color: C.muted }}>{known.length ? 'לחיצה על יישוב פותחת את התיק שלו.' : 'המפה עוד ריקה. כל משמרת מחזירה אליה יישובים.'}</T_>
       )}
       <T_ style={{ fontFamily: F.display, fontSize: 22 }}>האזורים</T_>
       {/* Regions in their colours, with how much of each is back. Tapping one flies the map there. */}
