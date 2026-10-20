@@ -85,6 +85,28 @@ const toLines = (d: string): Line[] => d.split('M').filter(Boolean).map((part) =
 const ROAD_LINES = O.roads.map((r) => toLines(r.d));
 const STREAM_LINES = O.streams.map((s) => toLines(s.d));
 
+/** Every point of a numbered road (all its pieces). */
+export const routePoints = (ref: string): Point[] => O.roads.flatMap((r, i) => (r.ref === ref ? ROAD_LINES[i].flatMap((l) => l.pts) : []));
+
+/** The box around a numbered road, for fitting the map to it. */
+export function routeBox(ref: string): Point[] {
+  const pts = routePoints(ref);
+  const xs = pts.map((q) => q.x), ys = pts.map((q) => q.y);
+  return [{ x: Math.min(...xs), y: Math.min(...ys) }, { x: Math.max(...xs), y: Math.max(...ys) }];
+}
+
+/** One numbered road drawn bold in the game's orange over a pale halo, for the road quiz. */
+export function RouteHighlight({ route, k }: { route: string; k: number }) {
+  const ds = O.roads.filter((r) => r.ref === route).map((r) => r.d);
+  return (
+    <G>
+      {[[C.roadCase, 9], [C.target, 4.5]].map(([col, w]) => ds.map((d, i) => (
+        <Path key={`${col}${i}`} d={d} fill="none" stroke={col as string} strokeWidth={(w as number) * k} strokeLinejoin="round" strokeLinecap="round" />
+      )))}
+    </G>
+  );
+}
+
 /** Points every `step` km along the lines (at fixed distances, so they don't jump while panning), with the local angle. */
 function along(lines: Line[], step: number, v: MapBox, margin: number) {
   const out: (Point & { a: number })[] = [];
@@ -107,10 +129,10 @@ function along(lines: Line[], step: number, v: MapBox, margin: number) {
 
 /** Road shields, region names and stream names for whatever part of each is on screen,
     placed so none overlap each other or the game's own marks. */
-export const MapLabels = memo(function MapLabels({ v, k, avoid, reserved = [] }: { v: MapBox; k: number; avoid: Point[]; reserved?: MapBox[] }) {
+export const MapLabels = memo(function MapLabels({ v, k, avoid, reserved = [], noShields }: { v: MapBox; k: number; avoid: Point[]; reserved?: MapBox[]; noShields?: boolean }) {
   const m = 16 * k;
   // A shield roughly every 150 px of road on screen, a stream name every 320 px.
-  const shields = (): Label[] => O.roads.flatMap((r, i) => along(ROAD_LINES[i], 150 * k, v, m).map((q): Label => ({ kind: 'shield', x: q.x, y: q.y, ref: r.ref })));
+  const shields = (): Label[] => noShields ? [] : O.roads.flatMap((r, i) => along(ROAD_LINES[i], 150 * k, v, m).map((q): Label => ({ kind: 'shield', x: q.x, y: q.y, ref: r.ref })));
   const streams = (lv: number): Label[] => (lv <= (v.w < 70 ? 1 : v.w < 160 ? 0 : -1) ? O.streams : [])
     .flatMap((s, i) => (s.level === lv ? along(STREAM_LINES[i], 320 * k, v, m * 2) : []).map((q): Label => ({ kind: 'stream', x: q.x, y: q.y, name: s.name, a: q.a })));
   // A region's name shows only when the whole region is on screen, so zoomed in on part of השפלה there's no השפלה.

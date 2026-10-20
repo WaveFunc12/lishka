@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   BY, DAY_MS, UNITS, PLACES, STORY, REGION_UNITS, UNIT_BY, shiftItems, advance, anchorFor, buildExam, buildShift, bump, clone, compareAnswer, dailyIds, dailyStats, dayNo, dist, points, shareText, totalKm,
   fading, finish, freshState, reminderPlan, msToNextDay, untilText, gradePin, gradeType, israelDay, markDay, migrate, nextShift, onOpen, rank, seeded,
-  squares, startSession, strength, T, answer, gradeTap, zoomAt, clampView, COUNTRY,
+  squares, startSession, strength, T, answer, gradeTap, zoomAt, clampView, COUNTRY, ROUTES, roadQuiz, routeTitle,
 } from './index';
 
 const NOW = Date.parse('2026-10-19T09:00:00Z');
@@ -282,5 +282,24 @@ describe('next daily countdown', () => {
     expect(untilText(2 * 3600e3)).toBe('שעתיים');
     expect(untilText(3600e3 + 60e3)).toBe('שעה ודקה');
     expect(untilText(20e3)).toBe('דקה');
+  });
+});
+
+describe('road quiz', () => {
+  it('knows every numbered road on the map', async () => {
+    const overlay = (await import('../data/overlay.json')).default as { roads: { ref: string }[] };
+    const refs = new Set(overlay.roads.map((r) => r.ref));
+    expect([...refs].sort()).toEqual(ROUTES.map((r) => r.ref).sort());
+  });
+  it('asks about different roads, each with its own number among three', () => {
+    const qs = roadQuiz(seeded(7));
+    expect(qs).toHaveLength(8);
+    expect(new Set(qs.map((q) => q.ref)).size).toBe(8);
+    for (const q of qs) {
+      expect(new Set(q.choices).size).toBe(3);
+      expect(q.choices).toContain(q.ref);
+    }
+    expect(routeTitle('6')).toBe('כביש 6 · חוצה ישראל');
+    expect(routeTitle('40')).toBe('כביש 40');
   });
 });

@@ -106,9 +106,10 @@ export default function Home() {
           </View>
           <T_ style={{ fontFamily: F.black, color: C.accent }}>{dailyDone ? 'לשתף' : dn ? 'להמשיך' : 'לשחק'}</T_>
         </Pressable>
-        <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 24 }}>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', columnGap: 22, rowGap: 6 }}>
           {story && <LinkBtn label="הארכיון" onPress={() => router.push('/archive')} />}
           {learned(s).length > 0 && <LinkBtn label="המפה שלי" onPress={() => router.push('/atlas')} />}
+          {!fresh && <LinkBtn label="כבישים" onPress={() => router.push('/roads')} />}
           <LinkBtn label="חדרים" onPress={() => router.push('/rooms')} />
           <LinkBtn label="תיק אישי" onPress={() => router.push('/file')} />
         </View>

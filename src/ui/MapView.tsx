@@ -5,7 +5,7 @@ import Animated, { runOnJS, useAnimatedStyle, useSharedValue } from 'react-nativ
 import Svg, { Circle, Defs, G, Image as SvgImage, Line, Mask, Path, RadialGradient, Rect, Stop, Text as SvgText } from 'react-native-svg';
 import geo from '@/data/geo.json';
 import { clampView, COUNTRY, fitAspect, fitView, niceScale, zoomAt, type Point, type View as MapBox } from '@/engine';
-import { MapLabels, MapOverlayBase } from './MapOverlay';
+import { MapLabels, MapOverlayBase, RouteHighlight } from './MapOverlay';
 import { OVERVIEW, OVERVIEW_PX_PER_KM, TILES, WIDE } from './mapTiles';
 import { BW, C, F, SHADOW } from './theme';
 
@@ -36,6 +36,10 @@ type Props = {
   onPressDot?: (id: string) => void;
   /** Any dot can be tapped, not only the numbered choices. */
   pickAny?: boolean;
+  /** A numbered road to draw bold (the road quiz). */
+  route?: string;
+  /** No road numbers on the map, so they don't give the answer away. */
+  noShields?: boolean;
   /** A card laid over the bottom-right corner (share of the width, height in px), kept clear of map labels. */
   cornerCard?: { w: number; h: number };
   /** Pinch, drag and zoom buttons. On by default. */
@@ -224,7 +228,8 @@ export function MapView(p: Props) {
       {G_.lakes.map((d, i) => <Path key={'lk' + i} d={d} fill={C.sea} stroke={C.ink} strokeWidth={0.8 * k} strokeOpacity={0.6} />)}
       {G_.home.map((d, i) => <Path key={'hs' + i} d={d} fill="none" stroke={C.ink} strokeWidth={2 * k} strokeLinejoin="round" />)}
       <MapOverlayBase v={sv} k={k} />
-      <MapLabels v={v} k={k} avoid={avoid} reserved={reserved} />
+      {p.route && <RouteHighlight route={p.route} k={k} />}
+      <MapLabels v={v} k={k} avoid={avoid} reserved={reserved} noShields={p.noShields} />
       {(p.lines || []).map(([a, b, cls], i) => (
         <Line key={'ln' + i} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={cls === 'aline' ? C.accent : C.pin} strokeWidth={2 * k}
           strokeDasharray={cls === 'aline' ? [3 * k, 4 * k] : [4 * k, 3 * k]} opacity={cls === 'aline' ? 0.7 : 1} />
