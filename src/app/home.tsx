@@ -17,7 +17,7 @@ export default function Home() {
   const t = useT();
   const start = useStart();
   // The postcard takes the room the screen has, so tall phones get a bigger map instead of a gap.
-  const mapH = Math.round(Math.min(460, Math.max(240, useWindowDimensions().height - 430)));
+  const mapH = Math.round(Math.min(540, Math.max(240, useWindowDimensions().height - 430)));
   const ns = nextShift(s);
   const u = ns ? ns.u : UNITS[UNITS.length - 1];
   const d = s.daily.day === today() ? s.daily : { shifts: 0, reviews: 0, picks: [] };
