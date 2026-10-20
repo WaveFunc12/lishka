@@ -11,6 +11,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { AccountProvider } from '@/net/account';
 import { StoreProvider, useStore } from '@/state/store';
 import { C } from '@/ui/theme';
 
@@ -33,8 +34,10 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <StoreProvider>
-          <StatusBar style="dark" />
-          <Gate />
+          <AccountProvider>
+            <StatusBar style="dark" />
+            <Gate />
+          </AccountProvider>
         </StoreProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

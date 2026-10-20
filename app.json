@@ -8,7 +8,8 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.wavefunc12.lishka"
+      "bundleIdentifier": "com.wavefunc12.lishka",
+      "usesAppleSignIn": true
     },
     "android": {
       "adaptiveIcon": {
@@ -32,7 +33,8 @@
       ],
       "expo-font",
       "expo-audio",
-      "expo-splash-screen"
+      "expo-splash-screen",
+      "expo-apple-authentication"
     ],
     "scheme": "lishka",
     "experiments": {

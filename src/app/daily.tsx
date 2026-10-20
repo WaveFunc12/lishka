@@ -1,11 +1,13 @@
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Share, StyleSheet, View } from 'react-native';
 import {
   ANCHORS, BY, COUNTRY, daily, dailyIds, DAILY_N, dayNo, dist, hit, HIT_KM, kmText, PLACES, points, shareText, squares, totalKm,
   type Point,
 } from '@/engine';
+import { submitDaily } from '@/net/backend';
+import { useAccount } from '@/net/account';
 import { useStore, useT } from '@/state/store';
 import { MapView, type MapDot } from '@/ui/MapView';
 import { Btn, Card, Kicker, LinkBtn, Screen, T_ } from '@/ui/kit';
@@ -23,6 +25,15 @@ export default function Daily() {
   // The pin just placed stays on screen until "next"; reopening the screen goes straight to the next place.
   const [shown, setShown] = useState<number | null>(null);
   const done = picks.length >= DAILY_N && shown === null;
+  // Signed in to rooms: the finished daily goes to the room tables by itself.
+  const { session, profile } = useAccount();
+  const [sent, setSent] = useState<'no' | 'yes' | 'failed'>('no');
+  const uid = profile ? session?.user.id : undefined, complete = picks.length >= DAILY_N;
+  useEffect(() => {
+    if (uid && complete) submitDaily(uid, day, picks).then(() => setSent('yes'), () => setSent('failed'));
+    // picks is complete and fixed once all five are in
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [uid, complete, day]);
   const i = shown ?? picks.length, it = places[Math.min(i, DAILY_N - 1)], pick = shown !== null ? picks[shown] : null;
 
   // On the whole-country map only a few far-apart cities fit with their names; zoomed to an answer, all the big ones do.
@@ -61,6 +72,8 @@ export default function Daily() {
           <T_ style={{ color: C.muted, textAlign: 'center' }}>סטייה כוללת {kmText(totalKm(picks))}. בתיקו, מי שסטה פחות מנצח.</T_>
         </Card>
         <Btn big label="לשתף ולהתחרות" onPress={() => Share.share({ message: shareText(picks, day, s.g) }).catch(() => {})} />
+        <Btn alt label={sent === 'yes' ? 'נשלח לחדרים. לטבלה' : 'חדרים פרטיים עם חברים'} onPress={() => router.push('/rooms')} />
+        {sent === 'failed' && <T_ style={{ color: C.bad, textAlign: 'center' }}>לא הצלחנו לשלוח לחדרים. ננסה שוב כשתפתחו את המסך.</T_>}
         <T_ style={{ textAlign: 'center', color: C.muted }}>חמישה יישובים חדשים מחר בבוקר.</T_>
       </Screen>
     );
