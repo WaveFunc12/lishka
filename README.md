@@ -1,4 +1,4 @@
-# גלויות מהלשכה
+# הלשכה
 
 Hebrew map-learning game for iPhone. Episode 1: Israel's cities and towns.
 Built with Expo (SDK 58), React Native, TypeScript and Expo Router.

@@ -5,7 +5,7 @@ available in Israel only.
 
 ## Name and texts
 
-- **Name** (30 max): גלויות מהלשכה: מפת ישראל (the name under the icon stays "גלויות מהלשכה")
+- **Name** (30 max): הלשכה: מפת ישראל (the name under the icon is "הלשכה"; App Store names are unique, so if it is taken try "הלשכה למיפוי: מפת ישראל")
 - **Subtitle** (30 max): חידון יישובים, כבישים ואזורים
 - **Category:** Education. Secondary: Games › Trivia.
 - **Keywords** (100 max, comma separated; words already in the name or subtitle count anyway, so they are left out):

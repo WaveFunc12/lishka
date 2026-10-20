@@ -20,7 +20,7 @@ export default function About() {
     <Screen>
       <LinkBtn label="חזרה" onPress={() => router.back()} />
       <View><Kicker>קומה 3 · לוח המודעות</Kicker><H1>על הלשכה</H1></View>
-      <ZviSays text={t('גלויות מהלשכה הוא משחק ללימוד מפת הארץ: איפה כל יישוב, מה לידו, ואיך מגיעים. כל יום קצת, ובלי שוקו ליד השרת.')} />
+      <ZviSays text={t('״הלשכה״ הוא משחק ללימוד מפת הארץ: איפה כל יישוב, מה לידו, ואיך מגיעים. כל יום קצת, ובלי שוקו ליד השרת.')} />
       <Card style={{ gap: 12 }}>
         <T_ style={{ fontFamily: F.display, fontSize: 22 }}>מקורות וקרדיטים</T_>
         {CREDITS.map(([h, b, en]) => (

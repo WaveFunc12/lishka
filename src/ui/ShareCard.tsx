@@ -16,7 +16,7 @@ export function ShareCard({ picks, day, run, ask, ref }: { picks: DailyPick[]; d
     <View ref={ref} collapsable={false} style={st.card}>
       <View style={st.top}>
         <View style={{ flex: 1, gap: 2 }}>
-          <Text maxFontSizeMultiplier={1} style={st.kicker}>הלשכה למיפוי · גלויות מהלשכה</Text>
+          <Text maxFontSizeMultiplier={1} style={st.kicker}>הלשכה · משחק מפת ישראל</Text>
           <Text maxFontSizeMultiplier={1} style={st.title}>היומי #{dayNo(day)}</Text>
         </View>
         {/* The stamp: the country in miniature, perforated like the ones in the personal file. */}

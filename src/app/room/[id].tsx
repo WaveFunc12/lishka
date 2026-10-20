@@ -41,7 +41,7 @@ export default function RoomScreen() {
 
   const best = prev?.[0] && prev[0].days > 0 ? prev[0] : null; // whoever played most points (then fewest km) wins, even on 0
   const [copied, setCopied] = useState(false);
-  const invite = () => room && shareText(`בואו להתחרות איתי ביומי של גלויות מהלשכה! החדר "${room.name}", קוד ${room.code}`).then((r) => setCopied(r === 'copied'));
+  const invite = () => room && shareText(`בואו להתחרות איתי ביומי של הלשכה! החדר "${room.name}", קוד ${room.code}`).then((r) => setCopied(r === 'copied'));
   const owner = !!room && room.owner === session?.user.id;
   const remove = (uid: string) => room && removeMember(room.id, uid).then(() => { setOut(null); load(); }).catch((e) => setErr(say(e)));
   const leave = () => {
