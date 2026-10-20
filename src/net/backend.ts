@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient, type Session } from '@supabase/supabase-js';
 import { AppState, Platform } from 'react-native';
-import { squares, totalKm, points, type DailyPick } from '@/engine';
+import { squares, totalKm, points, type DailyPick, type PlayerState } from '@/engine';
 
 /* The online side: sign-in, private rooms and the daily table, on Supabase (supabase/migrations).
    With no project configured (EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY unset)
@@ -85,4 +85,14 @@ export async function submitDaily(uid: string, day: string, picks: DailyPick[]) 
   const { error } = await need().from('daily_results')
     .insert({ user_id: uid, day, points: points(picks), total_km: Math.round(totalKm(picks) * 10) / 10, squares: squares(picks) });
   if (error && (error as { code?: string }).code !== '23505') throw error;
+}
+
+/** The saved game backed up for this account, if any. */
+export async function loadProgress(uid: string): Promise<{ state: unknown; xp: number } | null> {
+  const { data, error } = await need().from('progress').select('state, xp').eq('user_id', uid).maybeSingle();
+  if (error) throw error;
+  return data;
+}
+export async function saveProgress(uid: string, state: PlayerState) {
+  ok(await need().from('progress').upsert({ user_id: uid, state, xp: state.xp, updated_at: new Date().toISOString() }));
 }

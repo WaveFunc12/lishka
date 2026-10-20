@@ -61,17 +61,17 @@ export default function Rooms() {
           </View>
           <Card style={{ gap: 10 }}>
             <T_ style={{ fontFamily: F.display, fontSize: 20 }}>להצטרף עם קוד</T_>
-            <TextInput value={code} onChangeText={(v) => setCode(v.toUpperCase())} placeholder="K7QM2X" maxLength={8} autoCapitalize="characters"
+            <TextInput value={code} onChangeText={(v) => setCode(v.toUpperCase())} placeholder="K7QM2X" placeholderTextColor={C.muted} maxLength={8} autoCapitalize="characters"
               autoCorrect={false} style={[form.input, form.ltr, { letterSpacing: 4 }]} accessibilityLabel="קוד חדר" />
             <Btn label="להצטרף" disabled={busy || code.replace(/\s/g, '').length !== 6} onPress={() => act(() => joinRoom(code))} />
           </Card>
           <Card style={{ gap: 10 }}>
             <T_ style={{ fontFamily: F.display, fontSize: 20 }}>לפתוח חדר חדש</T_>
-            <TextInput value={name} onChangeText={setName} placeholder="שם החדר, למשל המשפחה" maxLength={30} style={form.input} accessibilityLabel="שם החדר" />
+            <TextInput value={name} onChangeText={setName} placeholder="שם החדר, למשל המשפחה" placeholderTextColor={C.muted} maxLength={30} style={form.input} accessibilityLabel="שם החדר" />
             <Btn alt label="לפתוח חדר" disabled={busy || !name.trim()} onPress={() => act(() => createRoom(name))} />
           </Card>
           {!!err && <T_ style={{ color: C.bad, fontFamily: F.bold }}>{err}</T_>}
-          <T_ style={{ color: C.muted, fontSize: 13, textAlign: 'center' }}>{t(`{מחובר|מחוברת} בתור ${profile.name}`)}</T_>
+          <T_ style={{ color: C.muted, fontSize: 13, textAlign: 'center' }}>{t(`{מחובר|מחוברת} בתור ${profile.name}. ההתקדמות נשמרת בחשבון.`)}</T_>
           <View style={{ alignItems: 'center' }}><LinkBtn label="להתנתק" onPress={() => { signOut().catch(() => {}); setRooms(null); }} /></View>
         </>
       )}

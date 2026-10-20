@@ -33,13 +33,15 @@ bash supabase/tests/run.sh   # rooms database rules, on a throwaway local Postgr
 - `src/ui/` — the map (`MapView`, react-native-svg), Zvi, buttons, theme.
 - `src/state/` — the store; progress is saved on the phone with AsyncStorage.
 
-Days roll over at midnight Israel time. Developer tools (skipping days) appear only in development builds.
+Days roll over at midnight Israel time. Zvi's daily reminder (set in the personnel file) is a local
+notification, planned a week ahead and skipped on days already played (`src/state/reminders.ts`). Developer tools (skipping days) appear only in development builds.
 
 ## Rooms (online)
 
 Private rooms let friends and family compare their daily: sign in (Sign in with Apple on iPhone, or a
-code by email), pick a display name, create a room and share its 6-letter code. The database rules are
-in `supabase/migrations/` and tested by `supabase/tests/run.sh`.
+code by email), pick a display name, create a room and share its 6-letter code. Signing in also backs up
+progress, so a new phone picks up the old one's game (the save with more xp wins on first sign-in).
+The database rules are in `supabase/migrations/` and tested by `supabase/tests/run.sh`.
 
 To turn it on:
 1. Create a free project at supabase.com and run the migration (SQL editor, or `supabase db push`).

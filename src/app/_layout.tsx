@@ -12,6 +12,7 @@ import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AccountProvider } from '@/net/account';
+import { useBackup } from '@/net/backup';
 import { useReminders } from '@/state/reminders';
 import { StoreProvider, useStore } from '@/state/store';
 import { C } from '@/ui/theme';
@@ -21,6 +22,7 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 function Gate() {
   const { ready } = useStore();
   useReminders();
+  useBackup();
   const [fontsLoaded, fontError] = useFonts({ Rubik_400Regular, Rubik_700Bold, Rubik_900Black, SuezOne_400Regular, Karantina_700Bold });
   // If a font fails to load, carry on with the system font rather than a blank screen.
   const go = ready && (fontsLoaded || !!fontError);
