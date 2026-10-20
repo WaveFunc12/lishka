@@ -1,8 +1,8 @@
-import { router } from 'expo-router';
 import { useEffect, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { BY, COPY, COUNTRY, learned, mastery, peopleText, PLACES, regionProgress, rnd, shortName, STORY, storyDone, strength, UNIT_BY } from '@/engine';
 import { useStart } from '@/state/actions';
+import { goHome } from '@/state/nav';
 import { useStore, useT } from '@/state/store';
 import { MapView, type MapDot } from '@/ui/MapView';
 import { sfx } from '@/ui/sound';
@@ -55,7 +55,7 @@ export default function Result() {
           label={win ? 'מפת הארץ' : `מפת הארץ, ובאדום ${R.misses.length} היישובים שפוספסו`} />
         {!win && <Btn big label={`לחזור על ${R.misses.length} שפוספסו`} onPress={() => start.review(R.misses)} />}
         {!win && <Btn alt label="לגשת שוב למבחן" onPress={() => start.exam()} />}
-        <Btn big={win} alt={!win} label="חזרה לשולחן" onPress={() => router.replace('/home')} />
+        <Btn big={win} alt={!win} label="חזרה לשולחן" onPress={goHome} />
       </Screen>
     );
   }
@@ -111,7 +111,7 @@ export default function Result() {
       )}
       <MapView view={COUNTRY} dots={dots} dotPx={5} reveal={reveal} revealR={1.7} style={{ height: 340 }}
         tag={`${learned(s).length}/${PLACES.length} יישובים חזרו למפה · המטרה: כל הארץ`} label="המפה הלאומית" />
-      <Btn big label={R.kind === 'shift' && R.shift === 0 ? 'הבא בתור' : 'חזרה לשולחן'} onPress={() => router.replace('/home')} />
+      <Btn big label={R.kind === 'shift' && R.shift === 0 ? 'הבא בתור' : 'חזרה לשולחן'} onPress={goHome} />
     </Screen>
   );
 }

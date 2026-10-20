@@ -1,10 +1,11 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Platform, View } from 'react-native';
-import { learned, PLACES, postcardsDone, rank, regionProgress, STORY, tiers, UNITS } from '@/engine';
+import { Alert, Platform, StyleSheet, View } from 'react-native';
+import { BY, learned, mastery, PLACES, postcardsDone, rank, regionProgress, STORY, tiers, UNITS } from '@/engine';
 import { useStart } from '@/state/actions';
 import { allowReminders, remindersSupported } from '@/state/reminders';
 import { useStore, useT } from '@/state/store';
+import { Medal, RegionStamp } from '@/ui/Badges';
 import { Btn, Card, H1, Kicker, LinkBtn, Meter, Screen, T_ } from '@/ui/kit';
 import { C, F } from '@/ui/theme';
 
@@ -28,8 +29,7 @@ export default function File() {
     Alert.alert('להתחיל מחדש?', 'כל ההתקדמות תימחק מהטלפון.', [{ text: 'ביטול', style: 'cancel' }, { text: 'למחוק', style: 'destructive', onPress: doIt }]);
   };
   return (
-    <Screen>
-      <LinkBtn label="חזרה לשולחן" onPress={() => router.back()} />
+    <Screen tab>
       <View><Kicker>משאבי אנוש · קומה 2</Kicker><H1>תיק אישי</H1></View>
       <Card style={{ gap: 6 }}>
         <T_ style={{ fontSize: 13, color: C.muted }}>{t('{תעודת עובד|תעודת עובדת}')} · מס׳ 0042</T_>
@@ -49,28 +49,39 @@ export default function File() {
         <T_ style={{ fontFamily: F.black }}>{s.sick ? 'יום מחלה אחד שמור' : 'אין יום מחלה שמור'}</T_>
         <T_ style={{ color: C.muted, fontSize: 14 }}>{s.sick ? t('אם {תפספס|תפספסי} יום, הוא ישמור על הנוכחות.') : 'מקבלים יום מחלה על כל ביקורת פתע. אפשר להחזיק אחד.'}</T_>
       </Card>
-      <Card style={{ gap: 4 }}>
+      <Card style={{ gap: 10 }}>
         <T_ style={{ fontFamily: F.display, fontSize: 22 }}>אותות</T_>
-        <T_>{tr.bronze ? '✓' : '○'} ארד: לתייק את {STORY.length} גלויות הסיפור</T_>
-        <T_>{tr.silver ? '✓' : '○'} כסף: שליטה ב־80% מהיישובים</T_>
-        <T_>{tr.gold ? '✓' : '○'} זהב: שליטה בכל היישובים ({Math.round(tr.mast * 100)}%)</T_>
-        <T_>{tr.legend ? '✓' : '○'} קביעות: מבחן הקביעות על מפה ריקה</T_>
-        <Btn alt label={tr.legend ? 'לנסות שוב את מבחן הקביעות' : 'למבחן הקביעות'} onPress={() => start.exam()} style={{ marginTop: 8 }} />
+        <View style={styles.medals}>
+          {([
+            ['bronze', 'ארד', tr.bronze, `${STORY.length} גלויות הסיפור`],
+            ['silver', 'כסף', tr.silver, 'שליטה ב־80% מהיישובים'],
+            ['gold', 'זהב', tr.gold, `שליטה בכל היישובים (${Math.round(tr.mast * 100)}%)`],
+            ['legend', '★', tr.legend, 'מבחן הקביעות על מפה ריקה'],
+          ] as const).map(([tier, face, got, what]) => (
+            <View key={tier} style={styles.medal} accessibilityLabel={`${tier === 'legend' ? 'קביעות' : face}: ${what}. ${got ? 'הושג' : 'עוד לא'}`}>
+              <Medal tier={tier} face={face} earned={!!got} size={58} />
+              <T_ style={styles.badgeName}>{tier === 'legend' ? 'קביעות' : face}</T_>
+              <T_ style={styles.badgeNote}>{what}</T_>
+            </View>
+          ))}
+        </View>
+        <Btn alt label={tr.legend ? 'לנסות שוב את מבחן הקביעות' : 'למבחן הקביעות'} onPress={() => start.exam()} />
       </Card>
-      <Card style={{ gap: 8 }}>
-        <T_ style={{ fontFamily: F.display, fontSize: 22 }}>אותות אזוריים · {closed}/{regions.length}</T_>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+      <Card style={{ gap: 10 }}>
+        <T_ style={{ fontFamily: F.display, fontSize: 22 }}>בולים אזוריים · {closed}/{regions.length}</T_>
+        <View style={styles.stamps}>
           {regions.map((g) => {
-            const full = g.done === g.units.length;
+            const full = g.done === g.units.length, ids = g.units.flatMap((u) => u.items);
             return (
-              <View key={g.id} accessibilityLabel={`${g.t}: ${full ? 'הושלם' : `${g.done} מתוך ${g.units.length} גלויות`}`}
-                style={{ borderWidth: full ? 3 : 2, borderColor: full ? g.col : C.track, backgroundColor: full ? C.surface : 'transparent', borderRadius: 999, paddingVertical: 4, paddingHorizontal: 10 }}>
-                <T_ style={{ fontFamily: F.bold, fontSize: 13, lineHeight: 18, color: full ? C.ink : C.muted }}>{full && <T_ style={{ color: g.col }}>★ </T_>}{g.s}</T_>
+              <View key={g.id} style={styles.stamp} accessibilityLabel={`${g.t}: ${full ? 'הושלם' : `${g.done} מתוך ${g.units.length} גלויות`}`}>
+                <RegionStamp col={g.col} earned={full} places={ids.map((id) => BY[id])} known={ids.filter((id) => mastery(s, id) >= 1).map((id) => BY[id])} size={60} />
+                <T_ style={[styles.badgeName, !full && { color: C.muted }]}>{g.s}</T_>
+                {!full && <T_ style={styles.badgeNote}>{g.done}/{g.units.length} גלויות</T_>}
               </View>
             );
           })}
         </View>
-        <T_ style={{ color: C.muted, fontSize: 13 }}>אות על כל אזור שכל הגלויות שלו תויקו בארכיון.</T_>
+        <T_ style={{ color: C.muted, fontSize: 13 }}>בול על כל אזור שכל הגלויות שלו תויקו בארכיון. הנקודות הצבעוניות הן היישובים שכבר חזרו למפה.</T_>
       </Card>
       <Card style={{ gap: 10 }}>
         <T_ style={{ fontFamily: F.display, fontSize: 22 }}>הגדרות</T_>
@@ -115,3 +126,12 @@ export default function File() {
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  medals: { flexDirection: 'row', justifyContent: 'space-between', gap: 6 },
+  medal: { flex: 1, alignItems: 'center', gap: 2 },
+  stamps: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', columnGap: 10, rowGap: 12 },
+  stamp: { width: 72, alignItems: 'center', gap: 2 },
+  badgeName: { fontFamily: F.black, fontSize: 13, lineHeight: 17, textAlign: 'center' },
+  badgeNote: { fontSize: 11, lineHeight: 14, color: C.muted, textAlign: 'center' },
+});

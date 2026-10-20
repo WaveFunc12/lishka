@@ -6,10 +6,11 @@ import { BW, C, F, SHADOW, SHADOW_SM } from './theme';
 
 /* Small shared pieces. Every screen sits in an RTL root; maps opt back into LTR. */
 
-export function Screen({ children, scroll = true, style }: { children: ReactNode; scroll?: boolean; style?: StyleProp<ViewStyle> }) {
+/** A screen: safe-area padded and scrolling. On a tab the tab bar takes the bottom inset. */
+export function Screen({ children, scroll = true, style, tab }: { children: ReactNode; scroll?: boolean; style?: StyleProp<ViewStyle>; tab?: boolean }) {
   const body = <View style={[styles.screen, style]}>{children}</View>;
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.safe} edges={tab ? ['top'] : ['top', 'bottom']}>
       {scroll ? <ScrollView contentContainerStyle={{ flexGrow: 1 }}>{body}</ScrollView> : body}
     </SafeAreaView>
   );

@@ -13,7 +13,7 @@ import { BW, C, F, SHADOW } from './theme';
    Coordinates are km; the view is fitted to the box's aspect. Pinch to zoom, drag once zoomed, or use the buttons. */
 
 export type DotState = 'lit' | 'ctx' | 'dim' | 'anc' | 'choice' | 'right' | 'wrong' | 'target' | 'mystery';
-export type MapDot = Point & { id: string; state: DotState; size?: number; num?: string | number; label?: string; pulse?: boolean };
+export type MapDot = Point & { id: string; state: DotState; size?: number; num?: string | number; label?: string; pulse?: boolean; /** Own fill, outlined in ink (a region's colour on my map). */ col?: string };
 export type FitSpec = { fit: Point[]; pad?: number; minW?: number };
 
 type Props = {
@@ -240,8 +240,8 @@ export function MapView(p: Props) {
         return (
           <G key={d.id + d.state}>
             {d.pulse && <Circle cx={d.x} cy={d.y} r={rr * 1.6} fill="none" stroke={C.target} strokeWidth={2 * k} opacity={0.5} />}
-            <Circle cx={d.x} cy={d.y} r={rr} fill={DOT_FILL[d.state]} opacity={d.state === 'dim' ? 0.5 : d.state === 'anc' ? 0.4 : 1}
-              stroke={ring ? (d.state === 'mystery' ? C.target : C.ink) : undefined} strokeWidth={ring ? 2.5 * k : 0} />
+            <Circle cx={d.x} cy={d.y} r={rr} fill={d.col ?? DOT_FILL[d.state]} opacity={d.state === 'dim' ? 0.5 : d.state === 'anc' ? 0.4 : 1}
+              stroke={ring ? (d.state === 'mystery' ? C.target : C.ink) : d.col ? C.ink : undefined} strokeWidth={ring ? 2.5 * k : d.col ? 1.2 * k : 0} />
             {d.num !== undefined && d.num !== '' && (
               <SvgText x={d.x} y={d.y + rr * 0.38} textAnchor="middle" fontSize={rr * 1.15} fontFamily={F.black} fontWeight="900"
                 fill={d.state === 'mystery' ? C.target : C.ink}>{String(d.num)}</SvgText>

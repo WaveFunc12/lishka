@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import {
-  BY, chapter, fading, learned, mastery, nextMilestone, nextShift, PLACES, shiftItems, storyDone, strength, UNITS, zviSays, squares, points, dailyStats, DAILY_N,
+  BY, chapter, fading, learned, mastery, nextMilestone, nextShift, PLACES, shiftItems, storyDone, strength, UNITS, zviSays,
   shortName,
 } from '@/engine';
 import { useStart } from '@/state/actions';
@@ -16,12 +16,10 @@ export default function Home() {
   const { s, now, today } = useStore();
   const t = useT();
   const start = useStart();
-  // The postcard takes the room the screen has, so tall phones get a bigger map instead of a gap.
-  const mapH = Math.round(Math.min(540, Math.max(240, useWindowDimensions().height - 488)));
+  const winH = useWindowDimensions().height;
   const ns = nextShift(s);
   const u = ns ? ns.u : UNITS[UNITS.length - 1];
   const d = s.daily.day === today() ? s.daily : { shifts: 0, reviews: 0, picks: [] };
-  const dn = d.picks.length, dailyDone = dn >= DAILY_N, run = dailyStats(s, today()).run;
   const quota = d.shifts > 0 || d.reviews > 0;
   const fad = fading(s, now()).length;
   const fresh = !s.xp;
@@ -30,6 +28,8 @@ export default function Home() {
   // Progress is shown for the current chapter: the story's seven postcards, then one region at a time.
   const story = storyDone(s), ch = chapter(s, u.region ?? null);
   const examDue = story && !s.legendary && act !== 'exam';
+  // The postcard takes the room the screen has left, so tall phones get a bigger map instead of a gap.
+  const mapH = Math.round(Math.min(540, Math.max(240, winH - (examDue ? 566 : 500))));
 
   const cur = ns ? shiftItems(u, ns.s) : [];
   const pts = u.items.map((id) => BY[id]);
@@ -44,7 +44,7 @@ export default function Home() {
   const go = () => (act === 'review' ? start.review() : act === 'exam' ? start.exam() : start.shift());
 
   return (
-    <Screen>
+    <Screen tab>
       <View style={styles.top}>
         <T_ style={{ fontFamily: F.display, fontSize: 20 }}>הלשכה למיפוי</T_>
         <View style={[styles.streak, s.streak > 0 && { backgroundColor: C.orange }]}
@@ -107,22 +107,9 @@ export default function Home() {
           <Meter pct={(learned(s).length / PLACES.length) * 100} color={C.accent} />
           {!!goal && <T_ style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>אבן הדרך הבאה: {goal.short}, עוד {goal.at - learned(s).length}</T_>}
         </Pressable>
-        <Pressable style={styles.dayrow} onPress={() => router.push('/daily')} accessibilityRole="button">
-          <View style={{ flex: 1 }}>
-            <T_ style={{ fontFamily: F.black }}>היומי</T_>
-            <T_ style={{ fontSize: 13, color: C.muted }}>
-              {dn ? `${squares(d.picks)} · ${points(d.picks)}/${DAILY_N}${dailyDone && run > 1 ? ` · ${run} ימים ברצף` : ''}`
-                : run ? `${run === 1 ? 'שיחקת אתמול' : `${run} ימים ברצף`}. היום ממשיכים את הרצף?` : 'חמישה יישובים. פגיעה עד 10 ק״מ שווה נקודה.'}
-            </T_>
-          </View>
-          <T_ style={{ fontFamily: F.black, color: C.accent }}>{dailyDone ? 'לשתף' : dn ? 'להמשיך' : 'לשחק'}</T_>
-        </Pressable>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', columnGap: 22, rowGap: 6 }}>
           {story && <LinkBtn label="הארכיון" onPress={() => router.push('/archive')} />}
-          {learned(s).length > 0 && <LinkBtn label="המפה שלי" onPress={() => router.push('/atlas')} />}
           {!fresh && <LinkBtn label="כבישים" onPress={() => router.push('/roads')} />}
-          <LinkBtn label="חדרים" onPress={() => router.push('/rooms')} />
-          <LinkBtn label="תיק אישי" onPress={() => router.push('/file')} />
         </View>
       </View>
     </Screen>
@@ -139,5 +126,4 @@ const styles = StyleSheet.create({
   segLbl: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
   segs: { flexDirection: 'row', gap: 4 },
   seg: { flex: 1, height: 12, borderWidth: 2, borderColor: C.ink, borderRadius: 4, backgroundColor: C.track, overflow: 'hidden' },
-  dayrow: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 2, borderColor: C.ink, borderRadius: 12, padding: 12, backgroundColor: C.surface },
 });

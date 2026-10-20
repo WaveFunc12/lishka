@@ -12,7 +12,7 @@ import { useStore, useT } from '@/state/store';
 import { MapView, type MapDot } from '@/ui/MapView';
 import { shareText as share } from '@/ui/share';
 import { sfx } from '@/ui/sound';
-import { Btn, Card, Kicker, LinkBtn, Screen, T_ } from '@/ui/kit';
+import { Btn, Card, Kicker, Screen, T_ } from '@/ui/kit';
 import { C, F } from '@/ui/theme';
 
 /** Countdown to the next daily (midnight in Israel), refreshed every half minute. */
@@ -110,8 +110,7 @@ export default function Daily() {
     const top = all.reduce((a, b) => (b.y < a.y ? b : a));
     all.push({ x: top.x, y: top.y - 0.1 * Math.max(60, Math.max(...all.map((q) => q.y)) - top.y) });
     return (
-      <Screen>
-        <LinkBtn label="חזרה לשולחן" onPress={() => router.back()} />
+      <Screen tab>
         <View>
           <Kicker>היומי · #{dayNo(day)}</Kicker>
           <T_ style={{ fontFamily: F.display, fontSize: 26 }}>{points(picks)} מתוך {DAILY_N} נקודות</T_>
@@ -140,8 +139,7 @@ export default function Daily() {
   }
 
   return (
-    <Screen>
-      <LinkBtn label="חזרה לשולחן" onPress={() => router.back()} />
+    <Screen tab>
       <View style={{ gap: 2 }}>
         <Kicker>היומי · #{dayNo(day)} · יישוב {i + 1} מתוך {DAILY_N}</Kicker>
         <T_ style={{ fontFamily: F.display, fontSize: 26 }}>{pick ? it.name : t(`{סמן|סמני} את ${it.name}`)}</T_>

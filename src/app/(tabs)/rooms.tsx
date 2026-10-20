@@ -34,8 +34,7 @@ export default function Rooms() {
   };
 
   return (
-    <Screen>
-      <LinkBtn label="חזרה לשולחן" onPress={() => router.back()} />
+    <Screen tab>
       <View><Kicker>חדר הישיבות · קומה 4</Kicker><H1>חדרים פרטיים</H1></View>
       <ZviSays text="פותחים חדר לחברים או למשפחה, משחקים יחד ביומי ומשווים מי פגע הכי קרוב." />
       {!enabled ? (
