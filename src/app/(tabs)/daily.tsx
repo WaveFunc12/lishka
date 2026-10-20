@@ -1,7 +1,8 @@
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { useEffect, useRef, useState, type ComponentRef } from 'react';
+import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { captureRef } from 'react-native-view-shot';
 import {
   ANCHORS, BY, COUNTRY, daily, dailyIds, dailyStats, DAILY_N, dayNo, dist, hit, HIT_KM, kmText, logEntry, markDay, msToNextDay, PLACES, points, shareText, shortName,
   squares, totalKm, untilText, type Point,
@@ -10,7 +11,8 @@ import { submitDaily } from '@/net/backend';
 import { useAccount } from '@/net/account';
 import { useStore, useT } from '@/state/store';
 import { MapView, type MapDot } from '@/ui/MapView';
-import { shareText as share } from '@/ui/share';
+import { shareImage } from '@/ui/share';
+import { ShareCard } from '@/ui/ShareCard';
 import { sfx } from '@/ui/sound';
 import { Btn, Card, Kicker, Screen, T_ } from '@/ui/kit';
 import { C, F } from '@/ui/theme';
@@ -74,6 +76,7 @@ export default function Daily() {
   const { session, profile } = useAccount();
   const [sent, setSent] = useState<'no' | 'yes' | 'failed'>('no');
   const [shared, setShared] = useState<'shared' | 'copied' | 'failed' | null>(null);
+  const cardRef = useRef<ComponentRef<typeof View>>(null);
   // The pin placed on the map, not yet confirmed.
   const [draft, setDraft] = useState<Point | null>(null);
   const uid = profile ? session?.user.id : undefined, complete = picks.length >= DAILY_N;
@@ -126,7 +129,14 @@ export default function Daily() {
           ))}
           <T_ style={{ color: C.muted, textAlign: 'center' }}>סטייה כוללת {kmText(totalKm(picks))}. בתיקו, מי שסטה פחות מנצח.</T_>
         </Card>
-        <Btn big label="לשתף ולהתחרות" onPress={() => share(shareText(picks, day, s.g, dailyStats(s, day).run)).then(setShared)} />
+        <Btn big label="לשתף ולהתחרות" onPress={() => shareImage(shareText(picks, day, s.g, dailyStats(s, day).run),
+          () => captureRef(cardRef, { format: 'png', quality: 1, result: 'tmpfile' })).then(setShared)} />
+        {/* The picture that goes with the shared text, drawn off screen until it is captured. */}
+        {Platform.OS !== 'web' && (
+          <View style={st.offscreen} pointerEvents="none">
+            <ShareCard ref={cardRef} picks={picks} day={day} run={dailyStats(s, day).run} ask={t('מי {מצליח|מצליחה} יותר?')} />
+          </View>
+        )}
         {shared === 'copied' && <T_ style={{ textAlign: 'center', color: C.ok, fontFamily: F.bold }}>התוצאה הועתקה. אפשר להדביק אותה בוואטסאפ.</T_>}
         <MapView view={{ fit: all, pad: 0.25, minW: 60 }} style={{ height: Math.round(Math.max(240, Math.min(360, winH - 540))) }} label="מפת התוצאות של היום"
           dots={picks.map((p) => ({ ...BY[p.id], state: hit(p.d) ? 'right' : 'wrong', label: BY[p.id].name }))}
@@ -174,5 +184,6 @@ export default function Daily() {
 }
 
 const st = StyleSheet.create({
+  offscreen: { position: 'absolute', left: -2000, top: 0 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
 });
