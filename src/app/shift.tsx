@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, TextInput, useWindowDimensions, View } from 'react-native';
 import {
   advance, anchorFor, answer, BY, compareAnswer, DIR_WORD, finish, fitView, gradeCompare, gradeName, gradePin, gradeTap,
-  gradeType, learned, PIN_LIMIT, PLACES, popText, ANCHORS, shortName, viewAround, ZVI_MEMORY, type Grade, type Point, type View as Box,
+  gradeType, learned, PIN_LIMIT, PLACES, popText, ANCHORS, shortName, UNIT_BY, viewAround, ZVI_MEMORY, type Grade, type Point, type View as Box,
 } from '@/engine';
 import { useStore, useT } from '@/state/store';
 import { TALES } from '@/ui/comic/tales';
@@ -21,14 +21,16 @@ export default function Shift() {
   const [picked, setPicked] = useState<string | null>(null);
   const [guess, setGuess] = useState<Point | null>(null);
   const winH = useWindowDimensions().height;
-  // A big city's founding story plays the first time its file opens; after that it waits behind a link.
+  // Founding stories play once: a region's as its first postcard starts, a big city's the first time its file opens.
+  const unseen = (k?: string | null) => (k && TALES[k] && !s.tales.includes(k) ? k : null);
+  const region = session?.unitId && session.i === 0 ? UNIT_BY[session.unitId]?.region : null;
   const introId = session?.q[session.i]?.t === 'intro' ? session.q[session.i].id : null;
-  const firstTale = !!introId && !!TALES[introId] && !s.tales.includes(introId);
+  const tale = unseen(region) ?? unseen(introId);
   useEffect(() => {
-    if (!firstTale || !introId) return;
-    update((d) => { d.tales = [...d.tales, introId]; });
-    router.push(`/tale/${introId}`);
-  }, [firstTale, introId, update]);
+    if (!tale) return;
+    update((d) => { d.tales = [...d.tales, tale]; });
+    router.push(`/tale/${tale}`);
+  }, [tale, update]);
   if (!session) return null;
   const sess = session, q = sess.q[sess.i], it = BY[q.id], done = !!sess.fb, rng = Math.random;
   const known = new Set(learned(s).map((p) => p.id));
