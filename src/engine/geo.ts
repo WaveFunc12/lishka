@@ -63,3 +63,19 @@ export const viewAround = (p: Point, w: number, off: Point = { x: 0, y: 0 }): Vi
   w,
   h: w,
 });
+
+/** The view after zooming by `factor` (>1 = closer) around a point that stays put on screen. */
+export function zoomAt(v: View, factor: number, at: Point = { x: v.x + v.w / 2, y: v.y + v.h / 2 }): View {
+  const w = v.w / factor, h = v.h / factor;
+  return { x: at.x - ((at.x - v.x) / v.w) * w, y: at.y - ((at.y - v.y) / v.h) * h, w, h };
+}
+
+/** Keep a zoomed view between minW and maxW wide and inside the box (centred on it if it's bigger). */
+export function clampView(v: View, box: View, minW: number, maxW: number): View {
+  const aspect = v.w / v.h;
+  const w = Math.min(Math.max(v.w, minW), maxW), h = w / aspect;
+  const fit = (c: number, half: number, lo: number, size: number) =>
+    half * 2 >= size ? lo + size / 2 : Math.min(Math.max(c, lo + half), lo + size - half);
+  const cx = fit(v.x + v.w / 2, w / 2, box.x, box.w), cy = fit(v.y + v.h / 2, h / 2, box.y, box.h);
+  return { x: cx - w / 2, y: cy - h / 2, w, h };
+}

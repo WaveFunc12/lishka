@@ -13,6 +13,13 @@ export type Place = {
   district: string;
   hint: string;
   unit: string;
+  /** Population (CBS 2023) and rank by population, 1 = biggest. */
+  pop: number;
+  rank: number;
+  /** Game region (REGIONS in content.ts). */
+  region: string;
+  /** Everyday short name, where it differs (תל אביב). */
+  short?: string;
 };
 
 export type Point = { x: number; y: number };
@@ -31,7 +38,13 @@ export type Unit = {
   /** Clue for the chocolate-milk mystery. */
   clue: string;
   items: string[];
+  /** Regional postcards: the region and this postcard's place among the region's. Story postcards have none. */
+  region?: string;
+  part?: number;
+  parts?: number;
 };
+
+export type Region = { id: string; t: string; s: string; col: string; in: string; z: string; card: string };
 
 export type DayStr = string; // YYYY-MM-DD in Israel time
 
@@ -54,8 +67,21 @@ export type PlayerState = {
   units: Record<string, boolean>;
   legendary: boolean;
   seenComic: boolean;
+  /** Founding stories (comics) already shown, by place or region id. */
+  tales: string[];
   mute: boolean;
-  daily: { day: DayStr | null; shifts: number; reviews: number; dp: DailyPick | null };
+  /** When the App Store rating prompt was last asked for (ms), so it comes at most once a season. */
+  rated: number | null;
+  /** The region chosen for the next postcards once the story is done; null = the default order. */
+  focus: string | null;
+  /** Hour of Zvi's daily reminder (device time), or null when off. */
+  remind: number | null;
+  /** Every finished daily: points and total km off. */
+  dailies: Record<DayStr, [number, number]>;
+  /** Fading ink: when each closed region was last renewed, and how many times. */
+  ink: Record<string, { at: number; n: number }>;
+  /** picks: today's daily pins, in order. */
+  daily: { day: DayStr | null; shifts: number; reviews: number; picks: DailyPick[] };
 };
 
 export type QType = 'intro' | 'tap' | 'name' | 'compare' | 'pin' | 'type';
@@ -95,6 +121,10 @@ export type Session = {
   best: number;
   misses: string[];
   fb: Feedback | null;
+  /** Places the wrong options may come from. */
+  pool?: string[];
+  /** The region whose ink this inspection renews. */
+  ink?: string;
 };
 
 export type SessionResult = {
@@ -111,6 +141,11 @@ export type SessionResult = {
   card: boolean;
   streakUp: number | null;
   rankUp: string | null;
+  /** A milestone on the way to the whole country, passed in this session. */
+  milestone: { at: number; title: string; short: string; say: string } | null;
+  /** A region's ink renewed by this session, and how many days it now holds. */
+  /** A fading-ink renewal: how many days the fresh ink holds, or 0 when it went badly and the ink stays faded. */
+  inked: { region: string; days: number } | null;
   earnedSick: boolean;
   welcomed: boolean;
 };

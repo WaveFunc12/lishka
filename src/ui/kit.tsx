@@ -1,22 +1,40 @@
-import type { ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
+import { useEffect, useRef, type ComponentRef, type ReactNode } from 'react';
+import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { BW, C, F, SHADOW, SHADOW_SM } from './theme';
 
 /* Small shared pieces. Every screen sits in an RTL root; maps opt back into LTR. */
 
-export function Screen({ children, scroll = true, style }: { children: ReactNode; scroll?: boolean; style?: StyleProp<ViewStyle> }) {
-  const body = <View style={[styles.screen, style]}>{children}</View>;
+/** A screen: safe-area padded and scrolling. On a tab the tab bar takes the bottom inset.
+    A `footer` (the way on) stays pinned below the scrolling part, so it is always in view.
+    When the keyboard opens, the screen shrinks above it and scrolls the box being typed in (and the button under it) into view. */
+export function Screen({ children, scroll = true, style, tab, footer }: { children: ReactNode; scroll?: boolean; style?: StyleProp<ViewStyle>; tab?: boolean; footer?: ReactNode }) {
+  const scroller = useRef<ComponentRef<typeof ScrollView>>(null), content = useRef<ComponentRef<typeof View>>(null), shown = useRef(0);
+  useEffect(() => {
+    if (!scroll) return;
+    const sub = Keyboard.addListener('keyboardDidShow', () => {
+      const input = TextInput.State.currentlyFocusedInput();
+      if (!input || !content.current) return;
+      input.measureLayout(content.current, (_x, y, _w, h) => scroller.current?.scrollTo({ y: Math.max(0, y + h + 70 - shown.current) }), () => {});
+    });
+    return () => sub.remove();
+  }, [scroll]);
+  const body = <View ref={content} style={[styles.screen, style]}>{children}</View>;
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-      {scroll ? <ScrollView contentContainerStyle={{ flexGrow: 1 }}>{body}</ScrollView> : body}
+    <SafeAreaView style={styles.safe} edges={tab ? ['top'] : ['top', 'bottom']}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        {scroll ? (
+          <ScrollView ref={scroller} contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled" onLayout={(e) => { shown.current = e.nativeEvent.layout.height; }}>{body}</ScrollView>
+        ) : body}
+        {!!footer && <View style={styles.footer}>{footer}</View>}
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
-export const T_ = ({ style, children, ...rest }: { style?: StyleProp<TextStyle>; children: ReactNode; accessibilityRole?: 'header' }) => (
-  <Text style={[styles.text, style]} {...rest}>{children}</Text>
+export const T_ = ({ style, children, ...rest }: { style?: StyleProp<TextStyle>; children: ReactNode; accessibilityRole?: 'header'; numberOfLines?: number; adjustsFontSizeToFit?: boolean }) => (
+  <Text maxFontSizeMultiplier={1.3} style={[styles.text, style]} {...rest}>{children}</Text>
 );
 
 export const Kicker = ({ children }: { children: ReactNode }) => <T_ style={styles.kicker}>{children}</T_>;
@@ -24,14 +42,16 @@ export const H1 = ({ children, size = 32 }: { children: ReactNode; size?: number
   <T_ style={[styles.h1, { fontSize: size, lineHeight: size * 1.2 }]} accessibilityRole="header">{children}</T_>
 );
 
-type BtnProps = { label: string; onPress: () => void; alt?: boolean; big?: boolean; disabled?: boolean; style?: StyleProp<ViewStyle>; right?: ReactNode; tone?: 'right' | 'wrong' };
-export function Btn({ label, onPress, alt, big, disabled, style, right, tone }: BtnProps) {
+/** `selected` marks the chosen option of a set: a check mark on screen, "selected" for VoiceOver. */
+type BtnProps = { label: string; onPress: () => void; alt?: boolean; big?: boolean; disabled?: boolean; style?: StyleProp<ViewStyle>; right?: ReactNode; tone?: 'right' | 'wrong'; selected?: boolean };
+export function Btn({ label, onPress, alt, big, disabled, style, right, tone, selected }: BtnProps) {
   const bg = tone === 'right' ? C.ok : tone === 'wrong' ? C.bad : alt ? C.surface : C.accent;
   const fg = tone || !alt ? C.accentInk : C.ink;
   return (
     <Pressable onPress={onPress} disabled={disabled} accessibilityRole="button" accessibilityLabel={label}
+      accessibilityState={selected === undefined ? { disabled: !!disabled } : { disabled: !!disabled, selected }}
       style={({ pressed }) => [styles.btn, big && styles.big, { backgroundColor: bg, opacity: disabled && !tone ? 0.55 : 1 }, pressed && styles.pressed, style]}>
-      <Text style={[styles.btnText, big && { fontSize: 20 }, { color: fg }]}>{label}</Text>
+      <Text maxFontSizeMultiplier={1.3} style={[styles.btnText, big && { fontSize: 20 }, { color: fg }]}>{selected ? `✓ ${label}` : label}</Text>
       {right}
     </Pressable>
   );
@@ -40,7 +60,7 @@ export function Btn({ label, onPress, alt, big, disabled, style, right, tone }: 
 export function LinkBtn({ label, onPress }: { label: string; onPress: () => void }) {
   return (
     <Pressable onPress={onPress} accessibilityRole="link" hitSlop={10}>
-      <Text style={styles.link}>{label}</Text>
+      <Text maxFontSizeMultiplier={1.3} style={styles.link}>{label}</Text>
     </Pressable>
   );
 }
@@ -84,18 +104,18 @@ export function Meter({ pct, color = C.orange }: { pct: number; color?: string }
   );
 }
 
-/** The orange "approved" stamp with the XP earned. */
-export function OkStamp({ xp, size = 72 }: { xp: number; size?: number }) {
+/** The orange "approved" stamp with the XP earned (or another word, such as "הוגש" for a rough shift). */
+export function OkStamp({ xp, size = 72, word = 'מאושר' }: { xp: number; size?: number; word?: string }) {
   return (
-    <View style={{ width: size, height: size, transform: [{ rotate: '-12deg' }] }} accessibilityLabel={`מאושר, ${xp} ותק`}>
+    <View style={{ width: size, height: size, transform: [{ rotate: '-12deg' }] }} accessible accessibilityLabel={`${word}, ${xp} ותק`}>
       <Svg width={size} height={size} viewBox="0 0 80 80">
         <Circle cx={40} cy={40} r={35} fill={C.orange} stroke={C.ink} strokeWidth={3} />
         <Circle cx={40} cy={40} r={27} fill="none" stroke={C.ink} strokeWidth={1.5} strokeDasharray={[3, 3]} />
       </Svg>
       <View style={StyleSheet.absoluteFill}>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ fontFamily: F.stamp, fontSize: size * 0.33, color: C.ink, lineHeight: size * 0.36 }}>מאושר</Text>
-          <Text style={{ fontFamily: F.black, fontSize: size * 0.13, color: C.ink }}>+{xp} ותק</Text>
+          <Text maxFontSizeMultiplier={1} style={{ fontFamily: F.stamp, fontSize: size * 0.33, color: C.ink, lineHeight: size * 0.36 }}>{word}</Text>
+          <Text maxFontSizeMultiplier={1} style={{ fontFamily: F.black, fontSize: size * 0.13, color: C.ink }}>+{xp} ותק</Text>
         </View>
       </View>
     </View>
@@ -105,6 +125,7 @@ export function OkStamp({ xp, size = 72 }: { xp: number; size?: number }) {
 export const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: C.bg, direction: 'rtl' },
   screen: { flex: 1, padding: 16, gap: 16, direction: 'rtl' },
+  footer: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 12, borderTopWidth: 2, borderTopColor: C.track, backgroundColor: C.bg, direction: 'rtl' },
   text: { fontFamily: F.body, fontSize: 17, color: C.ink, textAlign: 'right', writingDirection: 'rtl' },
   kicker: { fontFamily: F.black, fontSize: 13, color: C.kicker, letterSpacing: 0.5 },
   h1: { fontFamily: F.display, color: C.ink },

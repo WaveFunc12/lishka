@@ -26,7 +26,15 @@ export const C = {
   silver: '#8E98A3',
   gold: '#C8971C',
   legend: '#6A3FB5',
+  roadCase: '#FFF6E2',
+  routeHi: '#1F56D6',
+  shield: '#D3202A',
+  stream: '#3A8DB0',
+  streamInk: '#1E5D78',
 } as const;
+
+/** Road colours by class (motorway, trunk, primary, secondary): darker and heavier for the bigger roads. */
+export const ROAD_COL = ['#5E2014', '#7A2E1C', '#97573A', '#B38A68'] as const;
 
 export const F = {
   body: 'Rubik_400Regular',

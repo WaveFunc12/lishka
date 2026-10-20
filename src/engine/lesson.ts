@@ -1,11 +1,12 @@
 import { daily, markDay } from './attendance';
-import { BY, PLACES } from './catalog';
+import { INK_PASS, regionClosed, renewInk } from './ink';
+import { BY, PLACES, shiftItems, STORY, UNIT_BY } from './catalog';
 import { COPY, DIR_WORD } from './content';
 import { dist, nearest } from './geo';
 import { bump, fading, introduce, learned, mastery, qType, strength } from './memory';
-import { rank } from './progress';
+import { crossedMilestone, rank } from './progress';
 import { pick, rnd, shuffle, type Rng } from './random';
-import { kmText, norm } from './text';
+import { kmText, near1, norm } from './text';
 import type { Dir, DayStr, Point, PlayerState, Question, Session, SessionKind, SessionResult, Unit } from './types';
 
 /** Pin answers within this many km count. Within 4 km is a bullseye. */
@@ -35,9 +36,9 @@ export function confPair(s: PlayerState, ids: string[], rng: Rng): { a: string; 
   return { a: k.a, b: k.b, dir: k.ax === 'y' ? rnd<Dir>(['n', 's'], rng) : rnd<Dir>(['e', 'w'], rng) };
 }
 
-/** One postcard = two shifts of 3 places; a shift is about 14 short screens. */
+/** One postcard = two shifts of 2 or 3 places; a shift is about 14 short screens. */
 export function buildShift(s: PlayerState, u: Unit, shift: number, now: number, rng: Rng): Question[] {
-  const ids = u.items.slice(shift * 3, shift * 3 + 3);
+  const ids = shiftItems(u, shift);
   const q: Question[] = [];
   ids.forEach((id) => {
     if (mastery(s, id) < 1) q.push({ t: 'intro', id });
@@ -50,8 +51,10 @@ export function buildShift(s: PlayerState, u: Unit, shift: number, now: number, 
     .filter((p) => !ids.includes(p.id))
     .slice(0, 2)
     .forEach((p) => q.push({ t: qType(s, p.id), id: p.id, rev: true }));
+  // A postcard's first shift ends on a blank-map pin; typing a name from memory waits for its second shift.
   const sh = shuffle(ids.slice(), rng);
-  q.push({ t: 'pin', id: sh[0] }, { t: 'type', id: sh[1] });
+  q.push({ t: 'pin', id: sh[0] });
+  if (shift > 0) q.push({ t: 'type', id: sh[1 % sh.length] });
   return q;
 }
 
@@ -67,11 +70,16 @@ export function buildReview(s: PlayerState, now: number, rng: Rng, pool = learne
   );
 }
 
-/** The tenure exam: 10 random places on a blank map. */
-export const buildExam = (rng: Rng): Question[] => pick(PLACES.map((p) => p.id), 10, rng).map((id): Question => ({ t: 'pin', id }));
+/** The tenure exam: 10 random places the player has learned (the story's at least) on a blank map. */
+export function buildExam(s: PlayerState, rng: Rng): Question[] {
+  const pool = [...new Set([...STORY.flatMap((u) => u.items), ...learned(s).map((p) => p.id)])];
+  return pick(pool, 10, rng).map((id): Question => ({ t: 'pin', id }));
+}
 
-export function startSession(kind: SessionKind, q: Question[], rng: Rng, unitId: string | null = null, shift = 0): Session {
-  const sess: Session = { kind, unitId, shift, q, i: 0, ok: 0, n: 0, xp: 0, combo: 0, best: 0, misses: [], fb: null };
+/** Choices are drawn from `pool` (places the player has met, plus the session's own),
+    so a wrong option is never a hamlet they've never heard of. */
+export function startSession(kind: SessionKind, q: Question[], rng: Rng, unitId: string | null = null, shift = 0, pool?: string[]): Session {
+  const sess: Session = { kind, unitId, shift, q, i: 0, ok: 0, n: 0, xp: 0, combo: 0, best: 0, misses: [], fb: null, pool };
   prep(sess, rng);
   return sess;
 }
@@ -80,7 +88,8 @@ export function startSession(kind: SessionKind, q: Question[], rng: Rng, unitId:
 export function prep(sess: Session, rng: Rng): void {
   const q = sess.q[sess.i];
   if (!q) return;
-  const near = nearest(q.id, 2, 4);
+  const pool = sess.pool && sess.pool.length >= 6 ? sess.pool : undefined;
+  const near = nearest(q.id, 2, 4, pool);
   const jitter = (k: number) => (rng() - 0.5) * k;
   if (q.t === 'tap') q.choices = shuffle([q.id, ...near], rng);
   if (q.t === 'name') {
@@ -131,8 +140,12 @@ export function gradePin(q: Question, guess: Point, kind: SessionKind): Grade {
 
 export function gradeType(q: Question, typed: string): Grade {
   const it = BY[q.id], v = norm(typed);
-  const ok = !!v && [it.name, ...(it.alias || [])].some((n) => norm(n) === v);
-  return { ok, ids: [q.id], text: ok ? it.hint : `התשובה: ${it.name}` };
+  const names = [it.name, ...(it.alias || [])].map(norm);
+  if (v && names.includes(v)) return { ok: true, ids: [q.id], text: it.hint };
+  // One slip in a longer name still counts, unless what was typed is another place's name.
+  const slip = !!v && names.some((n) => n.length >= 4 && near1(n, v)) && !PLACES.some((p) => norm(p.name) === v);
+  if (slip) return { ok: true, ids: [q.id], text: `כמעט מדויק. כותבים ${it.name}. ${it.hint}` };
+  return { ok: false, ids: [q.id], text: `התשובה: ${it.name}` };
 }
 
 /** Apply an answer: XP with a combo bonus, mastery up or down, and one retry at the end for a miss. */
@@ -168,7 +181,7 @@ export function advance(sess: Session, s: PlayerState, now: number, rng: Rng): b
 }
 
 /** Bank the session: XP, shift and postcard completion, sick day, attendance, promotion. */
-export function finish(sess: Session, s: PlayerState, today: DayStr): SessionResult {
+export function finish(sess: Session, s: PlayerState, today: DayStr, now: number = Date.now()): SessionResult {
   const before = rank(s.xp).name;
   const d = daily(s, today);
   let card = false, earnedSick = false, welcomed = false, streakUp: number | null = null;
@@ -180,6 +193,9 @@ export function finish(sess: Session, s: PlayerState, today: DayStr): SessionRes
     if (sh.every(Boolean) && !s.units[sess.unitId]) {
       s.units[sess.unitId] = true;
       card = true;
+      // A region closed just now starts its ink fresh, even if its first postcards were learned weeks ago.
+      const region = UNIT_BY[sess.unitId]?.region;
+      if (region && regionClosed(s, region) && !s.ink[region]) s.ink[region] = { at: now, n: 0 };
     }
   }
   if (sess.kind === 'review') {
@@ -194,10 +210,14 @@ export function finish(sess: Session, s: PlayerState, today: DayStr): SessionRes
     }
   }
   if (sess.kind === 'exam' && !sess.misses.length) s.legendary = true;
+  // A renewal stamps fresh ink only when it went well; days 0 means the ink is still faded.
+  const inked = sess.ink ? { region: sess.ink, days: sess.n && sess.ok / sess.n >= INK_PASS ? renewInk(s, sess.ink, now) : 0 } : null;
   if (sess.kind !== 'exam' && markDay(s, today)) streakUp = s.streak;
   s.note = null;
   s.lost = 0;
   const after = rank(s.xp).name;
+  // Places met in this session are new on the map, so the count before it is the count now minus them.
+  const newIds = sess.q.filter((q) => q.t === 'intro').map((q) => q.id), known = learned(s).length;
   return {
     kind: sess.kind,
     unitId: sess.unitId,
@@ -207,7 +227,9 @@ export function finish(sess: Session, s: PlayerState, today: DayStr): SessionRes
     n: sess.n,
     best: sess.best,
     misses: sess.misses,
-    newIds: sess.q.filter((q) => q.t === 'intro').map((q) => q.id),
+    newIds,
+    milestone: crossedMilestone(known - newIds.length, known),
+    inked,
     card,
     streakUp,
     rankUp: after !== before ? after : null,

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
-  BY, DAY_MS, PLACES, UNITS, advance, anchorFor, buildExam, buildShift, bump, clone, compareAnswer, dailyId, dayNo,
-  fading, finish, freshState, gradePin, gradeType, israelDay, markDay, migrate, nextShift, onOpen, rank, score, seeded,
-  squares, startSession, strength, T, answer, gradeTap,
+  BY, DAY_MS, UNITS, fadingRegion, inkFaded, inkHold, renewInk, PLACES, STORY, REGION_UNITS, UNIT_BY, shiftItems, advance, anchorFor, buildExam, buildShift, bump, clone, compareAnswer, dailyIds, dailyStats, dayNo, dist, points, shareText, totalKm,
+  fading, finish, freshState, reminderPlan, msToNextDay, untilText, gradePin, gradeType, israelDay, markDay, migrate, nextShift, onOpen, rank, seeded,
+  squares, startSession, strength, T, answer, gradeTap, zoomAt, clampView, COUNTRY, ROUTES, roadQuiz, routeTitle, milestones, crossedMilestone, nextMilestone, weekEnd, weekText,
 } from './index';
 
 const NOW = Date.parse('2026-10-19T09:00:00Z');
@@ -19,6 +19,9 @@ describe('text', () => {
     expect(gradeType(q, 'תל אביב יפו').ok).toBe(true);
     expect(gradeType(q, 'חיפה').ok).toBe(false);
     expect(gradeType(q, '   ').ok).toBe(false);
+    expect(gradeType(q, 'תל אביג').ok).toBe(true);
+    expect(gradeType(q, 'תלאבב').ok).toBe(true);
+    expect(gradeType(q, 'תל אביב').text).toBe(BY.tlv.hint);
   });
 });
 
@@ -86,7 +89,10 @@ describe('shift', () => {
     expect(q.filter((x) => x.t === 'intro').map((x) => x.id)).toEqual(ids);
     expect(q.filter((x) => x.t === 'tap')).toHaveLength(3);
     expect(q.filter((x) => x.t === 'name')).toHaveLength(3);
-    expect(q.slice(-2).map((x) => x.t)).toEqual(['pin', 'type']);
+    // The first shift ends on a pin; typing a name waits for the second shift.
+    expect(q[q.length - 1].t).toBe('pin');
+    expect(q.some((x) => x.t === 'type')).toBe(false);
+    expect(buildShift(s, u, 1, NOW, seeded(1)).slice(-2).map((x) => x.t)).toEqual(['pin', 'type']);
   });
   it('anchors a new place to the nearest known one', () => {
     const a = anchorFor('rmg', []);
@@ -135,30 +141,254 @@ describe('scoring', () => {
     expect(rank(5000).next).toBeNull();
   });
   it('builds a 10-place exam with no repeats', () => {
-    const q = buildExam(seeded(4));
+    const q = buildExam(freshState(), seeded(4));
     expect(new Set(q.map((x) => x.id)).size).toBe(10);
+    expect(q.every((x) => STORY.some((u) => u.items.includes(x.id)))).toBe(true);
   });
 });
 
-describe('settlement of the day', () => {
-  it('is the same place all day and numbered from the epoch', () => {
-    expect(dailyId('2026-10-19')).toBe(dailyId('2026-10-19'));
-    expect(PLACES.map((p) => p.id)).toContain(dailyId('2026-10-19'));
+describe('catalog', () => {
+  it('has 500 places with unique ids, the story first', () => {
+    expect(PLACES.length).toBe(500);
+    expect(new Set(PLACES.map((p) => p.id)).size).toBe(500);
+    expect(STORY.map((u) => u.items.length)).toEqual([6, 6, 6, 6, 6, 6, 6]);
+  });
+  it('puts every place in exactly one postcard of 4 to 6', () => {
+    const all = UNITS.flatMap((u) => u.items);
+    expect(all.length).toBe(500);
+    expect(new Set(all).size).toBe(500);
+    expect(UNITS.every((u) => u.items.length >= 4 && u.items.length <= 6)).toBe(true);
+  });
+  it('splits a postcard into two non-empty shifts', () => {
+    for (const u of UNITS) {
+      expect(shiftItems(u, 0).length).toBeGreaterThan(0);
+      expect(shiftItems(u, 1).length).toBeGreaterThan(0);
+      expect([...shiftItems(u, 0), ...shiftItems(u, 1)]).toEqual(u.items);
+    }
+  });
+  it('goes through the story, then the chosen region, then the rest', () => {
+    const s = freshState();
+    expect(nextShift(s)!.u.id).toBe('u1');
+    STORY.forEach((u) => { s.units[u.id] = true; });
+    expect(nextShift(s)!.u.id).toBe(REGION_UNITS[0].id);
+    s.focus = 'ngv';
+    expect(nextShift(s)!.u.id).toBe('ngv1');
+    s.units.ngv1 = true;
+    s.shifts.ngv2 = [true, false];
+    expect(nextShift(s)).toEqual({ u: UNIT_BY.ngv2, s: 1 });
+  });
+  it('builds a shift for every regional postcard', () => {
+    const s = freshState();
+    for (const u of REGION_UNITS.slice(0, 20)) expect(buildShift(s, u, 1, 0, seeded(1)).length).toBeGreaterThan(5);
+  });
+  it('draws the daily from the biggest places only', () => {
+    expect(dailyIds('2026-11-02').every((id) => BY[id].rank <= 150)).toBe(true);
+  });
+});
+
+describe('daily', () => {
+  it('gives everyone the same five places all day, spread apart', () => {
+    const ids = dailyIds('2026-10-19');
+    expect(ids).toEqual(dailyIds('2026-10-19'));
+    expect(new Set(ids).size).toBe(5);
+    expect(dailyIds('2026-10-20')).not.toEqual(ids);
+    for (const a of ids) for (const b of ids) if (a !== b) expect(dist(BY[a], BY[b])).toBeGreaterThanOrEqual(20);
     expect(dayNo('2026-10-01')).toBe(1);
   });
-  it('scores five squares by distance', () => {
-    expect(score(4)).toBe(5);
-    expect(score(30)).toBe(2);
-    expect(squares(100)).toBe('⬜⬜⬜⬜⬜');
+  it('scores a point for each pin within 10 km', () => {
+    const at = (d: number) => ({ id: 'x', d, g: { x: 0, y: 0 } });
+    const picks = [at(3), at(10), at(10.5), at(40)];
+    expect(points(picks)).toBe(2);
+    expect(totalKm(picks)).toBe(63.5);
+    expect(squares(picks)).toBe('🟩🟩🟥🟥⬜');
+    expect(shareText(picks, '2026-10-19', 'f')).toContain('2/5');
+    expect(shareText(picks, '2026-10-19', 'f', 3)).toContain('3 ימים ברצף');
+    expect(shareText(picks, '2026-10-19', 'f', 1)).not.toContain('ברצף');
+  });
+  it('keeps a record of games, runs of days and the score spread', () => {
+    const s = freshState();
+    s.dailies = { '2026-10-10': [5, 4], '2026-10-11': [3, 30], '2026-10-12': [4, 12], '2026-10-15': [2, 50], '2026-10-16': [5, 3] };
+    const st = dailyStats(s, '2026-10-17');
+    expect(st.played).toBe(5);
+    expect(st.avg).toBeCloseTo(3.8);
+    expect(st.run).toBe(2); // yesterday still counts until today is over
+    expect(st.best).toBe(3);
+    expect(st.spread).toEqual([0, 0, 1, 1, 1, 2]);
+    expect(dailyStats(s, '2026-10-18').run).toBe(0);
+    expect(dailyStats(freshState(), '2026-10-18')).toEqual({ played: 0, avg: 0, run: 0, best: 0, spread: [0, 0, 0, 0, 0, 0] });
   });
 });
 
 describe('state', () => {
   it('fills fields missing from older saves', () => {
-    const s = migrate({ xp: 50, daily: { day: '2026-10-19' } });
+    const s = migrate({ xp: 50, daily: { day: '2026-10-19', dp: { id: 'jlm', d: 3, g: { x: 0, y: 0 } } } });
     expect(s.xp).toBe(50);
     expect(s.daily.shifts).toBe(0);
+    expect(s.daily.picks).toEqual([]);
+    expect('dp' in s.daily).toBe(false);
     expect(s.mastery).toEqual({});
+    expect(s.focus).toBeNull();
     expect(clone(s)).toEqual(s);
+  });
+  it('logs a finished daily from a save made before the daily log', () => {
+    const at = (d: number) => ({ id: 'x', d, g: { x: 0, y: 0 } });
+    const s = migrate({ daily: { day: '2026-10-19', picks: [at(1), at(2), at(30), at(4), at(5.04)] } });
+    expect(s.dailies).toEqual({ '2026-10-19': [4, 42] });
+    expect(migrate({ daily: { day: '2026-10-19', picks: [at(1)] } }).dailies).toEqual({});
+  });
+});
+
+describe('map zoom', () => {
+  const v = { x: 0, y: 0, w: 40, h: 20 };
+  it('keeps the zoom point in place', () => {
+    const z = zoomAt(v, 2, { x: 10, y: 5 });
+    expect(z).toEqual({ x: 5, y: 2.5, w: 20, h: 10 });
+    expect((10 - z.x) / z.w).toBeCloseTo((10 - v.x) / v.w);
+  });
+  it('clamps width and keeps the view inside the map', () => {
+    expect(clampView(zoomAt(v, 100), COUNTRY, 6, 200).w).toBe(6);
+    const far = clampView({ x: 900, y: 900, w: 4000, h: 2000 }, COUNTRY, 6, 200);
+    expect(far.w).toBe(200);
+    expect(far.x + far.w / 2).toBe(COUNTRY.x + COUNTRY.w / 2); // wider than the map: centred
+    expect(far.y + far.h).toBe(COUNTRY.y + COUNTRY.h); // fits in height: pushed back inside
+  });
+});
+
+describe('reminders', () => {
+  const at = new Date(2026, 9, 19, 10, 0, 0).getTime(); // 10:00 device time
+  it('plans a week at the chosen hour, from today when not played', () => {
+    const s = freshState();
+    const plan = reminderPlan(s, '2026-10-19', at, 20);
+    expect(plan).toHaveLength(7);
+    expect(new Date(plan[0].at).getHours()).toBe(20);
+    expect(new Date(plan[0].at).getDate()).toBe(19);
+  });
+  it('skips today once played, and guards the streak first', () => {
+    const s = freshState();
+    s.g = 'f'; s.streak = 4; s.lastDay = '2026-10-19';
+    const plan = reminderPlan(s, '2026-10-19', at, 20);
+    expect(plan).toHaveLength(6);
+    expect(new Date(plan[0].at).getDate()).toBe(20);
+    expect(plan[0].body).toContain('4 ימי נוכחות');
+    expect(plan.every((r) => !/[{}|]/.test(r.body))).toBe(true);
+  });
+  it('skips an hour that already passed today', () => {
+    expect(reminderPlan(freshState(), '2026-10-19', at, 8)).toHaveLength(6);
+  });
+});
+
+describe('next daily countdown', () => {
+  it('counts to midnight Israel time', () => {
+    // 21:30 UTC on 19 Oct is 00:30 on 20 Oct in Israel (UTC+3), so 23.5 hours remain.
+    expect(msToNextDay(Date.parse('2026-10-19T21:30:00Z'))).toBe(23.5 * 3600e3);
+    expect(msToNextDay(Date.parse('2026-10-19T20:59:00Z'))).toBe(60e3);
+  });
+  it('says it in Hebrew', () => {
+    expect(untilText(5 * 3600e3 + 12 * 60e3)).toBe('5 שעות ו־12 דקות');
+    expect(untilText(2 * 3600e3)).toBe('שעתיים');
+    expect(untilText(3600e3 + 60e3)).toBe('שעה ודקה');
+    expect(untilText(20e3)).toBe('דקה');
+  });
+});
+
+describe('road quiz', () => {
+  it('knows every numbered road on the map', async () => {
+    const overlay = (await import('../data/overlay.json')).default as { roads: { ref: string }[] };
+    const refs = new Set(overlay.roads.map((r) => r.ref));
+    expect([...refs].sort()).toEqual(ROUTES.map((r) => r.ref).sort());
+  });
+  it('asks about different roads, each with its own number among three', () => {
+    const qs = roadQuiz(seeded(7));
+    expect(qs).toHaveLength(8);
+    expect(new Set(qs.map((q) => q.ref)).size).toBe(8);
+    for (const q of qs) {
+      expect(new Set(q.choices).size).toBe(3);
+      expect(q.choices).toContain(q.ref);
+    }
+    expect(routeTitle('6')).toBe('כביש 6 · חוצה ישראל');
+    expect(routeTitle('40')).toBe('כביש 40');
+  });
+});
+
+describe('milestones on the way to the whole country', () => {
+  it('runs from the first ten places to all 500, without repeats', () => {
+    expect(milestones(500).map((m) => m.at)).toEqual([10, 25, 50, 125, 250, 375, 500]);
+  });
+  it('reports the biggest milestone a session passed, and none when it passed nothing', () => {
+    expect(crossedMilestone(8, 12, 500)?.at).toBe(10);
+    expect(crossedMilestone(120, 126, 500)?.title).toBe('רבע מהארץ על המפה');
+    expect(crossedMilestone(9, 26, 500)?.at).toBe(25);
+    expect(crossedMilestone(12, 20, 500)).toBeNull();
+  });
+  it('points at the next one ahead, and at nothing once the map is full', () => {
+    expect(nextMilestone(42, 500)?.at).toBe(50);
+    expect(nextMilestone(500, 500)).toBeNull();
+  });
+});
+
+describe('fading ink', () => {
+  const close = (s: ReturnType<typeof freshState>, id: string, m: number, at: number) => {
+    REGION_UNITS.filter((u) => u.region === id).forEach((u) => { s.units[u.id] = true; u.items.forEach((p) => { s.mastery[p] = m; s.seen[p] = at; }); });
+  };
+  it('fades a closed region once its places fade, one region at a time', () => {
+    const s = freshState();
+    close(s, 'dan', 3, NOW);
+    close(s, 'shr', 3, NOW - 2 * DAY_MS);
+    expect(fadingRegion(s, NOW)).toBe(null);
+    // Mastery 3 halves every 4 days: after 6 days Gush Dan is at about a third, the Sharon (2 days older) lower still.
+    expect(inkFaded(s, 'dan', NOW + 4 * DAY_MS)).toBe(false);
+    expect(inkFaded(s, 'dan', NOW + 6 * DAY_MS)).toBe(true);
+    expect(fadingRegion(s, NOW + 6 * DAY_MS)).toBe('shr');
+  });
+  it('never fades an open region', () => {
+    const s = freshState();
+    const u = REGION_UNITS.find((x) => x.region === 'dan')!;
+    u.items.forEach((p) => { s.mastery[p] = 1; s.seen[p] = NOW - 30 * DAY_MS; });
+    expect(inkFaded(s, 'dan', NOW)).toBe(false);
+  });
+  it('holds each renewal twice as long as the last', () => {
+    expect([1, 2, 3, 4, 5].map(inkHold)).toEqual([4, 8, 16, 30, 30]);
+    const s = freshState();
+    close(s, 'dan', 3, NOW - 10 * DAY_MS);
+    expect(renewInk(s, 'dan', NOW)).toBe(4);
+    expect(inkFaded(s, 'dan', NOW + 3 * DAY_MS)).toBe(false);
+    expect(inkFaded(s, 'dan', NOW + 5 * DAY_MS)).toBe(true);
+    expect(renewInk(s, 'dan', NOW + 5 * DAY_MS)).toBe(8);
+  });
+  it('gives a region closed just now four days, even when its first postcards are old', () => {
+    expect(inkHold(0)).toBe(4);
+    const s = freshState(), rng = seeded(4);
+    const [first, last] = REGION_UNITS.filter((u) => u.region === 'gol');
+    first.items.forEach((p) => { s.mastery[p] = 2; s.seen[p] = NOW - 30 * DAY_MS; });
+    s.units[first.id] = true;
+    s.shifts[last.id] = [true, false];
+    const sess = startSession('shift', buildShift(s, last, 1, NOW, rng), rng, last.id, 1);
+    for (let done = false; !done; done = advance(sess, s, NOW, rng)) {
+      const q = sess.q[sess.i];
+      if (q.t !== 'intro') answer(sess, s, gradeTap({ ...q, t: 'tap' }, q.t === 'compare' ? compareAnswer(q) : q.id), NOW, rng);
+    }
+    expect(finish(sess, s, '2026-10-19', NOW).card).toBe(true);
+    expect(s.ink.gol).toEqual({ at: NOW, n: 0 });
+    expect(inkFaded(s, 'gol', NOW + DAY_MS)).toBe(false);
+  });
+  it('renews the ink only when the renewal went well', () => {
+    const s = freshState(), sess = { kind: 'review', ink: 'dan', q: [], i: 0, xp: 0, ok: 3, n: 10, best: 0, misses: [] } as unknown as Parameters<typeof finish>[0];
+    close(s, 'dan', 3, NOW - 10 * DAY_MS);
+    expect(finish(sess, s, '2026-10-19', NOW).inked).toEqual({ region: 'dan', days: 0 });
+    expect(s.ink.dan).toBeUndefined();
+    expect(finish({ ...sess, ok: 8 }, s, '2026-10-19', NOW).inked).toEqual({ region: 'dan', days: 4 });
+  });
+});
+
+describe('room weeks', () => {
+  it('runs Sunday to Saturday', () => {
+    expect(weekEnd('2026-10-20')).toBe('2026-10-24'); // Tuesday → this Saturday
+    expect(weekEnd('2026-10-24')).toBe('2026-10-24'); // Saturday closes its own week
+    expect(weekEnd('2026-10-25')).toBe('2026-10-31'); // Sunday opens the next
+    expect(weekEnd('2026-10-20', 1)).toBe('2026-10-17');
+  });
+  it('writes a week the way people do', () => {
+    expect(weekText('2026-10-17')).toBe('11.10 עד 17.10');
+    expect(weekText('2026-10-03')).toBe('27.9 עד 3.10');
   });
 });
