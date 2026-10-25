@@ -1,17 +1,28 @@
 name: EAS build
 
+# Runs on GitHub's machines so builds don't depend on anyone's computer.
+# Secrets (repo settings → Secrets → Actions):
+#   EXPO_TOKEN                          always
+#   ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8, APPLE_TEAM_ID
+#                                       App Store Connect API key, for signed
+#                                       (device / TestFlight) builds
+
 on:
   workflow_dispatch:
     inputs:
       profile:
         description: eas.json build profile
-        default: simulator
+        default: production
   push:
     branches: [claude/eas-build-2-rxj2bm]
+
+env:
+  PROFILE: ${{ inputs.profile || 'production' }}
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -23,4 +34,31 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
       - run: npm ci
-      - run: eas build -p ios --profile ${{ inputs.profile || 'simulator' }} --non-interactive --no-wait
+
+      - name: Simulator build
+        if: env.PROFILE == 'simulator'
+        run: eas build -p ios --profile simulator --non-interactive --no-wait
+
+      - name: Signed build
+        if: env.PROFILE != 'simulator'
+        # eas only creates the distribution certificate and provisioning
+        # profile in interactive mode, so run it under a pseudo-terminal and
+        # accept every default (generate new credentials) with Enter.
+        shell: bash {0}
+        env:
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          EXPO_ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          EXPO_ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          EXPO_APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          EXPO_APPLE_TEAM_TYPE: INDIVIDUAL
+        run: |
+          if [ -z "$ASC_KEY_P8" ] || [ -z "$EXPO_ASC_KEY_ID" ] || [ -z "$EXPO_ASC_ISSUER_ID" ] || [ -z "$EXPO_APPLE_TEAM_ID" ]; then
+            echo "::error::Missing App Store Connect secrets (ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8, APPLE_TEAM_ID)"
+            exit 1
+          fi
+          printf '%s\n' "$ASC_KEY_P8" > "$RUNNER_TEMP/asc.p8"
+          export EXPO_ASC_API_KEY_PATH="$RUNNER_TEMP/asc.p8"
+          script -qec "eas build -p ios --profile $PROFILE --no-wait" /dev/null < <(yes '')
+          status=$?
+          rm -f "$RUNNER_TEMP/asc.p8"
+          exit $status
