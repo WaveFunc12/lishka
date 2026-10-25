@@ -108,7 +108,14 @@ function Gymnasium({ x, y }: { x: number; y: number }) {
       <Rect x={x - 110} y={y + 40} width={220} height={110} fill="#F1E3C4" stroke={K.ink} strokeWidth={4} />
       <Rect x={x - 130} y={y} width={50} height={150} fill="#E9D6AE" stroke={K.ink} strokeWidth={4} />
       <Rect x={x + 80} y={y} width={50} height={150} fill="#E9D6AE" stroke={K.ink} strokeWidth={4} />
-      <Path d={`M${x - 136} ${y} L${x - 105} ${y - 34} L${x - 74} ${y}Z M${x + 74} ${y} L${x + 105} ${y - 34} L${x + 136} ${y}Z`} fill={K.red} stroke={K.ink} strokeWidth={4} strokeLinejoin="round" />
+      {/* Crenellated tops on the towers and over the gate, the building's best-known feature. */}
+      {[-130, 80].map((d) => (
+        <G key={d}>
+          <Rect x={x + d - 4} y={y - 10} width={58} height={12} fill="#E9D6AE" stroke={K.ink} strokeWidth={3.5} />
+          {[0, 1, 2, 3].map((i) => <Rect key={i} x={x + d - 4 + i * 16} y={y - 26} width={10} height={17} fill="#E9D6AE" stroke={K.ink} strokeWidth={3} />)}
+        </G>
+      ))}
+      {[-34, -12, 10, 32].map((d) => <Rect key={d} x={x + d - 5} y={y - 26} width={12} height={22} fill="#E9D6AE" stroke={K.ink} strokeWidth={3} />)}
       <Path d={`M${x - 50} ${y + 150} L${x - 50} ${y + 30} Q${x} ${y - 40} ${x + 50} ${y + 30} L${x + 50} ${y + 150}Z`} fill="#E9D6AE" stroke={K.ink} strokeWidth={4} />
       <Path d={`M${x - 30} ${y + 150} L${x - 30} ${y + 60} Q${x} ${y + 14} ${x + 30} ${y + 60} L${x + 30} ${y + 150}Z`} fill={K.navy} stroke={K.ink} strokeWidth={3.5} />
       <Rect x={x - 130} y={y} width={16} height={150} fill="url(#dots)" />

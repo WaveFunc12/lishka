@@ -1,6 +1,6 @@
 import { Circle, Ellipse, G, Line, Path, Rect, Text as SvgText } from 'react-native-svg';
 import { F } from '../theme';
-import { K } from './parts';
+import { K, rtl } from './parts';
 
 /* Small props for the region stories: flags, a hanukkiah, a plane, a jeep, a stone lion, fires, ruins and signs. */
 
@@ -158,7 +158,7 @@ export function Sign({ x, y, text, w = 140, rot = 0, fill = '#E9D6AE', color = K
     <G transform={`rotate(${rot} ${x} ${y})`}>
       <Rect x={x - 5} y={y} width={10} height={90} fill={K.wood} stroke={K.ink} strokeWidth={3} />
       <Rect x={x - w / 2} y={y - 40} width={w} height={44} rx={4} fill={fill} {...INK} />
-      <SvgText x={x} y={y - 10} fontSize={20} fontFamily={F.black} textAnchor="middle" fill={color}>{text}</SvgText>
+      <SvgText x={x} y={y - 10} fontSize={20} fontFamily={F.black} textAnchor="middle" fill={color}>{rtl(text)}</SvgText>
     </G>
   );
 }

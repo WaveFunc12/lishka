@@ -2,7 +2,7 @@ import { Circle, Ellipse, G, Line, Path, Rect, Text as SvgText } from 'react-nat
 import { BY } from '@/engine';
 import { F } from '../theme';
 import type { Panel } from './ComicPlayer';
-import { Fist, Halftone, Hand, IsraelMap, K, Mug, OldManPortrait, Rays, ShokoBag, Sfx, WallMap, Zvi } from './parts';
+import { Fist, Halftone, Hand, IsraelMap, K, Mug, OldManPortrait, Rays, rtl, ShokoBag, Sfx, WallMap, Zvi } from './parts';
 
 /* Chapter 1 of the story, as a motion comic: the office, the stuck elevator, Zvi, the spilled chocolate milk,
    the empty map, the mission, and why the work starts with the big cities.
@@ -136,9 +136,9 @@ const elevator = (
     <G transform="rotate(6 262 440) translate(0 110)">
       <Rect x={226} y={286} width={86} height={96} fill="#FFFFFF" stroke={K.ink} strokeWidth={3} />
       <Rect x={250} y={278} width={36} height={14} fill="#E9E1A8" opacity={0.85} />
-      <SvgText x={269} y={318} fontSize={17} fontFamily={F.black} textAnchor="middle" fill={K.red}>מקולקלת.</SvgText>
-      <SvgText x={269} y={342} fontSize={17} fontFamily={F.black} textAnchor="middle" fill={K.red}>שוב.</SvgText>
-      <SvgText x={269} y={368} fontSize={12} fontFamily={F.bold} textAnchor="middle" fill={K.ink}>—ההנהלה</SvgText>
+      <SvgText x={269} y={318} fontSize={17} fontFamily={F.black} textAnchor="middle" fill={K.red}>{rtl('מקולקלת.')}</SvgText>
+      <SvgText x={269} y={342} fontSize={17} fontFamily={F.black} textAnchor="middle" fill={K.red}>{rtl('שוב.')}</SvgText>
+      <SvgText x={269} y={368} fontSize={12} fontFamily={F.bold} textAnchor="middle" fill={K.ink}>{rtl('—ההנהלה')}</SvgText>
     </G>
     {/* Call button and the stairs sign. */}
     <Rect x={330} y={400} width={30} height={56} rx={4} fill={K.steel} stroke={K.ink} strokeWidth={3} />
@@ -409,7 +409,7 @@ export function chapterOne(t: (s: string) => string): Panel[] {
     {
       art: pointer, focus: [0.32, 0.4], amount: 1.08,
       bubbles: [
-        { kind: 'say', text: 'מתחילים מהגדולות: שש ערים, שש עוגנים.', x: 0.4, y: 0.03, w: 0.57, tail: { at: 0.72, lean: 0.2 } },
+        { kind: 'say', text: 'מתחילים מהגדולות: שש ערים, שישה עוגנים.', x: 0.4, y: 0.03, w: 0.57, tail: { at: 0.72, lean: 0.2 } },
         { kind: 'you', text: 'למה דווקא הגדולות?', x: 0.05, y: 0.85, w: 0.56, tail: { at: 0.3 } },
       ],
     },
@@ -417,13 +417,13 @@ export function chapterOne(t: (s: string) => string): Panel[] {
       art: oldMan, focus: [0.55, 0.36], amount: 1.1,
       bubbles: [
         { kind: 'say', text: 'כמו שאמר הזקן:', x: 0.04, y: 0.62, w: 0.46, tail: { at: 0.85, lean: 0.9 } },
-        { kind: 'cap', big: true, text: '״עתידו של נוער זה הוא בעבודה.״\n— דוד בן־גוריון', x: 0.05, y: 0.8, w: 0.9 },
+        { kind: 'cap', big: true, text: '״בנגב ייבחן העם בישראל.״\n— דוד בן־גוריון, 1955', x: 0.05, y: 0.8, w: 0.9 },
       ],
     },
     {
       art: proud, focus: [0.52, 0.45], amount: 1.08,
       bubbles: [
-        { kind: 'say', text: 'קודם עובדים קשה על הגדולות. אחר כך כל השאר ייתלה עליהן.', x: 0.04, y: 0.03, w: 0.7, tail: { at: 0.8, lean: 0.4 } },
+        { kind: 'say', text: 'טוב, זה לא בדיוק קשור. אבל קודם עובדים קשה על הגדולות, ואחר כך כל השאר ייתלה עליהן.', x: 0.04, y: 0.03, w: 0.7, tail: { at: 0.8, lean: 0.4 } },
         { kind: 'shout', text: t('{בוא|בואי} לעבודה!'), x: 0.16, y: 0.84, w: 0.62 },
       ],
     },

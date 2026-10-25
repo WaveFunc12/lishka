@@ -14,7 +14,7 @@ export default function TaleScreen() {
   const place = id ? BY[id] : undefined;
   const region = id ? REGIONS.find((g) => regionTale(g.id) === id) : undefined;
   // The closing line: a city's population now, or how many of a region's places are in the game.
-  const today = place ? `והיום: ${popText(place.pop)}.` : region ? `והיום: ${PLACES.filter((p) => p.region === region.id).length} יישובים באזור מחכים לחזור למפה.` : '';
+  const today = place ? `והיום: ${popText(place.pop)}.` : region ? `והיום: ${PLACES.filter((p) => p.region === region.id).length} מיישובי האזור מחכים לחזור למפה.` : '';
   const panels = useMemo(() => (tale ? tale.panels(t, today) : []), [tale, t, today]);
   const close = () => (router.canGoBack() ? router.back() : router.replace('/home'));
   if (!tale) return null;

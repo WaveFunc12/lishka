@@ -118,6 +118,8 @@ const inkFlag = (
     <Flag x={150} y={500} h={320} w={150} />
     {/* The ink ran a little. */}
     <Path d="M190 236 l2 10 M240 236 l-1 8 M276 235 l2 12" stroke="#2F5FB3" strokeWidth={3} strokeLinecap="round" />
+    {/* As in the famous photo: one soldier shins up the pole to fix the flag. */}
+    <Person x={146} y={410} s={0.72} coat="#8C7A54" pants="#6E5F40" hat="tembel" pose="hold" mouth="open" />
     <Person x={90} y={690} s={1.05} coat="#8C7A54" pants="#6E5F40" hat="tembel" pose="cheer" mouth="shout" />
     <Person x={310} y={700} s={1.05} coat="#8C7A54" pants="#6E5F40" hat="cloth" hatColor="#8C7A54" moustache pose="wave" flip />
   </G>
@@ -131,7 +133,7 @@ const sdeBoker = (
     <Sun x={320} y={180} r={40} />
     <Hills y={340} near="#C98455" far="#D9A866" />
     <Barrack x={200} y={360} w={160} h={70} />
-    <Person x={130} y={690} s={1.1} coat="#C8B27A" pants="#8C7A54" hair="#E8E8E4" pose="hold" />
+    <Person x={130} y={690} s={1.1} coat="#C8B27A" pants="#8C7A54" hair="tufts" pose="hold" />
     <Sheep x={260} y={640} s={1.1} />
     <Sheep x={330} y={600} s={0.9} />
     <Sheep x={310} y={680} s={1.2} />
@@ -182,7 +184,7 @@ const sebaste = (
     <Rays cx={200} cy={250} n={24} a="#F7C873" b="#FBE7B9" />
     <Path d="M-10 420 Q100 370 200 380 Q300 370 410 420 L410 710 L-10 710Z" fill="#9FB86A" stroke={K.ink} strokeWidth={4} />
     <Temple x={210} y={380} w={220} />
-    <Person x={110} y={690} s={1.1} robe coat="#5A2E7A" hat="crown" beard="#3A2A1E" pose="point" />
+    <Person x={110} y={690} s={1.1} robe coat="#5A2E7A" hat="wreath" hair="#3A2A1E" beard="#3A2A1E" pose="point" />
     <Person x={310} y={690} s={1} robe coat="#E8DDC8" hat="none" hair="#5A3A22" pose="hold" flip />
   </G>
 );
@@ -327,8 +329,8 @@ export const regions3: Record<string, Tale> = {
     title: 'מישור החוף הדרומי',
     panels: (t, today) => [
       { art: lachish, focus: [0.55, 0.6], bubbles: [cap('בערך 588 לפנה״ס. צבא בבל צר על ממלכת יהודה. מפקד מוצב שולח ללכיש מכתב על שבר חרס. המכתב נמצא בתל לכיש ב־1935.'),
-        { kind: 'say', text: '״אל משאת לכש נחנו שמרם... כי לא נראה את עזקה.״', x: 0.3, y: 0.42, w: 0.64, tail: { at: 0.6 } }] },
-      { art: afridar, focus: [0.5, 0.55], bubbles: [cap('1951. יהודים מדרום אפריקה בונים מול הים את שכונת אפרידר. ב־1953 היא מתאחדת עם מגדל אשקלון, והעיר נקראת אשקלון.'),
+        { kind: 'say', text: '״אנחנו צופים לאותות האש של לכיש... כי את עזקה כבר לא רואים.״', x: 0.3, y: 0.42, w: 0.64, tail: { at: 0.6 } }] },
+      { art: afridar, focus: [0.5, 0.55], bubbles: [cap('1951. יהודים מדרום אפריקה בונים מול הים את שכונת אפרידר. ב־1955 היא מתאחדת עם מגדל אשקלון, והעיר נקראת אשקלון.'),
         { kind: 'say', text: 'אפרי־דר: אפריקה ודרום. השם כבר מוכן.', x: 0.04, y: 0.46, w: 0.52, tail: { at: 0.4 } }] },
       { art: kiryatGat, focus: [0.5, 0.6], bubbles: [cap('1955. 18 משפחות עולים ממרוקו מקימות את קריית גת, ליד תל שחשבו שהוא גת של הפלשתים.'),
         { kind: 'say', text: 'חדשות מהחפירות: גת בכלל במקום אחר. השם נשאר.', x: 0.38, y: 0.46, w: 0.58, tail: { at: 0.65 } }, end(today)] },
@@ -359,18 +361,19 @@ export const regions3: Record<string, Tale> = {
   bnm: {
     title: 'בנימין, יהודה וגוש עציון',
     panels: (t, today) => [
-      { art: jacob, focus: [0.55, 0.5], amount: 1.14, bubbles: [cap('לפי התנ״ך: יעקב נרדם בדרך, ראשו על אבן, וחולם על סולם שמלאכים עולים ויורדים בו. בבוקר הוא אומר ״אכן יש ה׳ במקום הזה״, וקורא למקום בית אל.')] },
-      { art: kfarEtzion, focus: [0.5, 0.55], bubbles: [cap('1943. מתיישבים חוזרים להרי חברון ומקימים מחדש את כפר עציון. השם על שם שמואל צבי הולצמן, שקנה כאן אדמה.'),
+      { art: jacob, focus: [0.55, 0.5], amount: 1.14, bubbles: [cap('לפי התנ״ך: יעקב נרדם בדרך, ראשו על אבן, וחולם על סולם שמלאכים עולים ויורדים בו. בבוקר הוא קורא למקום בית אל.'),
+        { kind: 'say', text: '״אכן יש ה׳ במקום הזה.״', x: 0.04, y: 0.62, w: 0.5, tail: { at: 0.6 } }] },
+      { art: kfarEtzion, focus: [0.5, 0.55], bubbles: [cap('1943. אחרי שני ניסיונות שננטשו, מתיישבים חוזרים להרי חברון ומקימים מחדש את כפר עציון. השם על שם שמואל צבי הולצמן, שקנה כאן אדמה.'),
         { kind: 'say', text: '״הולץ״ בגרמנית זה עץ. הולצמן, עץ, עציון!', x: 0.04, y: 0.46, w: 0.56, tail: { at: 0.35 } }] },
       { art: maaleAdumim, focus: [0.5, 0.55], bubbles: [cap('1975. אחרי ניסיון ראשון שפונה, 23 משפחות מקבלות אישור להקים מחנה עבודה על גבעה במדבר יהודה. השם מהתנ״ך, מעלה אדומים, בגלל הסלעים האדומים.'),
-        { kind: 'say', text: 'אדומים בגלל הסלעים. תסתכלו עליהם בשקיעה.', x: 0.04, y: 0.48, w: 0.54, tail: { at: 0.3 } }, end(today)] },
+        { kind: 'say', text: 'אדומים בגלל הסלעים. תסתכלו עליהם בשקיעה.', x: 0.04, y: 0.34, w: 0.54, tail: { at: 0.3 } }, end(today)] },
     ],
   },
   gol: {
     title: 'רמת הגולן',
     panels: (t, today) => [
-      { art: gamla, focus: [0.5, 0.5], bubbles: [cap('67 לספירה, המרד הגדול ברומאים. העיר היהודית גמלא, על רכס תלול בגולן, עומדת מול הלגיונות של אספסיאנוס.'),
-        { kind: 'cap', text: 'השם גמלא בא מהרכס, שנראה כמו דבשת של גמל.', x: 0.04, y: 0.86, w: 0.6 }] },
+      { art: gamla, focus: [0.5, 0.5], bubbles: [cap('67 לספירה, המרד הגדול ברומאים. העיר היהודית גמלא, על רכס בגולן שנראה כמו דבשת של גמל, עומדת מול הלגיונות של אספסיאנוס.'),
+        { kind: 'say', text: 'הר בצורת גמל? אף אחד לא אמר שצריך לטפס עליו!', x: 0.36, y: 0.52, w: 0.6, tail: { at: 0.7, lean: 0.3 } }] },
       { art: meromGolan, focus: [0.5, 0.55], bubbles: [cap('14 ביולי 1967, חודש אחרי מלחמת ששת הימים. קבוצה קטנה עולה לרמה ונכנסת למחנה צבאי סורי נטוש. כך מתחיל מרום גולן.'),
         { kind: 'say', text: 'יש מיטות, יש גג. חסרות רק פרות.', x: 0.44, y: 0.5, w: 0.52, tail: { at: 0.6 } }] },
       { art: katzrin, focus: [0.5, 0.55], bubbles: [cap('1977. ליד כפר יהודי מימי התלמוד, שנחרב ברעידת אדמה בשנת 749, קמה קצרין, ״בירת הגולן״.'),

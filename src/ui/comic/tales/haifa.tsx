@@ -1,7 +1,7 @@
 import { Circle, G, Line, Path, Rect, Text as SvgText } from 'react-native-svg';
 import { F } from '../../theme';
 import type { Panel } from '../ComicPlayer';
-import { Halftone, K } from '../parts';
+import { Halftone, K, rtl } from '../parts';
 import { House, Person, Sea, Sun, TownWall } from '../people';
 
 /* Haifa: Daher al-Omar's new walled town, the Templers' colony under the Carmel, and the War of the Languages. */
@@ -65,8 +65,8 @@ const templers = (
     <Path d="M-10 330 L170 300 L-10 700Z M410 330 L230 300 L410 700Z" fill="#CBB98A" stroke={K.ink} strokeWidth={4} />
     <TemplerHouse x={70} y={330} w={80} year="1869" />
     <TemplerHouse x={250} y={330} w={80} year="1870" />
-    <TemplerHouse x={-20} y={420} w={110} year="1871" />
-    <TemplerHouse x={310} y={420} w={110} year="1872" />
+    <TemplerHouse x={-20} y={420} w={110} year="" />
+    <TemplerHouse x={310} y={420} w={110} year="" />
     {[[164, 320, 0.5], [236, 320, 0.5], [176, 440, 0.8], [224, 440, 0.8]].map(([x, y, s], i) => (
       <G key={i}>
         <Line x1={x} y1={y} x2={x} y2={y - 60 * s} stroke={K.wood} strokeWidth={6} />
@@ -111,7 +111,7 @@ const languages = (
     <G transform="rotate(-6 200 470)">
       <Line x1={200} y1={500} x2={200} y2={650} stroke={K.wood} strokeWidth={8} />
       <Rect x={120} y={430} width={160} height={80} fill="#FFFFFF" stroke={K.ink} strokeWidth={4} />
-      <SvgText x={200} y={484} fontSize={40} fontFamily={F.display} textAnchor="middle" fill={K.red}>עברית!</SvgText>
+      <SvgText x={200} y={484} fontSize={40} fontFamily={F.display} textAnchor="middle" fill={K.red}>{rtl('עברית!')}</SvgText>
     </G>
   </G>
 );

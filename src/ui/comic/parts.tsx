@@ -46,13 +46,16 @@ export function Halftone() {
   );
 }
 
+/** Wraps Hebrew SVG text in right-to-left marks so its punctuation (! . —) lands on the correct side; SVG text does not pick up the page's direction. */
+export const rtl = (s: string) => `\u200F${s}\u200F`;
+
 /** A sound effect in hand-lettered capitals: thick ink outline, bright fill, tilted. */
 export function Sfx({ x, y, text, size = 64, rot = -10, fill = K.yellow }: { x: number; y: number; text: string; size?: number; rot?: number; fill?: string }) {
   return (
     <G transform={`rotate(${rot} ${x} ${y})`}>
-      <SvgText x={x + 4} y={y + 4} fontSize={size} fontFamily={F.stamp} textAnchor="middle" fill={K.ink}>{text}</SvgText>
+      <SvgText x={x + 4} y={y + 4} fontSize={size} fontFamily={F.stamp} textAnchor="middle" fill={K.ink}>{rtl(text)}</SvgText>
       <SvgText x={x} y={y} fontSize={size} fontFamily={F.stamp} textAnchor="middle" fill={fill} stroke={K.ink} strokeWidth={size * 0.06}
-        strokeLinejoin="round">{text}</SvgText>
+        strokeLinejoin="round">{rtl(text)}</SvgText>
     </G>
   );
 }
