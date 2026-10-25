@@ -118,6 +118,8 @@ const inkFlag = (
     <Flag x={150} y={500} h={320} w={150} />
     {/* The ink ran a little. */}
     <Path d="M190 236 l2 10 M240 236 l-1 8 M276 235 l2 12" stroke="#2F5FB3" strokeWidth={3} strokeLinecap="round" />
+    {/* As in the famous photo: one soldier shins up the pole to fix the flag. */}
+    <Person x={146} y={410} s={0.72} coat="#8C7A54" pants="#6E5F40" hat="tembel" pose="hold" mouth="open" />
     <Person x={90} y={690} s={1.05} coat="#8C7A54" pants="#6E5F40" hat="tembel" pose="cheer" mouth="shout" />
     <Person x={310} y={700} s={1.05} coat="#8C7A54" pants="#6E5F40" hat="cloth" hatColor="#8C7A54" moustache pose="wave" flip />
   </G>
