@@ -80,7 +80,7 @@ const holon = (
     {[[60, 200], [140, 160], [260, 210], [330, 170]].map(([x, y], i) => <Path key={i} d={`M${x} ${y} q20 -8 40 0 q20 8 40 0`} stroke="#E6C78C" strokeWidth={4} fill="none" strokeLinecap="round" />)}
     {/* The cornerstone. */}
     <Rect x={150} y={470} width={110} height={60} fill="#D9CBB0" stroke={K.ink} strokeWidth={4} />
-    <SvgText x={205} y={508} fontSize={16} fontFamily={F.black} textAnchor="middle" fill={K.ink}>אבן פינה</SvgText>
+    <SvgText x={205} y={508} fontSize={16} fontFamily={F.black} textAnchor="middle" fill={K.ink}>אבן יסוד</SvgText>
     <Person x={90} y={680} s={1.1} coat="#E8E2D6" pants="#C8B27A" hat="boater" pose="hold" />
     <G transform="rotate(-6 150 560)">
       <Rect x={110} y={530} width={110} height={70} fill="#2F5FB3" stroke={K.ink} strokeWidth={3.5} />
@@ -121,7 +121,7 @@ const ussishkin = (
     <Halftone />
     <Rays cx={200} cy={330} n={26} a="#F7C873" b="#FBE7B9" />
     {/* The podium and the crowd. */}
-    <Person x={200} y={560} s={1.3} coat="#2B2B2B" hat="none" hair="#E8E8E4" moustache pose="wave" mouth="shout" />
+    <Person x={200} y={560} s={1.3} coat="#2B2B2B" hat="none" hair="bald" beard="#E8E8E4" moustache pose="wave" mouth="shout" />
     <G transform="translate(266 240) rotate(10)">
       <Rect x={0} y={0} width={70} height={90} fill="#F6E3BA" stroke={K.ink} strokeWidth={3.5} />
       {[22, 38, 54, 70].map((y) => <Line key={y} x1={10} y1={y} x2={60} y2={y} stroke="#9AA3AD" strokeWidth={2} />)}
@@ -187,7 +187,7 @@ const gedera = (
     {/* The candles stand on a crate on the hilltop, above the settlers' heads. */}
     <Circle cx={190} cy={370} r={80} fill={K.lit} opacity={0.25} />
     <Rect x={150} y={400} width={80} height={40} fill={K.wood} stroke={K.ink} strokeWidth={3} />
-    <Hanukkiah x={190} y={360} s={1} n={8} />
+    <Hanukkiah x={190} y={360} s={1} n={2} />
     <Person x={90} y={690} s={1.05} coat="#5A4636" pants="#3A3A3A" hat="cap" pose="hold" />
     <Person x={190} y={710} s={1.05} dress coat="#2B3A55" hair="#3A2A1E" />
     <Person x={300} y={690} s={1.05} coat="#7A3B2A" pants="#3A3A3A" hat="fedora" moustache flip pose="wave" />
@@ -291,7 +291,7 @@ const daliyat = (
     ))}
     <Donkey x={330} y={640} s={1.1} load />
     <Person x={60} y={700} s={0.95} dress coat="#2B3A55" hat="scarf" hatColor="#FFFFFF" />
-    <Person x={160} y={700} s={1.15} coat="#1E1E1E" pants="#1E1E1E" hat="turban" moustache pose="point" />
+    <Person x={160} y={700} s={1.15} robe coat="#1E1E1E" hat="turban" moustache pose="point" />
   </G>
 );
 
@@ -323,7 +323,7 @@ export const regions1: Record<string, Tale> = {
         { kind: 'say', text: 'רמת גן? בינתיים זה בעיקר אבטיחים.', x: 0.42, y: 0.5, w: 0.54, tail: { at: 0.4, lean: -0.2 } }] },
       { art: bneiBrak, focus: [0.55, 0.5], bubbles: [cap('1924. שמונה משפחות חסידים מפולין, בראשות יצחק גרשטנקורן, מקימות את בני ברק. את השם לקחו מספר יהושע.'),
         { kind: 'say', text: 'קודם בית מדרש. אחר כך נחשוב איפה לישון.', x: 0.04, y: 0.48, w: 0.56, tail: { at: 0.4, lean: -0.1 } }] },
-      { art: holon, focus: [0.5, 0.62], bubbles: [cap('אמצע שנות ה־30. על הדיונות שמדרום לתל אביב קמה חולון.'),
+      { art: holon, focus: [0.5, 0.62], bubbles: [cap('שנות ה־30. על הדיונות שמדרום לתל אביב קמות שכונות חדשות. ב־1940 חמש מהן מתאחדות תחת שם אחד: חולון.'),
         { kind: 'say', text: 'יש פה המון חול. נקרא לה חולון.', x: 0.4, y: 0.52, w: 0.56, tail: { at: 0.7, lean: 0.3 } }, end(today)] },
     ],
   },
@@ -343,7 +343,7 @@ export const regions1: Record<string, Tale> = {
     panels: (t, today) => [
       { art: rishon, focus: [0.5, 0.5], bubbles: [cap('1883. אחרי חודשים של חול ויובש, מתיישבי ראשון לציון מוצאים מים. המילים האלה נמצאות עד היום בסמל העיר.'),
         { kind: 'shout', text: 'מצאנו מים!', x: 0.22, y: 0.2, w: 0.56 }] },
-      { art: gedera, focus: [0.5, 0.62], bubbles: [cap('חנוכה 1884. חלוצי ביל״ו מגיעים לגבעה ריקה ומקימים את גדרה.'),
+      { art: gedera, focus: [0.5, 0.62], bubbles: [cap('נר שני של חנוכה, 1884. חלוצי ביל״ו מגיעים לגבעה ריקה ומקימים את גדרה.'),
         { kind: 'say', text: 'חנוכה שמח, וברוכים הבאים לגדרה!', x: 0.44, y: 0.22, w: 0.52, tail: { at: 0.6, lean: 0.4 } }] },
       { art: nessZiona, focus: [0.52, 0.42], bubbles: [cap('1891. בנס ציונה מניפים דגל כחול־לבן עם מגן דוד, דומה מאוד לדגל המדינה של היום.'),
         { kind: 'say', text: 'שימו לב לצבעים. זה עוד יתפוס.', x: 0.04, y: 0.46, w: 0.5, tail: { at: 0.4 } }, end(today)] },
@@ -357,7 +357,7 @@ export const regions1: Record<string, Tale> = {
       { art: malaria, focus: [0.5, 0.45], bubbles: [cap('הקדחת מבריחה את המתיישבים ליהוד. ב־1883 הם חוזרים, והברון רוטשילד מממן ייבוש ביצות. ״אם המושבות״ ניצלה.'),
         { kind: 'shout', text: 'יתושים? חזרנו!', x: 0.44, y: 0.44, w: 0.5 }] },
       { art: roshHaAyin, focus: [0.55, 0.55], bubbles: [cap('1949. עולים מתימן שהגיעו במבצע ״על כנפי נשרים״ מתיישבים במחנה צבאי בריטי נטוש ליד מעיינות הירקון. משם צומחת ראש העין.'),
-        { kind: 'say', text: 'טסנו על כנפי נשרים, ונחתנו ליד מעיין.', x: 0.04, y: 0.5, w: 0.56, tail: { at: 0.4 } }, end(today)] },
+        { kind: 'say', text: 'טסנו על כנפי נשרים. את הקטע מלוד עשינו באוטובוס.', x: 0.04, y: 0.5, w: 0.56, tail: { at: 0.4 } }, end(today)] },
     ],
   },
   hfa: {
@@ -365,7 +365,7 @@ export const regions1: Record<string, Tale> = {
     panels: (t, today) => [
       { art: elijah, focus: [0.5, 0.5], amount: 1.16, bubbles: [cap('לפי התנ״ך: על הכרמל אליהו מתמודד מול 450 נביאי הבעל. הם צועקים מהבוקר ועד הצהריים. אצלו יורדת אש מהשמיים.'),
         { kind: 'say', text: 'קראו בקול גדול! אולי אלוהיכם ישן?', x: 0.02, y: 0.42, w: 0.46, tail: { at: 0.4 } }] },
-      { art: daliyat, focus: [0.5, 0.55], bubbles: [cap('לפי המסורת המקומית, משפחה דרוזית מאזור חלב מגיעה לחורבות עתיקות בכרמל, ומקימה את דאלית אל־כרמל.'),
+      { art: daliyat, focus: [0.5, 0.55], bubbles: [cap('תחילת המאה ה־17. דרוזים מתיישבים ליד חורבות עתיקות בכרמל ומקימים את דאלית אל־כרמל. לפי המסורת, חלקם באו מאזור חלב.'),
         { kind: 'say', text: 'נוף לים, ואבנים מוכנות. נשארים.', x: 0.2, y: 0.5, w: 0.56, tail: { at: 0.4 } }] },
       { art: zichron, focus: [0.5, 0.6], bubbles: [cap('1882. כמאה חלוצים מרומניה עולים לזמרין שבכרמל. ב־1883 הברון רוטשילד מאמץ את המושבה וקורא לה זכרון יעקב.'),
         { kind: 'say', text: 'הברון קרא לה על שם אבא שלו, יעקב.', x: 0.04, y: 0.5, w: 0.56, tail: { at: 0.3 } }, end(today)] },

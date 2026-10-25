@@ -7,7 +7,7 @@ import { K } from './parts';
 
 const INK = { stroke: K.ink, strokeWidth: 4, strokeLinejoin: 'round' as const };
 
-export type Hat = 'none' | 'fedora' | 'boater' | 'fez' | 'tembel' | 'slouch' | 'cloth' | 'crown' | 'scarf' | 'cap' | 'kippah' | 'turban' | 'feathers' | 'bicorne' | 'shtreimel' | 'helmet';
+export type Hat = 'none' | 'fedora' | 'boater' | 'fez' | 'tembel' | 'slouch' | 'cloth' | 'crown' | 'scarf' | 'cap' | 'kippah' | 'turban' | 'feathers' | 'bicorne' | 'shtreimel' | 'helmet' | 'nemes' | 'wreath';
 export type Pose = 'down' | 'wave' | 'point' | 'hold' | 'cheer' | 'hips';
 
 /** A person, feet at (x, y), about 220 tall at scale 1. `flip` turns them to face left.
@@ -32,7 +32,7 @@ export function Person({ x, y, s = 1, flip, coat = K.navy, pants = '#3B3B3B', sk
     return { x: +m[1], y: +m[2] };
   };
   const hc = hatColor ?? ({ fedora: '#4A3B2E', boater: '#E9CF8E', fez: K.red, tembel: '#C8B27A', slouch: '#8C7A54', cloth: '#E8DDC8', crown: '#F2C230',
-    scarf: K.teal, cap: '#4A4A4A', kippah: K.navy, turban: '#F4F1EA', feathers: '#F4F1EA', bicorne: '#1E1E1E', shtreimel: '#5A3A22', helmet: '#6E7F3B', none: '' } as const)[hat];
+    scarf: K.teal, cap: '#4A4A4A', kippah: K.navy, turban: '#F4F1EA', feathers: '#F4F1EA', bicorne: '#1E1E1E', shtreimel: '#5A3A22', helmet: '#6E7F3B', nemes: '#F2C230', wreath: '#5E8C3A', none: '' } as const)[hat];
   return (
     <G transform={`translate(${x} ${y}) scale(${flip ? -s : s} ${s})`}>
       {/* Legs and shoes, unless a robe covers them. */}
@@ -63,9 +63,11 @@ export function Person({ x, y, s = 1, flip, coat = K.navy, pants = '#3B3B3B', sk
       })}
       {/* Head. */}
       <Rect x={-9} y={-176} width={18} height={20} fill={skin} {...INK} strokeWidth={3} />
-      {hat !== 'cloth' && hat !== 'scarf' && hat !== 'turban' && hair !== 'bald' && (
+      {hat !== 'cloth' && hat !== 'scarf' && hat !== 'turban' && hat !== 'nemes' && hair !== 'bald' && hair !== 'tufts' && (
         <Path d="M-27 -190 Q-30 -222 0 -224 Q30 -222 27 -190 Q20 -206 0 -206 Q-20 -206 -27 -190Z" fill={hair} {...INK} strokeWidth={3} />
       )}
+      {/* A pharaoh's striped nemes: the lappets fall behind the head to the shoulders. */}
+      {hat === 'nemes' && <G><Path d="M-36 -146 Q-42 -200 -26 -220 Q0 -234 26 -220 Q42 -200 36 -146 L22 -150 Q24 -186 0 -196 Q-24 -186 -22 -150Z" fill={hc} {...INK} strokeWidth={3.5} />{[-30, -24, 24, 30].map((dx) => <Path key={dx} d={`M${dx} -196 L${dx * 1.1} -150`} stroke={K.navy} strokeWidth={4} />)}</G>}
       {(hat === 'cloth' || hat === 'scarf') && <Path d="M-34 -150 Q-40 -200 -26 -220 Q0 -236 26 -220 Q40 -200 34 -150 Q20 -160 22 -190 Q0 -200 -22 -190 Q-20 -160 -34 -150Z" fill={hc} {...INK} strokeWidth={3.5} />}
       <Circle cx={0} cy={-192} r={25} fill={skin} {...INK} />
       {beard && <Path d="M-24 -190 Q-26 -158 0 -150 Q26 -158 24 -190 Q12 -176 0 -178 Q-12 -176 -24 -190Z" fill={beard} {...INK} strokeWidth={3} />}
@@ -97,6 +99,11 @@ export function Person({ x, y, s = 1, flip, coat = K.navy, pants = '#3B3B3B', sk
       {hat === 'bicorne' && <G><Path d="M-46 -212 Q0 -262 46 -212 Q0 -224 -46 -212Z" fill={hc} {...INK} strokeWidth={3.5} /><Circle cx={0} cy={-232} r={6} fill={K.red} stroke={K.ink} strokeWidth={2} /></G>}
       {hat === 'shtreimel' && <G><Ellipse cx={0} cy={-212} rx={34} ry={14} fill={hc} {...INK} strokeWidth={3.5} /><Path d="M-18 -220 Q0 -246 18 -220Z" fill={K.ink} /></G>}
       {hat === 'helmet' && <Path d="M-30 -204 Q-30 -246 0 -246 Q30 -246 30 -204Z" fill={hc} {...INK} strokeWidth={3.5} />}
+      {hat === 'nemes' && <G><Path d="M-27 -200 Q-30 -228 0 -230 Q30 -228 27 -200 Q0 -208 -27 -200Z" fill={hc} {...INK} strokeWidth={3.5} />{[-14, 0, 14].map((dx) => <Path key={dx} d={`M${dx} -226 L${dx * 1.3} -204`} stroke={K.navy} strokeWidth={4} />)}<Path d="M0 -230 L-5 -242 L5 -242Z" fill={hc} stroke={K.ink} strokeWidth={2.5} /></G>}
+      {/* A laurel wreath: leaves along the brow. */}
+      {hat === 'wreath' && <G>{[-24, -16, -8, 0, 8, 16, 24].map((dx) => <Ellipse key={dx} cx={dx} cy={-208 - Math.sqrt(Math.max(0, 600 - dx * dx)) * 0.5} rx={6} ry={3.5} fill={hc} stroke={K.ink} strokeWidth={2} transform={`rotate(${dx * 2} ${dx} -210)`} />)}</G>}
+      {/* Bald on top with white tufts over the ears, like Ben-Gurion. */}
+      {hair === 'tufts' && <G>{[-1, 1].map((d) => <Path key={d} d={`M${d * 20} -212 Q${d * 44} -226 ${d * 46} -200 Q${d * 50} -186 ${d * 30} -178 Q${d * 34} -196 ${d * 22} -206Z`} fill="#F4F1EA" stroke={K.ink} strokeWidth={2.5} />)}</G>}
       {hat === 'turban' && <Path d="M-28 -200 Q-34 -238 0 -240 Q34 -238 28 -200 Q0 -210 -28 -200Z M-20 -226 Q0 -216 22 -230" fill={hc} {...INK} strokeWidth={3.5} />}
     </G>
   );

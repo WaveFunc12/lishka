@@ -44,7 +44,7 @@ const oath = (
     <Well x={200} y={460} />
     <Person x={84} y={600} s={1.1} robe coat="#E8DDC8" hat="cloth" hatColor="#F4F1EA" beard="#F4F1EA" hair="#F4F1EA" pose="hold" />
     <Person x={316} y={600} s={1.1} robe coat="#7A2E5A" hat="crown" beard="#3A2A1E" pose="hold" flip />
-    {Array.from({ length: 7 }, (_, i) => <Lamb key={i} x={44 + i * 52} y={628 - (i % 2) * 14} s={0.9} flip={i % 3 === 0} />)}
+    {Array.from({ length: 7 }, (_, i) => <Lamb key={i} x={62 + i * 46} y={628 - (i % 2) * 14} s={0.9} flip={i % 3 === 0} />)}
   </G>
 );
 
@@ -96,7 +96,7 @@ const charge = (
     <Rider x={240} y={470} s={0.72} />
     <Rider x={150} y={560} s={0.92} />
     <Rider x={270} y={646} s={1.05} />
-    <Sfx x={110} y={430} text="דגדג דגדג" size={44} rot={-8} fill={K.yellow} />
+    <Sfx x={110} y={430} text="טק־טק־טק" size={44} rot={-8} fill={K.yellow} />
   </G>
 );
 
@@ -120,7 +120,8 @@ export const beersheva = {
     {
       art: charge, focus: [0.45, 0.65],
       bubbles: [
-        { kind: 'cap', text: '31 באוקטובר 1917, לפני השקיעה. כ־500 פרשים אוסטרלים דוהרים לעיר ותופסים את הבארות.', x: 0.04, y: 0.03, w: 0.92 },
+        { kind: 'cap', text: '31 באוקטובר 1917, לפני השקיעה. כ־800 פרשים אוסטרלים דוהרים לעיר ותופסים את הבארות.', x: 0.04, y: 0.03, w: 0.92 },
+        { kind: 'say', text: 'הסוסים צמאים. לבארות!', x: 0.36, y: 0.38, w: 0.5, tail: { at: 0.45, lean: -0.2 } },
         { kind: 'cap', text: today, x: 0.44, y: 0.89, w: 0.52 },
       ],
     },

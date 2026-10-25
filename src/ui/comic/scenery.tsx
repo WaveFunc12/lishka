@@ -18,7 +18,21 @@ export function Hills({ y, near = '#B48F55', far = '#C9A76B', green }: { y: numb
 }
 
 /** Tower and stockade (חומה ומגדל): a wooden watchtower with a searchlight inside a double wall of planks. */
-export function TowerStockade({ x, y, s = 1, light }: { x: number; y: number; s?: number; light?: boolean }) {
+/** `building`: half up, as on the day it went up: the tower frame without its cabin, the wall half done. */
+export function TowerStockade({ x, y, s = 1, light, building }: { x: number; y: number; s?: number; light?: boolean; building?: boolean }) {
+  if (building)
+    return (
+      <G transform={`translate(${x} ${y}) scale(${s})`}>
+        <Path d="M-26 -60 L-18 -180 M26 -60 L18 -180 M-24 -90 L22 -140" stroke={K.ink} strokeWidth={8} />
+        <Path d="M-26 -60 L-18 -180 M26 -60 L18 -180 M-24 -90 L22 -140" stroke={K.wood} strokeWidth={4} />
+        {/* A rope from the top, for hauling up the cabin. */}
+        <Path d="M-18 -180 Q-70 -120 -96 -60" stroke={K.ink} strokeWidth={2.5} fill="none" />
+        <Rect x={-110} y={-60} width={110} height={60} fill="#B98A55" {...INK} />
+        {Array.from({ length: 6 }, (_, i) => <Line key={i} x1={-110 + i * 20} y1={-60} x2={-110 + i * 20} y2={0} stroke={K.woodDark} strokeWidth={2.5} />)}
+        {/* Boards waiting on the ground. */}
+        {[0, 12, 24].map((dy) => <Rect key={dy} x={20} y={-30 + dy} width={90} height={9} fill={K.wood} stroke={K.ink} strokeWidth={2.5} />)}
+      </G>
+    );
   return (
     <G transform={`translate(${x} ${y}) scale(${s})`}>
       {light && <Path d="M10 -196 L240 -260 L240 -150Z" fill={K.lit} opacity={0.45} />}
